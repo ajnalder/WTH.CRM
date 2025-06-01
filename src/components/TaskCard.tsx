@@ -5,12 +5,10 @@ import { Calendar, User, Tag, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import type { Tables } from '@/integrations/supabase/types';
-
-type Task = Tables<'tasks'>;
+import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskCardProps {
-  task: Task;
+  task: TaskWithClient;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
@@ -41,6 +39,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const handleCardClick = () => {
     navigate(`/tasks/${task.id}`);
   };
@@ -52,10 +59,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
-            {task.title}
-          </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex items-start gap-3 flex-1">
+            {task.client_name && (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 mt-1">
+                {getClientInitials(task.client_name)}
+              </div>
+            )}
+            <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
+              {task.title}
+            </CardTitle>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
             <Badge className={`text-xs ${getStatusColor(task.status)}`}>
               {task.status}
             </Badge>

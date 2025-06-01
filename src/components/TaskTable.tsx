@@ -10,12 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Tables } from '@/integrations/supabase/types';
-
-type Task = Tables<'tasks'>;
+import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskTableProps {
-  tasks: Task[];
+  tasks: TaskWithClient[];
 }
 
 export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
@@ -48,11 +46,21 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     });
   };
 
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Task</TableHead>
+          <TableHead>Client</TableHead>
           <TableHead>Project</TableHead>
           <TableHead>Assignee</TableHead>
           <TableHead>Status</TableHead>
@@ -74,6 +82,16 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
                   </div>
                 )}
               </div>
+            </TableCell>
+            <TableCell>
+              {task.client_name && (
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold">
+                    {getClientInitials(task.client_name)}
+                  </div>
+                  <span className="text-sm text-gray-600">{task.client_name}</span>
+                </div>
+              )}
             </TableCell>
             <TableCell className="text-gray-900">{task.project || 'No project'}</TableCell>
             <TableCell className="text-gray-900">{task.assignee || 'Unassigned'}</TableCell>

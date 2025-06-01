@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -6,6 +5,10 @@ import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type Task = Tables<'tasks'>;
 type TaskInsert = TablesInsert<'tasks'>;
+
+export interface TaskWithClient extends Task {
+  client_name?: string;
+}
 
 export const useTasks = () => {
   const { toast } = useToast();
@@ -24,7 +27,38 @@ export const useTasks = () => {
         throw error;
       }
 
-      return tasks || [];
+      // Get projects to map project names to client names
+      const { data: projects, error: projectsError } = await supabase
+        .from('projects')
+        .select(`
+          name,
+          clients (
+            company
+          )
+        `);
+
+      if (projectsError) {
+        console.error('Error fetching projects:', projectsError);
+        return tasks || [];
+      }
+
+      // Create a map of project names to client company names
+      const projectClientMap = new Map();
+      projects?.forEach(project => {
+        if (project.clients && Array.isArray(project.clients) && project.clients[0]) {
+          projectClientMap.set(project.name, project.clients[0].company);
+        } else if (project.clients && !Array.isArray(project.clients)) {
+          projectClientMap.set(project.name, project.clients.company);
+        }
+      });
+
+      // Add client information to tasks
+      const tasksWithClients: TaskWithClient[] = (tasks || []).map(task => ({
+        ...task,
+        client_name: task.project ? projectClientMap.get(task.project) : undefined
+      }));
+
+      return tasksWithClients;
     },
   });
 

@@ -43,7 +43,8 @@ const Tasks = () => {
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (task.project && task.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (task.assignee && task.assignee.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (task.assignee && task.assignee.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (task.client_name && task.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
