@@ -45,79 +45,84 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const timeRemaining = getTimeRemaining(project.dueDate);
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 border-gray-100">
+    <Card className="hover:shadow-lg transition-all duration-200 border-gray-100 cursor-pointer">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <Link to={`/projects/${project.id}`} className="hover:text-blue-600 transition-colors">
-              <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
-            </Link>
+          <Link 
+            to={`/projects/${project.id}`} 
+            className="flex-1 hover:text-blue-600 transition-colors"
+          >
+            <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
             <p className="text-sm text-gray-600">{project.client}</p>
-          </div>
+          </Link>
           <div className="flex flex-col items-end space-y-2">
             <Badge variant="secondary" className={getStatusColor(project.status)}>
               {project.status}
             </Badge>
-            <AddTaskToProjectDialog 
-              projectId={project.id} 
-              projectName={project.name} 
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <AddTaskToProjectDialog 
+                projectId={project.id} 
+                projectName={project.name} 
+              />
+            </div>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm text-gray-600">{project.progress}%</span>
+      <Link to={`/projects/${project.id}`}>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">Progress</span>
+              <span className="text-sm text-gray-600">{project.progress}%</span>
+            </div>
+            <Progress value={project.progress} className="h-2" />
           </div>
-          <Progress value={project.progress} className="h-2" />
-        </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-1">
-            <CheckCircle2 size={16} className="text-green-500" />
-            <span className="text-gray-600">
-              {project.tasks.completed}/{project.tasks.total} tasks
-            </span>
-          </div>
-          <div className={`flex items-center space-x-1 ${getPriorityColor(project.priority)}`}>
-            <AlertCircle size={16} />
-            <span className="font-medium">{project.priority}</span>
-          </div>
-        </div>
-
-        {timeRemaining && (
-          <div className={`flex items-center space-x-1 text-sm ${
-            timeRemaining.urgent ? 'text-red-600' : 'text-gray-600'
-          }`}>
-            <Clock size={16} />
-            <span className={timeRemaining.urgent ? 'font-medium' : ''}>{timeRemaining.text}</span>
-          </div>
-        )}
-
-        {project.team && project.team.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <Users size={16} className="text-gray-400" />
-            <div className="flex -space-x-1">
-              {project.team.slice(0, 3).map((member, index) => (
-                <div
-                  key={index}
-                  className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
-                >
-                  {member}
-                </div>
-              ))}
-              {project.team.length > 3 && (
-                <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
-                  +{project.team.length - 3}
-                </div>
-              )}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-1">
+              <CheckCircle2 size={16} className="text-green-500" />
+              <span className="text-gray-600">
+                {project.tasks.completed}/{project.tasks.total} tasks
+              </span>
+            </div>
+            <div className={`flex items-center space-x-1 ${getPriorityColor(project.priority)}`}>
+              <AlertCircle size={16} />
+              <span className="font-medium">{project.priority}</span>
             </div>
           </div>
-        )}
-      </CardContent>
+
+          {timeRemaining && (
+            <div className={`flex items-center space-x-1 text-sm ${
+              timeRemaining.urgent ? 'text-red-600' : 'text-gray-600'
+            }`}>
+              <Clock size={16} />
+              <span className={timeRemaining.urgent ? 'font-medium' : ''}>{timeRemaining.text}</span>
+            </div>
+          )}
+
+          {project.team && project.team.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <Users size={16} className="text-gray-400" />
+              <div className="flex -space-x-1">
+                {project.team.slice(0, 3).map((member, index) => (
+                  <div
+                    key={index}
+                    className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+                  >
+                    {member}
+                  </div>
+                ))}
+                {project.team.length > 3 && (
+                  <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
+                    +{project.team.length - 3}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Link>
     </Card>
   );
 };
