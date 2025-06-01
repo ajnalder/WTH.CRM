@@ -16,7 +16,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
   const { clients, isLoading: clientsLoading } = useClients();
   const { domains, createDomain, deleteDomain, isLoading: domainsLoading } = useDomains(clientId);
   const { hosting, createHosting, deleteHosting, isLoading: hostingLoading } = useHosting(clientId);
-  const { contacts, createContact, deleteContact, isLoading: contactsLoading } = useContacts(clientId);
+  const { contacts, createContact, deleteContact, updateContact, isLoading: contactsLoading } = useContacts(clientId);
 
   const client = clients.find(c => c.id === clientId);
 
@@ -42,6 +42,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
     deleteDomain,
     deleteHosting,
     deleteContact,
+    updateContact,
     ...actions
   });
 };
