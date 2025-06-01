@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
 interface Project {
@@ -27,11 +26,11 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({ project, daysUntilDu
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Progress</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-600">Completion</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-gray-900 mb-2">{project.progress}%</div>
-          <Progress value={project.progress} className="h-2" />
+          <div className="text-2xl font-bold text-gray-900">{project.progress}%</div>
+          <p className="text-sm text-gray-600">complete</p>
         </CardContent>
       </Card>
       

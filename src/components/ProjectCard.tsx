@@ -2,7 +2,6 @@
 import React from 'react';
 import { Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getStatusColor } from '@/utils/projectUtils';
@@ -113,14 +112,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">Progress</span>
-              <span className="text-sm text-gray-600">{project.progress}%</span>
-            </div>
-            <Progress value={project.progress} className="h-2" />
-          </div>
-
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-1">
               <CheckCircle2 size={16} className="text-green-500" />

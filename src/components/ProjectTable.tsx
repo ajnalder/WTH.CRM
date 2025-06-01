@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Calendar, Users } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import {
   Table,
   TableBody,
@@ -50,7 +49,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           <TableHead>Project</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Progress</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Team</TableHead>
           <TableHead>Tasks</TableHead>
@@ -74,12 +72,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                   {project.status}
                 </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  <Progress value={project.progress} className="h-2 w-20" />
-                  <span className="text-sm text-gray-600">{project.progress}%</span>
-                </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-1 text-sm text-gray-600">
