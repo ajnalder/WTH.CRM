@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTask } from '@/hooks/useTask';
 import { useTimeEntries } from '@/hooks/useTimeEntries';
+import { useTasks } from '@/hooks/useTasks';
 import { TaskDetailsHeader } from '@/components/task-details/TaskDetailsHeader';
 import { TaskDetailsMain } from '@/components/task-details/TaskDetailsMain';
 import { TaskTimeSummary } from '@/components/task-details/TaskTimeSummary';
@@ -13,6 +14,7 @@ import { TaskTimeEntries } from '@/components/task-details/TaskTimeEntries';
 const TaskDetails = () => {
   const { id } = useParams();
   const [timerHours, setTimerHours] = useState('');
+  const { deleteTask, isDeleting } = useTasks();
 
   console.log('TaskDetails - Task ID:', id);
 
@@ -59,10 +61,20 @@ const TaskDetails = () => {
     setTimerHours(hours);
   };
 
+  const handleDeleteTask = () => {
+    if (id) {
+      deleteTask(id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
-        <TaskDetailsHeader task={task} />
+        <TaskDetailsHeader 
+          task={task} 
+          onDelete={handleDeleteTask}
+          isDeleting={isDeleting}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}

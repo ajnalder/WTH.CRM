@@ -1,19 +1,34 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Edit2, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useClients } from '@/hooks/useClients';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsHeaderProps {
   task: TaskWithClient;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
-export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ task }) => {
+export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ 
+  task, 
+  onDelete, 
+  isDeleting = false 
+}) => {
   const navigate = useNavigate();
-  const { clients } = useClients();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,51 +49,83 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ task }) =>
     }
   };
 
-  const getClientInitials = (clientName: string) => {
-    return clientName
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+      navigate('/tasks');
+    }
   };
 
-  // Find the client by name to get their gradient color
-  const client = clients.find(c => c.company === task.client_name);
-  const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
-
   return (
-    <div className="mb-6">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate('/tasks')}
-        className="mb-4"
-      >
-        <ArrowLeft className="mr-2" size={16} />
-        Back to Tasks
-      </Button>
-      
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          {task.client_name && (
-            <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold`}>
-              {getClientInitials(task.client_name)}
-            </div>
-          )}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
-            <p className="text-gray-600">{task.project}</p>
+    <>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <Link
+            to="/tasks"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Back to Tasks
+          </Link>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Edit2 size={16} className="mr-2" />
+              Edit
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={isDeleting}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 size={16} className="mr-2" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Badge className={`${getStatusColor(task.status)}`}>
+
+        <div className="flex items-center gap-3 mb-4">
+          <Badge className={getStatusColor(task.status)}>
             {task.status}
           </Badge>
-          <Badge className={`${getPriorityColor(task.priority)}`}>
+          <Badge className={getPriorityColor(task.priority)}>
             {task.priority}
           </Badge>
+          {task.client_name && (
+            <Badge variant="outline">
+              {task.client_name}
+            </Badge>
+          )}
         </div>
+
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
+        
+        {task.project && (
+          <p className="text-gray-600">Project: {task.project}</p>
+        )}
       </div>
-    </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{task.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
