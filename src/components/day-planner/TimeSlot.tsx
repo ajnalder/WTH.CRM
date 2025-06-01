@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { ScheduledTaskCard } from './ScheduledTaskCard';
@@ -34,15 +35,17 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
         {timeSlot}
       </div>
       
-      <Droppable droppableId={`timeslot-${timeSlot}`}>
+      <Droppable droppableId={`timeslot-${timeSlot}`} type="TASK">
         {(provided, snapshot) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`flex-1 ml-4 min-h-[56px] border-2 border-dashed rounded-lg p-2 transition-colors relative ${
+            className={`flex-1 ml-4 min-h-[56px] border-2 rounded-lg p-2 transition-all duration-200 relative ${
               snapshot.isDraggingOver
-                ? 'border-blue-400 bg-blue-50'
-                : 'border-gray-200'
+                ? 'border-blue-400 bg-blue-50 border-solid shadow-md'
+                : isOccupied
+                ? 'border-transparent bg-transparent'
+                : 'border-gray-200 border-dashed hover:border-gray-300'
             }`}
           >
             {scheduledTask && isFirstSlot ? (
@@ -55,11 +58,16 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
                 removeScheduledTask={removeScheduledTask}
               />
             ) : (
-              !isOccupied && (
+              !isOccupied && !snapshot.isDraggingOver && (
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   Drop a task here
                 </div>
               )
+            )}
+            {snapshot.isDraggingOver && !isOccupied && (
+              <div className="flex items-center justify-center h-full text-blue-600 text-sm font-medium">
+                Drop here
+              </div>
             )}
             {provided.placeholder}
           </div>

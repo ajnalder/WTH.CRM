@@ -82,13 +82,14 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
       draggableId={`task-${scheduledTask.taskId}`} 
       index={0}
       isDragDisabled={isResizing}
+      type="TASK"
     >
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           className={`border rounded-lg shadow-sm relative group absolute left-0 right-0 z-10 ${getCardStyle()} ${
-            snapshot.isDragging ? 'shadow-lg z-50' : ''
+            snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
           } ${isResizing ? 'select-none pointer-events-none' : ''}`}
           style={{ 
             height: calculateHeight(scheduledTask.duration),
