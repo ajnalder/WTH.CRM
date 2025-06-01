@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Users, Flag } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/table';
 
 interface Project {
-  id: number;
+  id: string; // Changed from number to string to match UUID
   name: string;
   client: string;
   status: string;
