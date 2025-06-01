@@ -14,6 +14,7 @@ export interface ClientDetailContextProps {
   deleteDomain: (id: string) => void;
   deleteHosting: (id: string) => void;
   deleteContact: (id: string) => void;
+  updateContact: (id: string, data: any) => void;
   newDomain: {
     name: string;
     registrar: string;

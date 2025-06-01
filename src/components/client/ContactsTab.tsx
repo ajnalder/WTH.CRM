@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, User, Trash2 } from 'lucide-react';
+import { Mail, Phone, User, Trash2, Edit } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Contact } from '@/hooks/useContacts';
 import AddContactDialog from './AddContactDialog';
+import EditContactDialog from './EditContactDialog';
 
 interface ContactsTabProps {
   contacts: Contact[];
@@ -24,6 +25,7 @@ interface ContactsTabProps {
   newContact: Omit<Contact, 'id' | 'client_id' | 'created_at' | 'updated_at'>;
   setNewContact: (contact: Omit<Contact, 'id' | 'client_id' | 'created_at' | 'updated_at'>) => void;
   onAddContact: () => void;
+  onUpdateContact?: (id: string, data: Omit<Contact, 'id' | 'client_id' | 'created_at' | 'updated_at'>) => void;
   onDeleteContact?: (id: string) => void;
   isLoading?: boolean;
 }
@@ -35,9 +37,40 @@ const ContactsTab = ({
   newContact,
   setNewContact,
   onAddContact,
+  onUpdateContact,
   onDeleteContact,
   isLoading
 }: ContactsTabProps) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [editContactData, setEditContactData] = useState<Omit<Contact, 'id' | 'client_id' | 'created_at' | 'updated_at'>>({
+    name: '',
+    email: '',
+    phone: '',
+    role: '',
+    is_primary: false
+  });
+
+  const handleEditClick = (contact: Contact) => {
+    setEditingContact(contact);
+    setEditContactData({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone || '',
+      role: contact.role || '',
+      is_primary: contact.is_primary
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateContact = () => {
+    if (editingContact && onUpdateContact) {
+      onUpdateContact(editingContact.id, editContactData);
+      setShowEditDialog(false);
+      setEditingContact(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -98,32 +131,37 @@ const ContactsTab = ({
                       </div>
                     )}
                   </div>
-                  {onDeleteContact && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Trash2 size={16} className="text-red-500" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Contact</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{contact.name}"? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => onDeleteContact(contact.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(contact)}>
+                      <Edit size={16} className="text-blue-500" />
+                    </Button>
+                    {onDeleteContact && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 size={16} className="text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{contact.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDeleteContact(contact.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -136,6 +174,15 @@ const ContactsTab = ({
           </div>
         )}
       </div>
+
+      <EditContactDialog
+        isOpen={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        contact={editingContact}
+        editingContact={editContactData}
+        setEditingContact={setEditContactData}
+        onUpdateContact={handleUpdateContact}
+      />
     </div>
   );
 };

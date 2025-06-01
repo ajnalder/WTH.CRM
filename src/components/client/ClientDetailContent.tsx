@@ -36,7 +36,8 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
     newContact,
     setNewContact,
     addContact,
-    deleteContact
+    deleteContact,
+    updateContact
   } = props;
 
   if (!client) return null;
@@ -121,6 +122,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
           newContact={newContact}
           setNewContact={setNewContact}
           onAddContact={addContact}
+          onUpdateContact={updateContact}
           onDeleteContact={deleteContact}
           isLoading={contactsLoading}
         />

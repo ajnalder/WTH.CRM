@@ -24,6 +24,14 @@ export interface CreateContactData {
   is_primary: boolean;
 }
 
+export interface UpdateContactData {
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  is_primary: boolean;
+}
+
 export const useContacts = (clientId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -84,6 +92,39 @@ export const useContacts = (clientId: string) => {
     }
   });
 
+  const updateContactMutation = useMutation({
+    mutationFn: async ({ contactId, contactData }: { contactId: string; contactData: UpdateContactData }) => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .update(contactData)
+        .eq('id', contactId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating contact:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts', clientId] });
+      toast({
+        title: "Contact Updated",
+        description: "Contact has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      console.error('Update contact error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update contact. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const deleteContactMutation = useMutation({
     mutationFn: async (contactId: string) => {
       const { error } = await supabase
@@ -118,8 +159,10 @@ export const useContacts = (clientId: string) => {
     isLoading,
     error,
     createContact: createContactMutation.mutate,
+    updateContact: updateContactMutation.mutate,
     deleteContact: deleteContactMutation.mutate,
     isCreating: createContactMutation.isPending,
+    isUpdating: updateContactMutation.isPending,
     isDeleting: deleteContactMutation.isPending
   };
 };
