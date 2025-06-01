@@ -54,8 +54,10 @@ const ProjectDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <ProjectDescription project={transformedProject} />
-            <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
+            <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
+            {transformedProject.startDate && transformedProject.dueDate && (
+              <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
+            )}
           </div>
 
           <div className="space-y-6">

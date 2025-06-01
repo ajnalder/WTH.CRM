@@ -1,39 +1,42 @@
 
 import React from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Bell, Search, Settings } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { NewProjectForm } from '@/components/NewProjectForm';
-import { UserMenu } from '@/components/UserMenu';
+import { Button } from '@/components/ui/button';
+import { NewProjectForm } from './NewProjectForm';
 
-export const Header = () => {
-  const handleProjectCreated = (project: any) => {
-    console.log('New project created from header:', project);
-    // You could add global state management here if needed
-  };
-
+const Header = () => {
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <Input
-              placeholder="Search projects, tasks, or team members..."
-              className="pl-10 w-80"
-            />
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <NewProjectForm onProjectCreated={handleProjectCreated} />
-          <div className="relative">
-            <Bell className="text-gray-600 hover:text-gray-900 cursor-pointer" size={24} />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                placeholder="Search projects..."
+                className="pl-10 w-64"
+              />
+            </div>
+            
+            <NewProjectForm />
+            
+            <Button variant="ghost" size="icon">
+              <Bell size={20} />
+            </Button>
+            
+            <Button variant="ghost" size="icon">
+              <Settings size={20} />
+            </Button>
           </div>
-          <UserMenu />
         </div>
       </div>
     </header>
   );
 };
+
+export default Header;

@@ -4,8 +4,10 @@ import { Edit, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useProjects } from '@/hooks/useProjects';
 
 interface Project {
+  id: string;
   description: string;
 }
 
@@ -15,17 +17,19 @@ interface ProjectDescriptionProps {
 
 export const ProjectDescription: React.FC<ProjectDescriptionProps> = ({ project }) => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(project.description);
+  const [editedDescription, setEditedDescription] = useState(project.description || '');
+  const { updateProject, isUpdating } = useProjects();
   
   const handleSaveDescription = () => {
-    // In a real app, this would update the project in your data store/API
-    console.log('Saving description:', editedDescription);
-    project.description = editedDescription;
+    updateProject({ 
+      projectId: project.id, 
+      projectData: { description: editedDescription } 
+    });
     setIsEditingDescription(false);
   };
 
   const handleCancelEdit = () => {
-    setEditedDescription(project.description);
+    setEditedDescription(project.description || '');
     setIsEditingDescription(false);
   };
 
@@ -48,6 +52,7 @@ export const ProjectDescription: React.FC<ProjectDescriptionProps> = ({ project 
                 variant="ghost"
                 size="sm"
                 onClick={handleSaveDescription}
+                disabled={isUpdating}
               >
                 <Check className="h-4 w-4" />
               </Button>
@@ -55,6 +60,7 @@ export const ProjectDescription: React.FC<ProjectDescriptionProps> = ({ project 
                 variant="ghost"
                 size="sm"
                 onClick={handleCancelEdit}
+                disabled={isUpdating}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -69,9 +75,12 @@ export const ProjectDescription: React.FC<ProjectDescriptionProps> = ({ project 
             onChange={(e) => setEditedDescription(e.target.value)}
             className="min-h-[100px]"
             placeholder="Enter project description..."
+            disabled={isUpdating}
           />
         ) : (
-          <p className="text-gray-700 leading-relaxed">{project.description}</p>
+          <p className="text-gray-700 leading-relaxed">
+            {project.description || 'No description provided'}
+          </p>
         )}
       </CardContent>
     </Card>

@@ -4,11 +4,11 @@ import { Project } from '@/hooks/useProjects';
 // Transform database project to match the existing interface used in components
 export const transformProject = (project: Project & { clients?: { company: string; name: string } }) => {
   return {
-    id: parseInt(project.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
+    id: project.id, // Keep as string UUID instead of converting to number
     name: project.name,
     client: project.clients?.company || 'Unknown Client',
     status: project.status,
-    progress: project.progress,
+    progress: project.progress || 0,
     dueDate: project.due_date || '',
     team: [], // We'll implement team members later when we add that feature
     priority: project.priority,
@@ -54,9 +54,11 @@ export const getPriorityColor = (priority: string) => {
 };
 
 export const calculateDaysUntilDue = (dueDate: string) => {
+  if (!dueDate) return 0;
   return Math.ceil((new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
 };
 
 export const calculateProjectDuration = (startDate: string, dueDate: string) => {
+  if (!startDate || !dueDate) return 0;
   return Math.ceil((new Date(dueDate).getTime() - new Date(startDate).getTime()) / (1000 * 3600 * 24));
 };
