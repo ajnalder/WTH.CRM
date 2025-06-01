@@ -64,10 +64,22 @@ export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) =
     setInviteLink('');
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset form when closing
+      setEmail('');
+      setInviteLink('');
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setOpen(true)}
+        >
           <Plus size={16} />
           Add Team Member
         </Button>
