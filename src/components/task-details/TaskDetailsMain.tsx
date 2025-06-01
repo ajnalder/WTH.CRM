@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { TaskAssigneeEditor } from '@/components/TaskAssigneeEditor';
 import { TaskStatusEditor } from '@/components/TaskStatusEditor';
 import { TaskDueDateEditor } from '@/components/TaskDueDateEditor';
+import { TaskDropboxUrlEditor } from '@/components/TaskDropboxUrlEditor';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsMainProps {
@@ -15,6 +16,8 @@ interface TaskDetailsMainProps {
   isUpdatingStatus: boolean;
   updateTaskDueDate: (dueDate: string | null) => void;
   isUpdatingDueDate: boolean;
+  updateTaskDropboxUrl: (url: string | null) => void;
+  isUpdatingDropboxUrl: boolean;
 }
 
 export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ 
@@ -24,7 +27,9 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
   updateTaskStatus,
   isUpdatingStatus,
   updateTaskDueDate,
-  isUpdatingDueDate
+  isUpdatingDueDate,
+  updateTaskDropboxUrl,
+  isUpdatingDropboxUrl
 }) => {
   return (
     <Card>
@@ -61,6 +66,14 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
             currentDueDate={task.due_date}
             onDueDateUpdate={updateTaskDueDate}
             isUpdating={isUpdatingDueDate}
+          />
+        </div>
+
+        <div>
+          <TaskDropboxUrlEditor
+            currentDropboxUrl={task.dropbox_url}
+            onDropboxUrlUpdate={updateTaskDropboxUrl}
+            isUpdating={isUpdatingDropboxUrl}
           />
         </div>
 

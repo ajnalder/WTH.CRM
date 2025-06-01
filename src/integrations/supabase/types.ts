@@ -331,6 +331,7 @@ export type Database = {
           assignee: string | null
           created_at: string
           description: string | null
+          dropbox_url: string | null
           due_date: string | null
           id: string
           progress: number | null
@@ -345,6 +346,7 @@ export type Database = {
           assignee?: string | null
           created_at?: string
           description?: string | null
+          dropbox_url?: string | null
           due_date?: string | null
           id?: string
           progress?: number | null
@@ -359,6 +361,7 @@ export type Database = {
           assignee?: string | null
           created_at?: string
           description?: string | null
+          dropbox_url?: string | null
           due_date?: string | null
           id?: string
           progress?: number | null

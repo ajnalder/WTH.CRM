@@ -39,6 +39,7 @@ interface TaskFormData {
   project: string;
   dueDate: string;
   tags: string;
+  dropboxUrl: string;
 }
 
 interface NewTaskFormProps {
@@ -57,6 +58,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       project: '',
       dueDate: '',
       tags: '',
+      dropboxUrl: '',
     },
   });
 
@@ -90,6 +92,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       project: data.project,
       status: 'To Do',
       progress: 0,
+      dropbox_url: data.dropboxUrl || null,
     });
     
     setOpen(false);
@@ -226,6 +229,23 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="dropboxUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dropbox URL (optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://dropbox.com/..."
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

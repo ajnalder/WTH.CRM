@@ -27,7 +27,9 @@ const TaskDetails = () => {
     updateTaskStatus,
     isUpdatingStatus,
     updateTaskDueDate,
-    isUpdatingDueDate
+    isUpdatingDueDate,
+    updateTaskDropboxUrl,
+    isUpdatingDropboxUrl
   } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
@@ -89,6 +91,8 @@ const TaskDetails = () => {
               isUpdatingStatus={isUpdatingStatus}
               updateTaskDueDate={updateTaskDueDate}
               isUpdatingDueDate={isUpdatingDueDate}
+              updateTaskDropboxUrl={updateTaskDropboxUrl}
+              isUpdatingDropboxUrl={isUpdatingDropboxUrl}
             />
 
             <TaskTimeEntries timeEntries={timeEntries} />

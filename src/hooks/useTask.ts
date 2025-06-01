@@ -167,6 +167,40 @@ export const useTask = (taskId: string) => {
     },
   });
 
+  const updateTaskDropboxUrl = useMutation({
+    mutationFn: async (dropboxUrl: string | null) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ dropbox_url: dropboxUrl })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task dropbox URL:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Success",
+        description: "Task Dropbox URL updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Update task dropbox URL error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task Dropbox URL",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
@@ -177,5 +211,7 @@ export const useTask = (taskId: string) => {
     isUpdatingStatus: updateTaskStatus.isPending,
     updateTaskDueDate: updateTaskDueDate.mutate,
     isUpdatingDueDate: updateTaskDueDate.isPending,
+    updateTaskDropboxUrl: updateTaskDropboxUrl.mutate,
+    isUpdatingDropboxUrl: updateTaskDropboxUrl.isPending,
   };
 };
