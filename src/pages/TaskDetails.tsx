@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Play, Pause, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,41 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock task data - in a real app this would come from an API
-const mockTasks = [
-  {
-    id: 1,
-    title: 'Design login page mockups',
-    description: 'Create wireframes and high-fidelity mockups for the user authentication flow',
-    status: 'In Progress',
-    priority: 'High',
-    assignee: 'Sarah Miller',
-    project: 'E-commerce Platform',
-    dueDate: '2024-06-15',
-    tags: ['Design', 'UI/UX'],
-    progress: 60,
-    timeLogged: 8.5,
-    timeEntries: [
-      { id: 1, date: '2024-06-10', hours: 3.5, description: 'Initial wireframes' },
-      { id: 2, date: '2024-06-11', hours: 5, description: 'High-fidelity mockups' }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Implement user authentication API',
-    description: 'Build REST endpoints for login, logout, and user registration',
-    status: 'To Do',
-    priority: 'High',
-    assignee: 'John Doe',
-    project: 'E-commerce Platform',
-    dueDate: '2024-06-20',
-    tags: ['Backend', 'API'],
-    progress: 0,
-    timeLogged: 0,
-    timeEntries: []
-  }
-];
+import { useTask } from '@/hooks/useTask';
+import { useTimeEntries } from '@/hooks/useTimeEntries';
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -57,10 +24,20 @@ const TaskDetails = () => {
     description: ''
   });
 
-  // Find the task by ID
-  const task = mockTasks.find(t => t.id === parseInt(id || '0'));
+  const { task, isLoading: taskLoading, error: taskError } = useTask(id || '');
+  const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
-  if (!task) {
+  if (taskLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (taskError || !task) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="text-center">
@@ -93,7 +70,8 @@ const TaskDetails = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'No due date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'long', 
@@ -111,7 +89,6 @@ const TaskDetails = () => {
 
   const toggleTimer = () => {
     if (isTimerRunning) {
-      // Stop timer
       setIsTimerRunning(false);
       if (timerSeconds > 0) {
         const hours = (timerSeconds / 3600).toFixed(2);
@@ -121,7 +98,6 @@ const TaskDetails = () => {
         }));
       }
     } else {
-      // Start timer
       setIsTimerRunning(true);
       setTimerSeconds(0);
     }
@@ -137,18 +113,28 @@ const TaskDetails = () => {
       return;
     }
 
-    // In a real app, this would save to the backend
-    toast({
-      title: "Time logged",
-      description: `${newTimeEntry.hours} hours logged successfully`
+    createTimeEntry({
+      task_id: id!,
+      hours: parseFloat(newTimeEntry.hours),
+      description: newTimeEntry.description,
+      date: new Date().toISOString().split('T')[0]
     });
 
     setNewTimeEntry({ hours: '', description: '' });
     setTimerSeconds(0);
   };
 
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   // Timer effect
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
       interval = setInterval(() => {
@@ -173,9 +159,16 @@ const TaskDetails = () => {
           </Button>
           
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
-              <p className="text-gray-600">{task.project}</p>
+            <div className="flex items-center gap-3">
+              {task.client_name && (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+                  {getClientInitials(task.client_name)}
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
+                <p className="text-gray-600">{task.project}</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Badge className={`${getStatusColor(task.status)}`}>
@@ -197,40 +190,44 @@ const TaskDetails = () => {
                 <CardTitle>Task Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-                  <p className="text-gray-600">{task.description}</p>
-                </div>
+                {task.description && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Description</h3>
+                    <p className="text-gray-600">{task.description}</p>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">Assignee</h3>
-                    <p className="text-gray-600">{task.assignee}</p>
+                    <p className="text-gray-600">{task.assignee || 'Unassigned'}</p>
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">Due Date</h3>
-                    <p className="text-gray-600">{formatDate(task.dueDate)}</p>
+                    <p className="text-gray-600">{formatDate(task.due_date)}</p>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">Progress</h3>
                   <div className="flex items-center space-x-3">
-                    <Progress value={task.progress} className="flex-1" />
-                    <span className="text-sm text-gray-600">{task.progress}%</span>
+                    <Progress value={task.progress || 0} className="flex-1" />
+                    <span className="text-sm text-gray-600">{task.progress || 0}%</span>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {task.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
+                {task.tags && task.tags.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {task.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -240,9 +237,9 @@ const TaskDetails = () => {
                 <CardTitle>Time Entries</CardTitle>
               </CardHeader>
               <CardContent>
-                {task.timeEntries.length > 0 ? (
+                {timeEntries.length > 0 ? (
                   <div className="space-y-3">
-                    {task.timeEntries.map((entry) => (
+                    {timeEntries.map((entry) => (
                       <div key={entry.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{entry.description}</p>
@@ -273,7 +270,7 @@ const TaskDetails = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-600">{task.timeLogged}h</p>
+                  <p className="text-3xl font-bold text-blue-600">{totalHours.toFixed(1)}h</p>
                   <p className="text-gray-600">Total logged</p>
                 </div>
               </CardContent>
@@ -339,7 +336,11 @@ const TaskDetails = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveTimeEntry} className="w-full">
+                <Button 
+                  onClick={handleSaveTimeEntry} 
+                  className="w-full"
+                  disabled={isCreating}
+                >
                   <Save className="mr-2" size={16} />
                   Save Time Entry
                 </Button>
