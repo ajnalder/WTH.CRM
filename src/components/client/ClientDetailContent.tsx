@@ -1,10 +1,9 @@
-
 import React from 'react';
 import ClientOverviewTab from '@/components/client/ClientOverviewTab';
 import DomainsTab from '@/components/client/DomainsTab';
 import HostingTab from '@/components/client/HostingTab';
 import ContactsTab from '@/components/client/ContactsTab';
-import { ClientDetailContextProps } from './ClientDetailProvider';
+import { ClientDetailContextProps } from '@/types/clientDetail';
 
 interface ClientDetailContentProps extends ClientDetailContextProps {
   activeTab: string;
