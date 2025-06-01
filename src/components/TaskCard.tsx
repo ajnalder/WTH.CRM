@@ -127,7 +127,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             </div>
           )}
           
-          {task.progress && task.progress > 0 && (
+          {task.progress != null && task.progress > 0 && (
             <div className="mt-4">
               <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                 <span>Progress</span>
