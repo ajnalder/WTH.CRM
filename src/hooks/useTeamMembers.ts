@@ -24,12 +24,9 @@ export const useTeamMembers = () => {
   const queryClient = useQueryClient();
 
   const teamMembersQuery = useQuery({
-    queryKey: ['team_members', user?.id],
+    queryKey: ['team_members'],
     queryFn: async (): Promise<TeamMember[]> => {
-      if (!user) {
-        console.log('No authenticated user, returning empty team members array');
-        return [];
-      }
+      console.log('Fetching all team members (profiles)');
 
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -73,6 +70,7 @@ export const useTeamMembers = () => {
         };
       });
 
+      console.log('Team members fetched:', teamMembers);
       return teamMembers;
     },
     enabled: !!user,
@@ -119,7 +117,7 @@ export const useTeamMembers = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['team_members', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['team_members'] });
       toast({
         title: "Success",
         description: "Team member updated successfully",
