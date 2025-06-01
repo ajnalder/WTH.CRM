@@ -16,6 +16,11 @@ interface ProjectStatsProps {
 }
 
 export const ProjectStats: React.FC<ProjectStatsProps> = ({ project, daysUntilDue }) => {
+  const formatBudget = (budget: number) => {
+    if (!budget || budget === 0) return 'Not set';
+    return `$${budget.toLocaleString()}`;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <Card>
@@ -33,7 +38,7 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({ project, daysUntilDu
           <CardTitle className="text-sm font-medium text-gray-600">Budget</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-gray-900">${project.budget.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatBudget(project.budget)}</div>
         </CardContent>
       </Card>
       
@@ -53,10 +58,10 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({ project, daysUntilDu
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-gray-900">
-            {daysUntilDue > 0 ? `${daysUntilDue}` : 'Overdue'}
+            {daysUntilDue > 0 ? `${daysUntilDue}` : daysUntilDue < 0 ? 'Overdue' : 'Due today'}
           </div>
           <p className="text-sm text-gray-600">
-            {daysUntilDue > 0 ? 'days left' : ''}
+            {daysUntilDue > 0 ? 'days left' : daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days ago` : ''}
           </p>
         </CardContent>
       </Card>

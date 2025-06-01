@@ -14,10 +14,7 @@ import { transformProject, calculateDaysUntilDue, calculateProjectDuration } fro
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { projects, isLoading } = useProjects();
-  
-  const project = projects.find(p => p.id === id);
-  const transformedProject = project ? transformProject(project) : null;
+  const { projects, isLoading, error } = useProjects();
   
   if (isLoading) {
     return (
@@ -28,18 +25,34 @@ const ProjectDetail = () => {
       </div>
     );
   }
-  
-  if (!transformedProject) {
+
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Project</h1>
+          <p className="text-gray-600 mb-4">There was an error loading the project details.</p>
           <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
         </div>
       </div>
     );
   }
   
+  const project = projects.find(p => p.id === id);
+  
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
+          <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or you don't have permission to view it.</p>
+          <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const transformedProject = transformProject(project);
   const daysUntilDue = transformedProject.dueDate ? calculateDaysUntilDue(transformedProject.dueDate) : 0;
   const projectDuration = transformedProject.startDate && transformedProject.dueDate 
     ? calculateProjectDuration(transformedProject.startDate, transformedProject.dueDate) 

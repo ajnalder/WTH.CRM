@@ -4,7 +4,7 @@ import { Project } from '@/hooks/useProjects';
 // Transform database project to match the existing interface used in components
 export const transformProject = (project: Project & { clients?: { company: string; name: string } }) => {
   return {
-    id: project.id, // Keep as string UUID instead of converting to number
+    id: project.id,
     name: project.name,
     client: project.clients?.company || 'Unknown Client',
     status: project.status,
@@ -55,10 +55,16 @@ export const getPriorityColor = (priority: string) => {
 
 export const calculateDaysUntilDue = (dueDate: string) => {
   if (!dueDate) return 0;
-  return Math.ceil((new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+  const now = new Date();
+  const due = new Date(dueDate);
+  const diffTime = due.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 3600 * 24));
 };
 
 export const calculateProjectDuration = (startDate: string, dueDate: string) => {
   if (!startDate || !dueDate) return 0;
-  return Math.ceil((new Date(dueDate).getTime() - new Date(startDate).getTime()) / (1000 * 3600 * 24));
+  const start = new Date(startDate);
+  const due = new Date(dueDate);
+  const diffTime = due.getTime() - start.getTime();
+  return Math.ceil(diffTime / (1000 * 3600 * 24));
 };
