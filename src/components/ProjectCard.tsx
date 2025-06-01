@@ -2,6 +2,7 @@
 import React from 'react';
 import { Calendar, Users, Flag } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useNavigate } from 'react-router-dom';
 
 interface Project {
   id: number;
@@ -48,10 +49,18 @@ const getPriorityColor = (priority: string) => {
 };
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+  const navigate = useNavigate();
   const daysUntilDue = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
   
+  const handleCardClick = () => {
+    navigate(`/projects/${project.id}`);
+  };
+  
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50">
+    <div 
+      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-gray-900 mb-1">{project.name}</h3>
