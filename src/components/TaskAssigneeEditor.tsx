@@ -49,7 +49,7 @@ export const TaskAssigneeEditor: React.FC<TaskAssigneeEditorProps> = ({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium text-gray-900">Assign Team Member</h3>
+          <h3 className="font-medium text-gray-900">Add Team Member</h3>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -80,7 +80,7 @@ export const TaskAssigneeEditor: React.FC<TaskAssigneeEditorProps> = ({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-medium text-gray-900">Assignee</h3>
+        <h3 className="font-medium text-gray-900">Team Member</h3>
         <Button
           size="sm"
           variant="ghost"
@@ -98,7 +98,7 @@ export const TaskAssigneeEditor: React.FC<TaskAssigneeEditorProps> = ({
           {currentTeamMember.name}
         </Badge>
       ) : (
-        <p className="text-gray-500">No assignee</p>
+        <p className="text-gray-500">No team member assigned</p>
       )}
     </div>
   );
