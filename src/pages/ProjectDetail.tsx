@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Users, Flag, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Flag, CheckCircle2, Clock, AlertCircle, Edit, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 // This would normally come from a data store or API
 const getProjectById = (id: string) => {
@@ -160,6 +160,8 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   
   const project = getProjectById(id!);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(project?.description || '');
   
   if (!project) {
     return (
@@ -174,6 +176,18 @@ const ProjectDetail = () => {
   
   const daysUntilDue = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
   const projectDuration = Math.ceil((new Date(project.dueDate).getTime() - new Date(project.startDate).getTime()) / (1000 * 3600 * 24));
+  
+  const handleSaveDescription = () => {
+    // In a real app, this would update the project in your data store/API
+    console.log('Saving description:', editedDescription);
+    project.description = editedDescription;
+    setIsEditingDescription(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedDescription(project.description);
+    setIsEditingDescription(false);
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -255,10 +269,47 @@ const ProjectDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Project Description</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Project Description</CardTitle>
+                  {!isEditingDescription ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditingDescription(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSaveDescription}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 leading-relaxed">{project.description}</p>
+                {isEditingDescription ? (
+                  <Textarea
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    className="min-h-[100px]"
+                    placeholder="Enter project description..."
+                  />
+                ) : (
+                  <p className="text-gray-700 leading-relaxed">{project.description}</p>
+                )}
               </CardContent>
             </Card>
             
