@@ -55,7 +55,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`border border-gray-200 rounded-lg shadow-sm relative group ${
+          className={`border border-gray-200 rounded-lg shadow-sm relative group absolute left-0 right-0 z-10 ${
             scheduledTask.type === 'custom' 
               ? getCustomColor(scheduledTask.color || 'blue')
               : 'bg-white'
@@ -63,7 +63,8 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
           style={{ 
             ...provided.draggableProps.style,
             height: calculateHeight(scheduledTask.duration),
-            minHeight: '52px'
+            minHeight: '52px',
+            top: '2px'
           }}
           onMouseEnter={() => setShowControls(true)}
           onMouseLeave={() => setShowControls(false)}

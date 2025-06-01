@@ -35,20 +35,6 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
   isOccupied,
   isFirstSlot
 }) => {
-  // If this slot is occupied but not the first slot, render as occupied space
-  if (isOccupied && !isFirstSlot) {
-    return (
-      <div className="flex items-start border-b border-gray-100 py-2 min-h-[60px]">
-        <div className="w-20 text-sm text-gray-500 font-mono">
-          {timeSlot}
-        </div>
-        <div className="flex-1 ml-4 min-h-[56px] bg-gray-50 rounded border-2 border-dashed border-gray-200">
-          {/* Occupied space - no content */}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-start border-b border-gray-100 py-2 min-h-[60px]">
       <div className="w-20 text-sm text-gray-500 font-mono">
@@ -60,7 +46,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`flex-1 ml-4 min-h-[56px] border-2 border-dashed rounded-lg p-2 transition-colors ${
+            className={`flex-1 ml-4 min-h-[56px] border-2 border-dashed rounded-lg p-2 transition-colors relative ${
               snapshot.isDraggingOver
                 ? 'border-blue-400 bg-blue-50'
                 : 'border-gray-200'
