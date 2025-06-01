@@ -5,6 +5,7 @@ import { Calendar, User, Tag, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskCardProps {
@@ -13,6 +14,10 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const navigate = useNavigate();
+  const { teamMembers } = useTeamMembers();
+
+  // Find the assigned team member by ID
+  const assignedMember = task.assignee ? teamMembers.find(member => member.id === task.assignee) : null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -88,10 +93,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         )}
         
         <div className="space-y-3">
-          {task.assignee && (
+          {assignedMember && (
             <div className="flex items-center text-sm text-gray-600">
               <User size={16} className="mr-2" />
-              <span>{task.assignee}</span>
+              <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 bg-gradient-to-r ${assignedMember.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                  {assignedMember.avatar}
+                </div>
+                <span>{assignedMember.name}</span>
+              </div>
             </div>
           )}
           
