@@ -10,9 +10,14 @@ interface ClientOverviewTabProps {
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
-  const { contacts } = useContacts(client.id.toString());
+  const { contacts, isLoading } = useContacts(client.id.toString());
+  
+  console.log('ClientOverviewTab - Client ID:', client.id);
+  console.log('ClientOverviewTab - Contacts:', contacts);
   
   const primaryContact = contacts.find(contact => contact.is_primary);
+  console.log('ClientOverviewTab - Primary Contact:', primaryContact);
+  
   const displayEmail = primaryContact?.email || 'No primary contact email';
   const displayPhone = primaryContact?.phone || client.phone || 'No phone number';
 
@@ -35,11 +40,11 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
               </div>
               <div>
                 <Label>Email</Label>
-                <p className="text-gray-900">{displayEmail}</p>
+                <p className="text-gray-900">{isLoading ? 'Loading...' : displayEmail}</p>
               </div>
               <div>
                 <Label>Phone</Label>
-                <p className="text-gray-900">{displayPhone}</p>
+                <p className="text-gray-900">{isLoading ? 'Loading...' : displayPhone}</p>
               </div>
             </div>
           </CardContent>
