@@ -17,6 +17,7 @@ export const transformProject = (project: Project & { clients?: { company: strin
     budget: project.budget || 0,
     startDate: project.start_date || '',
     isRetainer: project.is_retainer || false,
+    isBillable: project.is_billable || true,
   };
 };
 

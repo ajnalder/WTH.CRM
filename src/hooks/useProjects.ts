@@ -14,6 +14,8 @@ export interface Project {
   due_date: string | null;
   budget: number | null;
   progress: number;
+  is_retainer: boolean;
+  is_billable: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +31,7 @@ export interface CreateProjectData {
   budget?: number;
   progress?: number;
   is_retainer?: boolean;
+  is_billable?: boolean;
 }
 
 export interface UpdateProjectData {
@@ -40,6 +43,8 @@ export interface UpdateProjectData {
   due_date?: string;
   budget?: number;
   progress?: number;
+  is_retainer?: boolean;
+  is_billable?: boolean;
 }
 
 export const useProjects = (clientId?: string) => {

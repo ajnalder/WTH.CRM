@@ -236,6 +236,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          is_billable: boolean
           is_retainer: boolean
           name: string
           priority: string
@@ -252,6 +253,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_billable?: boolean
           is_retainer?: boolean
           name: string
           priority?: string
@@ -268,6 +270,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_billable?: boolean
           is_retainer?: boolean
           name?: string
           priority?: string

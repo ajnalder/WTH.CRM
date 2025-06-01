@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { ProjectHeaderControls } from '@/components/project/ProjectHeaderControls';
 import { ProjectStats } from '@/components/project/ProjectStats';
 import { ProjectDescription } from '@/components/project/ProjectDescription';
 import { ProjectTimeline } from '@/components/project/ProjectTimeline';
@@ -65,6 +66,8 @@ const ProjectDetail = () => {
       <div className="p-6">
         <ProjectHeader project={transformedProject} />
         
+        <ProjectHeaderControls project={transformedProject} />
+        
         <ProjectStats project={transformedProject} daysUntilDue={daysUntilDue} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -72,15 +75,6 @@ const ProjectDetail = () => {
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
               <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
-            )}
-            {transformedProject.isRetainer && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-2">Retainer Project</h3>
-                <p className="text-blue-700 text-sm">
-                  This is an ongoing retainer project without specific start and end dates. 
-                  Work is performed on a recurring basis as part of the client's retainer agreement.
-                </p>
-              </div>
             )}
           </div>
 
