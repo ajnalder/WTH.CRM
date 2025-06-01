@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,10 +22,8 @@ export interface Client {
 }
 
 export interface CreateClientData {
-  name: string;
-  email: string;
-  phone: string;
   company: string;
+  phone: string;
   industry: string;
 }
 
@@ -84,14 +81,14 @@ export const useClients = () => {
     mutationFn: async (clientData: CreateClientData) => {
       if (!user) throw new Error('User not authenticated');
 
-      const avatar = getInitials(clientData.company || clientData.name);
+      const avatar = getInitials(clientData.company);
       const gradient = gradients[Math.floor(Math.random() * gradients.length)];
 
       const { data, error } = await supabase
         .from('clients')
         .insert({
-          name: clientData.name,
-          email: clientData.email,
+          name: '', // Will be set later via contacts
+          email: '', // Will be set later via contacts
           phone: clientData.phone,
           company: clientData.company,
           industry: clientData.industry,
@@ -116,7 +113,7 @@ export const useClients = () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast({
         title: "Client Added",
-        description: "Your client has been successfully added.",
+        description: "Your client has been successfully added. Add contact details in the client detail page.",
       });
     },
     onError: (error) => {

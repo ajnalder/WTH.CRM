@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClientOverview } from '@/components/ClientOverview';
 import { AddClientDialog } from '@/components/AddClientDialog';
@@ -9,7 +8,7 @@ import { useClients } from '@/hooks/useClients';
 const Clients = () => {
   const { clients, isLoading, createClient } = useClients();
 
-  const handleAddClient = (newClient: { name: string; email: string; phone: string; company: string; industry: string }) => {
+  const handleAddClient = (newClient: { company: string; phone: string; industry: string }) => {
     createClient(newClient);
   };
 

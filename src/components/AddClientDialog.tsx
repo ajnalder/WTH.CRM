@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -22,10 +21,8 @@ import { Plus } from 'lucide-react';
 
 interface AddClientDialogProps {
   onAddClient: (client: { 
-    name: string; 
-    email: string; 
-    phone: string; 
     company: string; 
+    phone: string; 
     industry: string;
   }) => void;
 }
@@ -33,10 +30,8 @@ interface AddClientDialogProps {
 export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
     company: '',
+    phone: '',
     industry: '',
   });
 
@@ -55,9 +50,9 @@ export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.email && formData.company) {
+    if (formData.company) {
       onAddClient(formData);
-      setFormData({ name: '', email: '', phone: '', company: '', industry: '' });
+      setFormData({ company: '', phone: '', industry: '' });
       setIsOpen(false);
     }
   };
@@ -86,29 +81,6 @@ export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
               placeholder="Enter company name"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="name">Contact Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter contact person name"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="Enter email address"
               required
             />
           </div>
