@@ -1,11 +1,15 @@
 
 import React from 'react';
-import { Calendar, Users, Flag } from 'lucide-react';
+import { Calendar, Users, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
+import { Link } from 'react-router-dom';
+import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
 
 interface Project {
-  id: string; // Changed from number to string to match UUID
+  id: string;
   name: string;
   client: string;
   status: string;
@@ -14,105 +18,106 @@ interface Project {
   team: string[];
   priority: string;
   tasks: { completed: number; total: number };
+  description: string;
+  budget: number;
+  startDate: string;
 }
 
 interface ProjectCardProps {
   project: Project;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Completed':
-      return 'bg-green-100 text-green-800';
-    case 'In Progress':
-      return 'bg-blue-100 text-blue-800';
-    case 'Review':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'Planning':
-      return 'bg-purple-100 text-purple-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'High':
-      return 'text-red-600';
-    case 'Medium':
-      return 'text-yellow-600';
-    case 'Low':
-      return 'text-green-600';
-    default:
-      return 'text-gray-600';
-  }
-};
-
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const navigate = useNavigate();
-  const daysUntilDue = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-  
-  const handleCardClick = () => {
-    navigate(`/projects/${project.id}`);
+  const getTimeRemaining = (dueDate: string) => {
+    if (!dueDate) return null;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+    
+    if (diffDays < 0) return { text: 'Overdue', urgent: true };
+    if (diffDays === 0) return { text: 'Due today', urgent: true };
+    if (diffDays === 1) return { text: '1 day left', urgent: true };
+    if (diffDays <= 7) return { text: `${diffDays} days left`, urgent: false };
+    return { text: `${diffDays} days left`, urgent: false };
   };
-  
+
+  const timeRemaining = getTimeRemaining(project.dueDate);
+
   return (
-    <div 
-      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 cursor-pointer"
-      onClick={handleCardClick}
-    >
-      <div className="flex items-start justify-between mb-3">
+    <Card className="hover:shadow-lg transition-all duration-200 border-gray-100">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <Link to={`/projects/${project.id}`} className="hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
+            </Link>
+            <p className="text-sm text-gray-600">{project.client}</p>
+          </div>
+          <div className="flex flex-col items-end space-y-2">
+            <Badge variant="secondary" className={getStatusColor(project.status)}>
+              {project.status}
+            </Badge>
+            <AddTaskToProjectDialog 
+              projectId={project.id} 
+              projectName={project.name} 
+            />
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
         <div>
-          <h3 className="font-semibold text-gray-900 mb-1">{project.name}</h3>
-          <p className="text-sm text-gray-600">{project.client}</p>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">Progress</span>
+            <span className="text-sm text-gray-600">{project.progress}%</span>
+          </div>
+          <Progress value={project.progress} className="h-2" />
         </div>
-        <div className="flex items-center space-x-2">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-            {project.status}
-          </span>
-          <Flag className={`${getPriorityColor(project.priority)}`} size={16} />
-        </div>
-      </div>
-      
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">Progress</span>
-          <span className="text-sm font-medium text-gray-900">{project.progress}%</span>
-        </div>
-        <Progress value={project.progress} className="h-2" />
-      </div>
-      
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <div className="flex items-center space-x-4">
+
+        <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-1">
-            <Calendar size={14} />
-            <span>{daysUntilDue > 0 ? `${daysUntilDue} days` : 'Overdue'}</span>
+            <CheckCircle2 size={16} className="text-green-500" />
+            <span className="text-gray-600">
+              {project.tasks.completed}/{project.tasks.total} tasks
+            </span>
           </div>
-          <div className="flex items-center space-x-1">
-            <Users size={14} />
-            <span>{project.team.length} members</span>
+          <div className={`flex items-center space-x-1 ${getPriorityColor(project.priority)}`}>
+            <AlertCircle size={16} />
+            <span className="font-medium">{project.priority}</span>
           </div>
         </div>
-        <div className="text-xs">
-          {project.tasks.completed}/{project.tasks.total} tasks
-        </div>
-      </div>
-      
-      <div className="flex -space-x-2 mt-3">
-        {project.team.slice(0, 3).map((member, index) => (
-          <div
-            key={index}
-            className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-          >
-            {member}
-          </div>
-        ))}
-        {project.team.length > 3 && (
-          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
-            +{project.team.length - 3}
+
+        {timeRemaining && (
+          <div className={`flex items-center space-x-1 text-sm ${
+            timeRemaining.urgent ? 'text-red-600' : 'text-gray-600'
+          }`}>
+            <Clock size={16} />
+            <span className={timeRemaining.urgent ? 'font-medium' : ''}>{timeRemaining.text}</span>
           </div>
         )}
-      </div>
-    </div>
+
+        {project.team && project.team.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <Users size={16} className="text-gray-400" />
+            <div className="flex -space-x-1">
+              {project.team.slice(0, 3).map((member, index) => (
+                <div
+                  key={index}
+                  className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+                >
+                  {member}
+                </div>
+              ))}
+              {project.team.length > 3 && (
+                <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
+                  +{project.team.length - 3}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
