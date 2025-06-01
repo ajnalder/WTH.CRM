@@ -2,7 +2,6 @@
 import React from 'react';
 import { Calendar, User, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import type { TaskWithClient } from '@/hooks/useTasks';
@@ -96,14 +95,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </CardHeader>
         
         <CardContent className="space-y-3">
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-medium text-gray-700">Progress</span>
-              <span className="text-xs text-gray-600">{task.progress || 0}%</span>
-            </div>
-            <Progress value={task.progress || 0} className="h-1.5" />
-          </div>
-
           <div className="flex items-center justify-between text-xs text-gray-600">
             <div className="flex items-center space-x-1">
               <User size={14} />
