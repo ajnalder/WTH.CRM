@@ -1,9 +1,13 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 export const useTask = (taskId: string) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const taskQuery = useQuery({
     queryKey: ['task', taskId],
     queryFn: async (): Promise<TaskWithClient> => {
@@ -61,9 +65,45 @@ export const useTask = (taskId: string) => {
     enabled: !!taskId,
   });
 
+  const updateTaskAssignee = useMutation({
+    mutationFn: async (assignee: string | null) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ assignee })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task assignee:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Success",
+        description: "Task assignee updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Update task assignee error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task assignee",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
     error: taskQuery.error,
+    updateTaskAssignee: updateTaskAssignee.mutate,
+    isUpdating: updateTaskAssignee.isPending,
   };
 };

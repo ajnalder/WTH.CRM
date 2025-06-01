@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useTask } from '@/hooks/useTask';
 import { useTimeEntries } from '@/hooks/useTimeEntries';
+import { TaskAssigneeEditor } from '@/components/TaskAssigneeEditor';
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const TaskDetails = () => {
 
   console.log('TaskDetails - Task ID:', id);
 
-  const { task, isLoading: taskLoading, error: taskError } = useTask(id || '');
+  const { task, isLoading: taskLoading, error: taskError, updateTaskAssignee, isUpdating } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
   console.log('TaskDetails - Task data:', task);
@@ -215,8 +216,11 @@ const TaskDetails = () => {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-1">Assignee</h3>
-                    <p className="text-gray-600">{task.assignee || 'Unassigned'}</p>
+                    <TaskAssigneeEditor
+                      currentAssignee={task.assignee}
+                      onAssigneeUpdate={updateTaskAssignee}
+                      isUpdating={isUpdating}
+                    />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">Due Date</h3>
