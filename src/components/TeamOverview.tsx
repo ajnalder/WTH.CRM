@@ -15,6 +15,7 @@ interface TeamMember {
 
 interface TeamOverviewProps {
   members: TeamMember[];
+  onMemberClick?: (member: TeamMember) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -30,7 +31,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const TeamOverview = ({ members }: TeamOverviewProps) => {
+export const TeamOverview = ({ members, onMemberClick }: TeamOverviewProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -40,7 +41,11 @@ export const TeamOverview = ({ members }: TeamOverviewProps) => {
       
       <div className="space-y-4">
         {members.map((member) => (
-          <div key={member.id} className="flex items-center space-x-3">
+          <div 
+            key={member.id} 
+            className={`flex items-center space-x-3 ${onMemberClick ? 'cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors' : ''}`}
+            onClick={() => onMemberClick?.(member)}
+          >
             <div className="relative">
               <div className={`w-10 h-10 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white font-medium text-sm`}>
                 {member.avatar}

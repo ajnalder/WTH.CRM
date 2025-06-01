@@ -1,13 +1,25 @@
-
 import React, { useState } from 'react';
 import { TeamOverview } from '@/components/TeamOverview';
 import { AddTeamMemberDialog } from '@/components/AddTeamMemberDialog';
+import { TeamMemberDetails } from '@/components/TeamMemberDetails';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Mail, Phone } from 'lucide-react';
 
+interface TeamMember {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  avatar: string;
+  status: string;
+  currentTask: string;
+  hoursThisWeek: number;
+  gradient: string;
+}
+
 const Team = () => {
-  const [teamMembers, setTeamMembers] = useState([
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
       id: 1,
       name: 'John Doe',
@@ -54,6 +66,9 @@ const Team = () => {
     },
   ]);
 
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
   const handleAddMember = (newMember: { name: string; role: string; email: string }) => {
     const gradients = [
       'from-blue-400 to-blue-600',
@@ -90,6 +105,18 @@ const Team = () => {
     setTeamMembers([...teamMembers, member]);
   };
 
+  const handleMemberClick = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsDetailsOpen(true);
+  };
+
+  const handleUpdateMember = (updatedMember: TeamMember) => {
+    setTeamMembers(teamMembers.map(member => 
+      member.id === updatedMember.id ? updatedMember : member
+    ));
+    setSelectedMember(updatedMember);
+  };
+
   const totalHours = teamMembers.reduce((sum, member) => sum + member.hoursThisWeek, 0);
   const onlineMembers = teamMembers.filter(member => member.status === 'online').length;
 
@@ -113,7 +140,7 @@ const Team = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <TeamOverview members={teamMembers} />
+              <TeamOverview members={teamMembers} onMemberClick={handleMemberClick} />
             </CardContent>
           </Card>
         </div>
@@ -156,6 +183,13 @@ const Team = () => {
           </Card>
         </div>
       </div>
+
+      <TeamMemberDetails
+        member={selectedMember}
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        onUpdateMember={handleUpdateMember}
+      />
     </div>
   );
 };
