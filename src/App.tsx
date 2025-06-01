@@ -12,6 +12,7 @@ import Tasks from "./pages/Tasks";
 import TaskDetails from "./pages/TaskDetails";
 import Team from "./pages/Team";
 import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
 import Calendar from "./pages/Calendar";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/tasks/:id" element={<TaskDetails />} />
                 <Route path="/team" element={<Team />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientDetail />} />
                 <Route path="/calendar" element={<Calendar />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

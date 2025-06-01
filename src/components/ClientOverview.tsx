@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Building2, Phone, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Client {
   id: number;
@@ -49,13 +50,19 @@ const getStatusText = (status: string) => {
 };
 
 export const ClientOverview = ({ clients, onClientClick }: ClientOverviewProps) => {
+  const navigate = useNavigate();
+
+  const handleClientClick = (client: Client) => {
+    navigate(`/clients/${client.id}`);
+  };
+
   return (
     <div className="space-y-4">
       {clients.map((client) => (
         <div 
           key={client.id} 
-          className={`flex items-center space-x-4 p-4 rounded-lg border border-gray-100 ${onClientClick ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
-          onClick={() => onClientClick?.(client)}
+          className="flex items-center space-x-4 p-4 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => handleClientClick(client)}
         >
           <div className="relative">
             <div className={`w-12 h-12 bg-gradient-to-r ${client.gradient} rounded-full flex items-center justify-center text-white font-medium`}>

@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { ClientOverview } from '@/components/ClientOverview';
 import { AddClientDialog } from '@/components/AddClientDialog';
-import { ClientDetails } from '@/components/ClientDetails';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, DollarSign, Calendar } from 'lucide-react';
 
@@ -81,9 +80,6 @@ const Clients = () => {
     },
   ]);
 
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
   const handleAddClient = (newClient: { name: string; email: string; phone: string; company: string; industry: string }) => {
     const gradients = [
       'from-blue-400 to-blue-600',
@@ -123,18 +119,6 @@ const Clients = () => {
     setClients([...clients, client]);
   };
 
-  const handleClientClick = (client: Client) => {
-    setSelectedClient(client);
-    setIsDetailsOpen(true);
-  };
-
-  const handleUpdateClient = (updatedClient: Client) => {
-    setClients(clients.map(client => 
-      client.id === updatedClient.id ? updatedClient : client
-    ));
-    setSelectedClient(updatedClient);
-  };
-
   const activeClients = clients.filter(client => client.status === 'active').length;
   const totalValue = clients.reduce((sum, client) => sum + client.totalValue, 0);
   const totalProjects = clients.reduce((sum, client) => sum + client.projectsCount, 0);
@@ -159,7 +143,7 @@ const Clients = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ClientOverview clients={clients} onClientClick={handleClientClick} />
+              <ClientOverview clients={clients} />
             </CardContent>
           </Card>
         </div>
@@ -210,13 +194,6 @@ const Clients = () => {
           </Card>
         </div>
       </div>
-
-      <ClientDetails
-        client={selectedClient}
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        onUpdateClient={handleUpdateClient}
-      />
     </div>
   );
 };
