@@ -2,12 +2,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface Project {
   progress: number;
   budget: number;
   team: string[];
   dueDate: string;
+  isRetainer?: boolean;
 }
 
 interface ProjectStatsProps {
@@ -54,15 +56,28 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({ project, daysUntilDu
       
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Due Date</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-600">
+            {project.isRetainer ? 'Project Type' : 'Due Date'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-gray-900">
-            {daysUntilDue > 0 ? `${daysUntilDue}` : daysUntilDue < 0 ? 'Overdue' : 'Due today'}
-          </div>
-          <p className="text-sm text-gray-600">
-            {daysUntilDue > 0 ? 'days left' : daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days ago` : ''}
-          </p>
+          {project.isRetainer ? (
+            <div className="flex flex-col">
+              <Badge variant="secondary" className="w-fit mb-1">
+                Retainer
+              </Badge>
+              <p className="text-sm text-gray-600">Ongoing project</p>
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-gray-900">
+                {daysUntilDue > 0 ? `${daysUntilDue}` : daysUntilDue < 0 ? 'Overdue' : 'Due today'}
+              </div>
+              <p className="text-sm text-gray-600">
+                {daysUntilDue > 0 ? 'days left' : daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days ago` : ''}
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

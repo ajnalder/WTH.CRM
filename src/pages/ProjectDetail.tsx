@@ -53,9 +53,11 @@ const ProjectDetail = () => {
   }
 
   const transformedProject = transformProject(project);
-  const daysUntilDue = transformedProject.dueDate ? calculateDaysUntilDue(transformedProject.dueDate) : 0;
+  const daysUntilDue = transformedProject.dueDate 
+    ? calculateDaysUntilDue(transformedProject.dueDate, transformedProject.isRetainer) 
+    : 0;
   const projectDuration = transformedProject.startDate && transformedProject.dueDate 
-    ? calculateProjectDuration(transformedProject.startDate, transformedProject.dueDate) 
+    ? calculateProjectDuration(transformedProject.startDate, transformedProject.dueDate, transformedProject.isRetainer) 
     : 0;
   
   return (
@@ -68,8 +70,17 @@ const ProjectDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
-            {transformedProject.startDate && transformedProject.dueDate && (
+            {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
               <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
+            )}
+            {transformedProject.isRetainer && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-2">Retainer Project</h3>
+                <p className="text-blue-700 text-sm">
+                  This is an ongoing retainer project without specific start and end dates. 
+                  Work is performed on a recurring basis as part of the client's retainer agreement.
+                </p>
+              </div>
             )}
           </div>
 

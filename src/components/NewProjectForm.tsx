@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ interface ProjectFormData {
   due_date: string;
   priority: 'Low' | 'Medium' | 'High';
   budget: number;
+  is_retainer: boolean;
 }
 
 export const NewProjectForm: React.FC = () => {
@@ -47,8 +49,11 @@ export const NewProjectForm: React.FC = () => {
       due_date: '',
       priority: 'Medium',
       budget: 0,
+      is_retainer: false,
     },
   });
+
+  const isRetainer = form.watch('is_retainer');
 
   const onSubmit = (data: ProjectFormData) => {
     console.log('Creating new project:', data);
@@ -57,11 +62,12 @@ export const NewProjectForm: React.FC = () => {
       client_id: data.client_id,
       name: data.name,
       description: data.description,
-      due_date: data.due_date,
+      due_date: data.is_retainer ? null : data.due_date,
       priority: data.priority,
       budget: data.budget,
       status: 'Planning',
-      progress: 0
+      progress: 0,
+      is_retainer: data.is_retainer
     });
     
     setOpen(false);
@@ -142,28 +148,53 @@ export const NewProjectForm: React.FC = () => {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="is_retainer"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Retainer Project
+                    </FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      This is an ongoing project without a specific due date
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
             
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="due_date"
-                rules={{ required: "Due date is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isRetainer && (
+                <FormField
+                  control={form.control}
+                  name="due_date"
+                  rules={!isRetainer ? { required: "Due date is required" } : {}}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Due Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <FormField
                 control={form.control}
                 name="priority"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className={!isRetainer ? "" : "col-span-2"}>
                     <FormLabel>Priority</FormLabel>
                     <FormControl>
                       <select 

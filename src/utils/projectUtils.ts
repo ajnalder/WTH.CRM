@@ -16,6 +16,7 @@ export const transformProject = (project: Project & { clients?: { company: strin
     description: project.description || '',
     budget: project.budget || 0,
     startDate: project.start_date || '',
+    isRetainer: project.is_retainer || false,
   };
 };
 
@@ -53,16 +54,16 @@ export const getPriorityColor = (priority: string) => {
   }
 };
 
-export const calculateDaysUntilDue = (dueDate: string) => {
-  if (!dueDate) return 0;
+export const calculateDaysUntilDue = (dueDate: string, isRetainer: boolean = false) => {
+  if (!dueDate || isRetainer) return 0;
   const now = new Date();
   const due = new Date(dueDate);
   const diffTime = due.getTime() - now.getTime();
   return Math.ceil(diffTime / (1000 * 3600 * 24));
 };
 
-export const calculateProjectDuration = (startDate: string, dueDate: string) => {
-  if (!startDate || !dueDate) return 0;
+export const calculateProjectDuration = (startDate: string, dueDate: string, isRetainer: boolean = false) => {
+  if (!startDate || !dueDate || isRetainer) return 0;
   const start = new Date(startDate);
   const due = new Date(dueDate);
   const diffTime = due.getTime() - start.getTime();

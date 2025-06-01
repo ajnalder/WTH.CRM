@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -26,9 +25,10 @@ export interface CreateProjectData {
   status?: string;
   priority?: string;
   start_date?: string;
-  due_date?: string;
+  due_date?: string | null;
   budget?: number;
   progress?: number;
+  is_retainer?: boolean;
 }
 
 export interface UpdateProjectData {
