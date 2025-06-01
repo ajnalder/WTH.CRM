@@ -139,6 +139,7 @@ export const useTeamMembers = () => {
     teamMembers: teamMembersQuery.data || [],
     isLoading: teamMembersQuery.isLoading,
     error: teamMembersQuery.error,
+    refetch: teamMembersQuery.refetch,
     createTeamMember: createTeamMemberMutation.mutate,
     updateTeamMember: updateTeamMemberMutation.mutate,
     isCreating: createTeamMemberMutation.isPending,

@@ -10,35 +10,35 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddTeamMemberDialogProps {
-  onAddMember: (member: {
-    name: string;
-    role: string;
-    email: string;
-  }) => void;
+  onAddMember?: () => void;
 }
 
 export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const generateTempPassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setTempPassword(password);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !role || !email) {
+    if (!fullName.trim() || !email.trim() || !tempPassword.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -47,18 +47,54 @@ export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) =
       return;
     }
 
-    onAddMember({ name, role, email });
-    
-    toast({
-      title: "Success",
-      description: "Team member added successfully",
-    });
+    setIsCreating(true);
 
-    // Reset form
-    setName('');
-    setRole('');
-    setEmail('');
-    setOpen(false);
+    try {
+      // Create the user account
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: email.trim(),
+        password: tempPassword,
+        email_confirm: true, // Skip email confirmation for internal users
+        user_metadata: {
+          full_name: fullName.trim(),
+        },
+      });
+
+      if (error) {
+        console.error('Error creating user:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create team member account",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: `Team member account created! Temporary password: ${tempPassword}`,
+        duration: 10000, // Show for 10 seconds so they can copy the password
+      });
+
+      // Reset form
+      setFullName('');
+      setEmail('');
+      setTempPassword('');
+      setOpen(false);
+      
+      // Notify parent component
+      onAddMember?.();
+      
+    } catch (error) {
+      console.error('Error creating team member:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -75,12 +111,13 @@ export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) =
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="fullName">Full Name</Label>
             <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter full name"
+              disabled={isCreating}
             />
           </div>
           
@@ -92,32 +129,44 @@ export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) =
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email address"
+              disabled={isCreating}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-                <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-                <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-                <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
-                <SelectItem value="Product Manager">Product Manager</SelectItem>
-                <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
-                <SelectItem value="QA Engineer">QA Engineer</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="tempPassword">Temporary Password</Label>
+            <div className="flex gap-2">
+              <Input
+                id="tempPassword"
+                type="text"
+                value={tempPassword}
+                onChange={(e) => setTempPassword(e.target.value)}
+                placeholder="Enter temporary password"
+                disabled={isCreating}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={generateTempPassword}
+                disabled={isCreating}
+              >
+                Generate
+              </Button>
+            </div>
           </div>
           
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={isCreating}
+            >
               Cancel
             </Button>
-            <Button type="submit">Add Member</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? 'Creating...' : 'Create Account'}
+            </Button>
           </div>
         </form>
       </DialogContent>

@@ -9,12 +9,13 @@ import { Users, Mail, Phone } from 'lucide-react';
 import { useTeamMembers, type TeamMember } from '@/hooks/useTeamMembers';
 
 const Team = () => {
-  const { teamMembers, isLoading, createTeamMember, updateTeamMember } = useTeamMembers();
+  const { teamMembers, isLoading, updateTeamMember, refetch } = useTeamMembers();
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const handleAddMember = (newMember: { name: string; role: string; email: string }) => {
-    createTeamMember(newMember);
+  const handleAddMember = () => {
+    // Refresh the team members list after adding a new member
+    refetch();
   };
 
   const handleMemberClick = (member: TeamMember) => {
@@ -45,7 +46,7 @@ const Team = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Team</h1>
-          <p className="text-gray-600 mt-1">Manage your team members and their roles</p>
+          <p className="text-gray-600 mt-1">Manage your team members and their accounts</p>
         </div>
         <AddTeamMemberDialog onAddMember={handleAddMember} />
       </div>
