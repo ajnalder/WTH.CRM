@@ -21,8 +21,16 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 
 interface TaskFormData {
   title: string;
@@ -35,12 +43,13 @@ interface TaskFormData {
 }
 
 interface NewTaskFormProps {
-  onTaskCreated: (task: any) => void;
+  onTaskCreated?: () => void;
 }
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
   const [open, setOpen] = React.useState(false);
-  const { toast } = useToast();
+  const { createTask, isCreating } = useTasks();
+  const { projects, isLoading: isLoadingProjects } = useProjects();
   const form = useForm<TaskFormData>({
     defaultValues: {
       title: '',
@@ -56,27 +65,26 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
   const onSubmit = (data: TaskFormData) => {
     console.log('Creating new task:', data);
     
-    const newTask = {
-      id: Date.now(),
+    const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    
+    createTask({
       title: data.title,
-      description: data.description,
-      status: 'To Do',
+      description: data.description || null,
       priority: data.priority,
-      assignee: data.assignee,
+      assignee: data.assignee || null,
+      due_date: data.dueDate || null,
+      tags: tagsArray.length > 0 ? tagsArray : null,
       project: data.project,
-      dueDate: data.dueDate,
-      tags: data.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      progress: 0
-    };
-
-    onTaskCreated(newTask);
+      status: 'To Do',
+      progress: 0,
+    });
+    
     setOpen(false);
     form.reset();
     
-    toast({
-      title: "Task Created",
-      description: `${data.title} has been successfully created.`,
-    });
+    if (onTaskCreated) {
+      onTaskCreated();
+    }
   };
 
   return (
@@ -129,26 +137,42 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
               )}
             />
             
+            <FormField
+              control={form.control}
+              name="project"
+              rules={{ required: "Project is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingProjects ? (
+                        <SelectItem value="" disabled>Loading projects...</SelectItem>
+                      ) : projects.length === 0 ? (
+                        <SelectItem value="" disabled>No projects available</SelectItem>
+                      ) : (
+                        projects.map((project) => (
+                          <SelectItem key={project.id} value={project.name}>
+                            {project.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="project"
-                rules={{ required: "Project is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project</FormLabel>
-                    <FormControl>
-                      <Input placeholder="E-commerce Platform" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
                 name="assignee"
-                rules={{ required: "Assignee is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assignee</FormLabel>
@@ -159,13 +183,35 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="dueDate"
-                rules={{ required: "Due date is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
@@ -179,19 +225,15 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
               
               <FormField
                 control={form.control}
-                name="priority"
+                name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>Tags</FormLabel>
                     <FormControl>
-                      <select 
-                        {...field}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
+                      <Input 
+                        placeholder="Frontend, React"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,28 +241,13 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Frontend, React, UI/UX"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Task</Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? 'Creating...' : 'Create Task'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
