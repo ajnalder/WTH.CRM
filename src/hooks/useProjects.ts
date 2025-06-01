@@ -78,13 +78,12 @@ export const useProjects = (clientId?: string) => {
             name
           ),
           project_team_members(
-            team_member:team_members(
+            user_id,
+            profiles!inner(
               id,
-              name,
-              role,
+              full_name,
               email,
-              avatar,
-              gradient
+              avatar_url
             )
           )
         `)
@@ -102,10 +101,40 @@ export const useProjects = (clientId?: string) => {
       }
 
       // Transform the data to flatten team members
-      const transformedData = data?.map(project => ({
-        ...project,
-        team_members: project.project_team_members?.map((ptm: any) => ptm.team_member) || []
-      })) || [];
+      const transformedData = data?.map((project, index) => {
+        const gradients = [
+          'from-blue-400 to-blue-600',
+          'from-green-400 to-green-600',
+          'from-purple-400 to-purple-600',
+          'from-red-400 to-red-600',
+          'from-yellow-400 to-yellow-600',
+          'from-pink-400 to-pink-600',
+          'from-indigo-400 to-indigo-600',
+          'from-teal-400 to-teal-600',
+        ];
+
+        const team_members = project.project_team_members?.map((ptm: any, idx: number) => {
+          const profile = ptm.profiles;
+          const name = profile?.full_name || profile?.email || 'Unknown User';
+          const initials = profile?.full_name 
+            ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+            : (profile?.email || 'UN').slice(0, 2).toUpperCase();
+
+          return {
+            id: profile?.id || '',
+            name,
+            role: 'Team Member',
+            email: profile?.email || '',
+            avatar: initials,
+            gradient: gradients[idx % gradients.length],
+          };
+        }) || [];
+
+        return {
+          ...project,
+          team_members
+        };
+      }) || [];
 
       console.log('Projects fetched:', transformedData);
       return transformedData as Project[];
