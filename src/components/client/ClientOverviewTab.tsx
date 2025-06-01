@@ -12,6 +12,7 @@ interface ClientOverviewTabProps {
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
   const { contacts, isLoading } = useContacts(client.id.toString());
   
+  // Use the contacts directly from the hook (Supabase format with is_primary)
   const primaryContact = contacts?.find(contact => contact.is_primary);
 
   return (
@@ -88,7 +89,7 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Contacts</span>
-              <span className="font-semibold">{client.contacts.length}</span>
+              <span className="font-semibold">{contacts?.length || 0}</span>
             </div>
           </CardContent>
         </Card>

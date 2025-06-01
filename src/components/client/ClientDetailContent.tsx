@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ClientOverviewTab from '@/components/client/ClientOverviewTab';
 import DomainsTab from '@/components/client/DomainsTab';
@@ -66,7 +67,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
       id: parseInt(h.id),
       provider: h.provider,
       plan: h.plan,
-      serverLocation: h.platform, // Using platform as serverLocation for backward compatibility
+      serverLocation: h.platform,
       renewalDate: h.renewal_date,
       loginUrl: h.login_url || '',
       notes: h.notes || '',
@@ -78,7 +79,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
       email: c.email,
       phone: c.phone || '',
       role: c.role || '',
-      isPrimary: c.is_primary
+      isPrimary: c.is_primary  // Fixed: using the correct field name from Supabase
     }))
   };
 
