@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,11 +26,17 @@ const ClientDetail = () => {
   const { contacts, createContact, deleteContact, isLoading: contactsLoading } = useContacts(id || '');
 
   // Form state for new items
-  const [newDomain, setNewDomain] = useState({
+  const [newDomain, setNewDomain] = useState<{
+    name: string;
+    registrar: string;
+    expiry_date: string;
+    status: 'active' | 'expired' | 'pending';
+    renewal_cost: number;
+  }>({
     name: '',
     registrar: '',
     expiry_date: '',
-    status: 'active' as const,
+    status: 'active',
     renewal_cost: 0
   });
 
