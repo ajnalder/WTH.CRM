@@ -29,7 +29,7 @@ export interface Contact {
 }
 
 export interface Client {
-  id: number;
+  id: string; // Changed from number to string to match UUID format
   name: string;
   email: string;
   phone: string;

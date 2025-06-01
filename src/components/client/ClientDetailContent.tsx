@@ -43,7 +43,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
 
   // Convert the Supabase client data to match the expected format for the overview tab
   const clientForOverview = {
-    id: parseInt(client.id),
+    id: client.id, // Keep as string UUID
     name: client.name,
     email: client.email,
     phone: client.phone || '',
@@ -79,7 +79,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
       email: c.email,
       phone: c.phone || '',
       role: c.role || '',
-      isPrimary: c.is_primary  // Fixed: using the correct field name from Supabase
+      isPrimary: c.is_primary
     }))
   };
 

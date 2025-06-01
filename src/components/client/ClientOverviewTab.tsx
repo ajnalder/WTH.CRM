@@ -10,10 +10,15 @@ interface ClientOverviewTabProps {
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
-  const { contacts, isLoading } = useContacts(client.id.toString());
+  const { contacts, isLoading } = useContacts(client.id); // Remove .toString() since client.id is already a string
   
   // Use the contacts directly from the hook (Supabase format with is_primary)
   const primaryContact = contacts?.find(contact => contact.is_primary);
+
+  console.log('ClientOverviewTab - client.id:', client.id);
+  console.log('ClientOverviewTab - contacts:', contacts);
+  console.log('ClientOverviewTab - primaryContact:', primaryContact);
+  console.log('ClientOverviewTab - isLoading:', isLoading);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

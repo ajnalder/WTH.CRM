@@ -38,7 +38,7 @@ const getStatusText = (status: string) => {
 
 const ClientCard = ({ client }: { client: Client }) => {
   const navigate = useNavigate();
-  const { contacts } = useContacts(client.id);
+  const { contacts } = useContacts(client.id); // client.id is already a string
   
   const primaryContact = contacts.find(contact => contact.is_primary);
   const displayEmail = primaryContact?.email || 'No email';
