@@ -18,6 +18,7 @@ import Team from "./pages/Team";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import Calendar from "./pages/Calendar";
+import DayPlanner from "./pages/DayPlanner";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,7 @@ const App = () => (
                           <Route path="/clients" element={<Clients />} />
                           <Route path="/clients/:id" element={<ClientDetail />} />
                           <Route path="/calendar" element={<Calendar />} />
+                          <Route path="/day-planner" element={<DayPlanner />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </SidebarInset>
