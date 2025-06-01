@@ -18,13 +18,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { Domain } from '@/types/client';
 
 interface AddDomainDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  newDomain: Omit<Domain, 'id'>;
-  setNewDomain: (domain: Omit<Domain, 'id'>) => void;
+  newDomain: {
+    name: string;
+    registrar: string;
+    expiry_date: string;
+    status: 'active' | 'expired' | 'pending';
+    renewal_cost: number;
+  };
+  setNewDomain: (domain: {
+    name: string;
+    registrar: string;
+    expiry_date: string;
+    status: 'active' | 'expired' | 'pending';
+    renewal_cost: number;
+  }) => void;
   onAddDomain: () => void;
 }
 
@@ -71,8 +82,8 @@ const AddDomainDialog = ({
             <Input
               id="expiry"
               type="date"
-              value={newDomain.expiryDate}
-              onChange={(e) => setNewDomain({...newDomain, expiryDate: e.target.value})}
+              value={newDomain.expiry_date}
+              onChange={(e) => setNewDomain({...newDomain, expiry_date: e.target.value})}
             />
           </div>
           <div>
@@ -80,8 +91,8 @@ const AddDomainDialog = ({
             <Input
               id="renewal-cost"
               type="number"
-              value={newDomain.renewalCost}
-              onChange={(e) => setNewDomain({...newDomain, renewalCost: parseFloat(e.target.value) || 0})}
+              value={newDomain.renewal_cost}
+              onChange={(e) => setNewDomain({...newDomain, renewal_cost: parseFloat(e.target.value) || 0})}
               placeholder="15.99"
             />
           </div>

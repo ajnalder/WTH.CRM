@@ -12,13 +12,28 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { HostingInfo } from '@/types/client';
 
 interface AddHostingDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  newHosting: Omit<HostingInfo, 'id'>;
-  setNewHosting: (hosting: Omit<HostingInfo, 'id'>) => void;
+  newHosting: {
+    provider: string;
+    plan: string;
+    server_location: string;
+    renewal_date: string;
+    login_url: string;
+    notes: string;
+    renewal_cost: number;
+  };
+  setNewHosting: (hosting: {
+    provider: string;
+    plan: string;
+    server_location: string;
+    renewal_date: string;
+    login_url: string;
+    notes: string;
+    renewal_cost: number;
+  }) => void;
   onAddHosting: () => void;
 }
 
@@ -64,8 +79,8 @@ const AddHostingDialog = ({
             <Label htmlFor="location">Server Location</Label>
             <Input
               id="location"
-              value={newHosting.serverLocation}
-              onChange={(e) => setNewHosting({...newHosting, serverLocation: e.target.value})}
+              value={newHosting.server_location}
+              onChange={(e) => setNewHosting({...newHosting, server_location: e.target.value})}
               placeholder="US East, Europe, etc."
             />
           </div>
@@ -74,8 +89,8 @@ const AddHostingDialog = ({
             <Input
               id="renewal"
               type="date"
-              value={newHosting.renewalDate}
-              onChange={(e) => setNewHosting({...newHosting, renewalDate: e.target.value})}
+              value={newHosting.renewal_date}
+              onChange={(e) => setNewHosting({...newHosting, renewal_date: e.target.value})}
             />
           </div>
           <div>
@@ -83,8 +98,8 @@ const AddHostingDialog = ({
             <Input
               id="hosting-renewal-cost"
               type="number"
-              value={newHosting.renewalCost}
-              onChange={(e) => setNewHosting({...newHosting, renewalCost: parseFloat(e.target.value) || 0})}
+              value={newHosting.renewal_cost}
+              onChange={(e) => setNewHosting({...newHosting, renewal_cost: parseFloat(e.target.value) || 0})}
               placeholder="50.00"
             />
           </div>
@@ -92,8 +107,8 @@ const AddHostingDialog = ({
             <Label htmlFor="login-url">Login URL</Label>
             <Input
               id="login-url"
-              value={newHosting.loginUrl}
-              onChange={(e) => setNewHosting({...newHosting, loginUrl: e.target.value})}
+              value={newHosting.login_url}
+              onChange={(e) => setNewHosting({...newHosting, login_url: e.target.value})}
               placeholder="https://console.aws.amazon.com"
             />
           </div>

@@ -63,6 +63,144 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          is_primary: boolean
+          name: string
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          email: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domains: {
+        Row: {
+          client_id: string
+          created_at: string
+          expiry_date: string
+          id: string
+          name: string
+          registrar: string
+          renewal_cost: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expiry_date: string
+          id?: string
+          name: string
+          registrar: string
+          renewal_cost?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expiry_date?: string
+          id?: string
+          name?: string
+          registrar?: string
+          renewal_cost?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domains_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hosting: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          login_url: string | null
+          notes: string | null
+          plan: string
+          provider: string
+          renewal_cost: number
+          renewal_date: string
+          server_location: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          login_url?: string | null
+          notes?: string | null
+          plan: string
+          provider: string
+          renewal_cost?: number
+          renewal_date: string
+          server_location: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          login_url?: string | null
+          notes?: string | null
+          plan?: string
+          provider?: string
+          renewal_cost?: number
+          renewal_date?: string
+          server_location?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hosting_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

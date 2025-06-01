@@ -11,13 +11,24 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { Contact } from '@/types/client';
 
 interface AddContactDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  newContact: Omit<Contact, 'id'>;
-  setNewContact: (contact: Omit<Contact, 'id'>) => void;
+  newContact: {
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    is_primary: boolean;
+  };
+  setNewContact: (contact: {
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    is_primary: boolean;
+  }) => void;
   onAddContact: () => void;
 }
 
@@ -82,8 +93,8 @@ const AddContactDialog = ({
             <input
               type="checkbox"
               id="is-primary"
-              checked={newContact.isPrimary}
-              onChange={(e) => setNewContact({...newContact, isPrimary: e.target.checked})}
+              checked={newContact.is_primary}
+              onChange={(e) => setNewContact({...newContact, is_primary: e.target.checked})}
               className="rounded"
             />
             <Label htmlFor="is-primary">Primary Contact</Label>

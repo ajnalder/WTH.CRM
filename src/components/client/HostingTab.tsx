@@ -14,17 +14,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { HostingInfo } from '@/types/client';
+import { HostingInfo } from '@/hooks/useHosting';
 import AddHostingDialog from './AddHostingDialog';
 
 interface HostingTabProps {
   hosting: HostingInfo[];
   showHostingDialog: boolean;
   setShowHostingDialog: (show: boolean) => void;
-  newHosting: Omit<HostingInfo, 'id'>;
-  setNewHosting: (hosting: Omit<HostingInfo, 'id'>) => void;
+  newHosting: Omit<HostingInfo, 'id' | 'client_id' | 'created_at' | 'updated_at'>;
+  setNewHosting: (hosting: Omit<HostingInfo, 'id' | 'client_id' | 'created_at' | 'updated_at'>) => void;
   onAddHosting: () => void;
-  onDeleteHosting?: (id: number) => void;
+  onDeleteHosting?: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const HostingTab = ({
@@ -34,8 +35,22 @@ const HostingTab = ({
   newHosting,
   setNewHosting,
   onAddHosting,
-  onDeleteHosting
+  onDeleteHosting,
+  isLoading
 }: HostingTabProps) => {
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Hosting Information</h2>
+        </div>
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -59,15 +74,17 @@ const HostingTab = ({
                   <div>
                     <h3 className="font-semibold">{hostingInfo.provider}</h3>
                     <p className="text-sm text-gray-600">{hostingInfo.plan}</p>
-                    <p className="text-sm text-gray-600">Cost: ${hostingInfo.renewalCost}/month</p>
+                    <p className="text-sm text-gray-600">Cost: ${hostingInfo.renewal_cost}/month</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={hostingInfo.loginUrl} target="_blank" rel="noopener noreferrer">
-                      Access Console
-                    </a>
-                  </Button>
+                  {hostingInfo.login_url && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={hostingInfo.login_url} target="_blank" rel="noopener noreferrer">
+                        Access Console
+                      </a>
+                    </Button>
+                  )}
                   {onDeleteHosting && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -99,11 +116,11 @@ const HostingTab = ({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Location:</span>
-                  <p className="font-medium">{hostingInfo.serverLocation}</p>
+                  <p className="font-medium">{hostingInfo.server_location}</p>
                 </div>
                 <div>
                   <span className="text-gray-600">Renewal:</span>
-                  <p className="font-medium">{new Date(hostingInfo.renewalDate).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(hostingInfo.renewal_date).toLocaleDateString()}</p>
                 </div>
               </div>
               {hostingInfo.notes && (
@@ -114,6 +131,12 @@ const HostingTab = ({
             </CardContent>
           </Card>
         ))}
+        {hosting.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <Server size={48} className="mx-auto mb-4 text-gray-300" />
+            <p>No hosting information added yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );

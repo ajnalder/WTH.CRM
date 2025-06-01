@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
-import { Domain, HostingInfo, Contact } from '@/types/client';
+import { useDomains } from '@/hooks/useDomains';
+import { useHosting } from '@/hooks/useHosting';
+import { useContacts } from '@/hooks/useContacts';
 import ClientOverviewTab from '@/components/client/ClientOverviewTab';
 import DomainsTab from '@/components/client/DomainsTab';
 import HostingTab from '@/components/client/HostingTab';
@@ -12,72 +15,42 @@ import ContactsTab from '@/components/client/ContactsTab';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, isLoading } = useClients();
+  const { clients, isLoading: clientsLoading } = useClients();
   const [activeTab, setActiveTab] = useState('overview');
 
   // Find the client from the real data
   const client = clients.find(c => c.id === id);
 
-  // Mock data for domains, hosting, and contacts - these could be separate tables later
-  const [domains, setDomains] = useState<Domain[]>([
-    {
-      id: 1,
-      name: 'example.com',
-      registrar: 'GoDaddy',
-      expiryDate: '2024-12-15',
-      status: 'active',
-      renewalCost: 15
-    }
-  ]);
+  // Use the database hooks
+  const { domains, createDomain, deleteDomain, isLoading: domainsLoading } = useDomains(id || '');
+  const { hosting, createHosting, deleteHosting, isLoading: hostingLoading } = useHosting(id || '');
+  const { contacts, createContact, deleteContact, isLoading: contactsLoading } = useContacts(id || '');
 
-  const [hosting, setHosting] = useState<HostingInfo[]>([
-    {
-      id: 1,
-      provider: 'AWS',
-      plan: 'EC2 t3.medium',
-      serverLocation: 'US East (Virginia)',
-      renewalDate: '2024-07-01',
-      loginUrl: 'https://console.aws.amazon.com',
-      notes: 'Main production environment',
-      renewalCost: 50
-    }
-  ]);
-
-  const [contacts, setContacts] = useState<Contact[]>([
-    {
-      id: 1,
-      name: client?.name || 'Primary Contact',
-      email: client?.email || 'contact@example.com',
-      phone: client?.phone || '+1 (555) 123-4567',
-      role: 'Primary Contact',
-      isPrimary: true
-    }
-  ]);
-
-  const [newDomain, setNewDomain] = useState<Omit<Domain, 'id'>>({
+  // Form state for new items
+  const [newDomain, setNewDomain] = useState({
     name: '',
     registrar: '',
-    expiryDate: '',
-    status: 'active',
-    renewalCost: 0
+    expiry_date: '',
+    status: 'active' as const,
+    renewal_cost: 0
   });
 
-  const [newHosting, setNewHosting] = useState<Omit<HostingInfo, 'id'>>({
+  const [newHosting, setNewHosting] = useState({
     provider: '',
     plan: '',
-    serverLocation: '',
-    renewalDate: '',
-    loginUrl: '',
+    server_location: '',
+    renewal_date: '',
+    login_url: '',
     notes: '',
-    renewalCost: 0
+    renewal_cost: 0
   });
 
-  const [newContact, setNewContact] = useState<Omit<Contact, 'id'>>({
+  const [newContact, setNewContact] = useState({
     name: '',
     email: '',
     phone: '',
     role: '',
-    isPrimary: false
+    is_primary: false
   });
 
   const [showDomainDialog, setShowDomainDialog] = useState(false);
@@ -85,64 +58,53 @@ const ClientDetail = () => {
   const [showContactDialog, setShowContactDialog] = useState(false);
 
   const addDomain = () => {
-    if (newDomain.name && newDomain.registrar) {
-      const domain: Domain = {
-        id: domains.length + 1,
+    if (newDomain.name && newDomain.registrar && id) {
+      createDomain({
+        client_id: id,
         ...newDomain
-      };
-      setDomains([...domains, domain]);
-      setNewDomain({ name: '', registrar: '', expiryDate: '', status: 'active', renewalCost: 0 });
+      });
+      setNewDomain({ name: '', registrar: '', expiry_date: '', status: 'active', renewal_cost: 0 });
       setShowDomainDialog(false);
     }
   };
 
-  const deleteDomain = (id: number) => {
-    setDomains(domains.filter(domain => domain.id !== id));
-  };
-
   const addHosting = () => {
-    if (newHosting.provider && newHosting.plan) {
-      const newHost: HostingInfo = {
-        id: hosting.length + 1,
+    if (newHosting.provider && newHosting.plan && id) {
+      createHosting({
+        client_id: id,
         ...newHosting
-      };
-      setHosting([...hosting, newHost]);
+      });
       setNewHosting({
         provider: '',
         plan: '',
-        serverLocation: '',
-        renewalDate: '',
-        loginUrl: '',
+        server_location: '',
+        renewal_date: '',
+        login_url: '',
         notes: '',
-        renewalCost: 0
+        renewal_cost: 0
       });
       setShowHostingDialog(false);
     }
   };
 
-  const deleteHosting = (id: number) => {
-    setHosting(hosting.filter(host => host.id !== id));
-  };
-
   const addContact = () => {
-    if (newContact.name && newContact.email) {
-      const contact: Contact = {
-        id: contacts.length + 1,
+    if (newContact.name && newContact.email && id) {
+      createContact({
+        client_id: id,
         ...newContact
-      };
-      setContacts([...contacts, contact]);
+      });
       setNewContact({
         name: '',
         email: '',
         phone: '',
         role: '',
-        isPrimary: false
+        is_primary: false
       });
       setShowContactDialog(false);
     }
   };
 
-  if (isLoading) {
+  if (clientsLoading) {
     return (
       <div className="flex-1 p-6 space-y-6">
         <div className="flex items-center justify-center h-64">
@@ -169,8 +131,8 @@ const ClientDetail = () => {
     );
   }
 
-  // Convert the Supabase client data to match the expected format for the components
-  const clientForTabs = {
+  // Convert the Supabase client data to match the expected format for the overview tab
+  const clientForOverview = {
     id: parseInt(client.id),
     name: client.name,
     email: client.email,
@@ -183,15 +145,38 @@ const ClientDetail = () => {
     joinedDate: client.joined_date,
     avatar: client.avatar || client.company.substring(0, 2).toUpperCase(),
     gradient: client.gradient || 'from-blue-400 to-blue-600',
-    domains,
-    hosting,
-    contacts
+    domains: domains.map(d => ({
+      id: parseInt(d.id),
+      name: d.name,
+      registrar: d.registrar,
+      expiryDate: d.expiry_date,
+      status: d.status,
+      renewalCost: Number(d.renewal_cost)
+    })),
+    hosting: hosting.map(h => ({
+      id: parseInt(h.id),
+      provider: h.provider,
+      plan: h.plan,
+      serverLocation: h.server_location,
+      renewalDate: h.renewal_date,
+      loginUrl: h.login_url || '',
+      notes: h.notes || '',
+      renewalCost: Number(h.renewal_cost)
+    })),
+    contacts: contacts.map(c => ({
+      id: parseInt(c.id),
+      name: c.name,
+      email: c.email,
+      phone: c.phone || '',
+      role: c.role || '',
+      isPrimary: c.is_primary
+    }))
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <ClientOverviewTab client={clientForTabs} />;
+        return <ClientOverviewTab client={clientForOverview} />;
       case 'domains':
         return (
           <DomainsTab
@@ -202,6 +187,7 @@ const ClientDetail = () => {
             setNewDomain={setNewDomain}
             onAddDomain={addDomain}
             onDeleteDomain={deleteDomain}
+            isLoading={domainsLoading}
           />
         );
       case 'hosting':
@@ -214,6 +200,7 @@ const ClientDetail = () => {
             setNewHosting={setNewHosting}
             onAddHosting={addHosting}
             onDeleteHosting={deleteHosting}
+            isLoading={hostingLoading}
           />
         );
       case 'contacts':
@@ -225,10 +212,12 @@ const ClientDetail = () => {
             newContact={newContact}
             setNewContact={setNewContact}
             onAddContact={addContact}
+            onDeleteContact={deleteContact}
+            isLoading={contactsLoading}
           />
         );
       default:
-        return <ClientOverviewTab client={clientForTabs} />;
+        return <ClientOverviewTab client={clientForOverview} />;
     }
   };
 

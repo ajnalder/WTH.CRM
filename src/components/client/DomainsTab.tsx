@@ -14,17 +14,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Domain } from '@/types/client';
+import { Domain } from '@/hooks/useDomains';
 import AddDomainDialog from './AddDomainDialog';
 
 interface DomainsTabProps {
   domains: Domain[];
   showDomainDialog: boolean;
   setShowDomainDialog: (show: boolean) => void;
-  newDomain: Omit<Domain, 'id'>;
-  setNewDomain: (domain: Omit<Domain, 'id'>) => void;
+  newDomain: Omit<Domain, 'id' | 'client_id' | 'created_at' | 'updated_at'>;
+  setNewDomain: (domain: Omit<Domain, 'id' | 'client_id' | 'created_at' | 'updated_at'>) => void;
   onAddDomain: () => void;
-  onDeleteDomain?: (id: number) => void;
+  onDeleteDomain?: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -47,8 +48,22 @@ const DomainsTab = ({
   newDomain,
   setNewDomain,
   onAddDomain,
-  onDeleteDomain
+  onDeleteDomain,
+  isLoading
 }: DomainsTabProps) => {
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Domain Management</h2>
+        </div>
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -72,7 +87,7 @@ const DomainsTab = ({
                   <div>
                     <h3 className="font-semibold">{domain.name}</h3>
                     <p className="text-sm text-gray-600">Registered with {domain.registrar}</p>
-                    <p className="text-sm text-gray-600">Annual renewal: ${domain.renewalCost}</p>
+                    <p className="text-sm text-gray-600">Annual renewal: ${domain.renewal_cost}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -80,7 +95,7 @@ const DomainsTab = ({
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(domain.status)}`}>
                       {domain.status}
                     </span>
-                    <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiryDate).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiry_date).toLocaleDateString()}</p>
                   </div>
                   {onDeleteDomain && (
                     <AlertDialog>
@@ -113,6 +128,12 @@ const DomainsTab = ({
             </CardContent>
           </Card>
         ))}
+        {domains.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <Globe size={48} className="mx-auto mb-4 text-gray-300" />
+            <p>No domains registered yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );
