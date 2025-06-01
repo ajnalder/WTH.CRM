@@ -49,13 +49,7 @@ export const updateTaskDurationWithShifting = (
   const currentStartTime = currentTask.startTime;
   const oldDuration = currentTask.duration;
   
-  // Check if the new duration fits in the available space
-  if (!isTimeSlotAvailable(currentStartTime, newDuration, timeSlots, scheduledTasks, taskId)) {
-    console.log('Cannot resize: not enough space available');
-    return scheduledTasks;
-  }
-  
-  // Update the task duration
+  // Update the task duration first
   const updatedTask = { ...currentTask, duration: newDuration };
   const updatedTasks = [...scheduledTasks];
   updatedTasks[taskIndex] = updatedTask;
@@ -71,35 +65,69 @@ export const updateTaskDurationWithShifting = (
   const newEndIndex = taskTimeIndex + newSlotsNeeded;
   
   if (newDuration > oldDuration) {
-    // Task is getting longer - shift conflicting tasks down
-    const tasksToShift = updatedTasks.filter(task => {
-      if (task.taskId === taskId) return false;
-      const taskStartIndex = timeSlots.indexOf(task.startTime);
-      return taskStartIndex >= taskTimeIndex && taskStartIndex < newEndIndex;
-    });
+    // Task is getting longer - need to shift conflicting tasks down
+    const slotsExpanded = newSlotsNeeded - oldSlotsNeeded;
     
-    // Shift conflicting tasks to start after this task
+    // Find all tasks that start at or after the old end time, sorted by start time
+    const tasksToShift = updatedTasks
+      .filter(task => {
+        if (task.taskId === taskId) return false;
+        const taskStartIndex = timeSlots.indexOf(task.startTime);
+        return taskStartIndex >= oldEndIndex;
+      })
+      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
+    
+    // Shift each task down by the number of slots expanded
     tasksToShift.forEach(taskToShift => {
-      const shiftedStartIndex = newEndIndex;
-      if (shiftedStartIndex < timeSlots.length) {
+      const currentStartIndex = timeSlots.indexOf(taskToShift.startTime);
+      const newStartIndex = currentStartIndex + slotsExpanded;
+      
+      // Make sure we don't go beyond the available time slots
+      if (newStartIndex < timeSlots.length) {
         const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
         if (taskToShiftIndex !== -1) {
           updatedTasks[taskToShiftIndex] = {
             ...updatedTasks[taskToShiftIndex],
-            startTime: timeSlots[shiftedStartIndex]
+            startTime: timeSlots[newStartIndex]
           };
         }
       }
     });
+    
+    // Also shift any tasks that are now conflicting with the expanded task
+    const conflictingTasks = updatedTasks
+      .filter(task => {
+        if (task.taskId === taskId) return false;
+        const taskStartIndex = timeSlots.indexOf(task.startTime);
+        const taskSlotsNeeded = Math.ceil(task.duration / 15);
+        const taskEndIndex = taskStartIndex + taskSlotsNeeded;
+        
+        // Check if this task overlaps with the expanded area
+        return (taskStartIndex < newEndIndex && taskEndIndex > oldEndIndex);
+      });
+    
+    conflictingTasks.forEach(conflictingTask => {
+      const conflictingTaskIndex = updatedTasks.findIndex(t => t.taskId === conflictingTask.taskId);
+      if (conflictingTaskIndex !== -1) {
+        // Move conflicting task to start after the expanded task
+        if (newEndIndex < timeSlots.length) {
+          updatedTasks[conflictingTaskIndex] = {
+            ...updatedTasks[conflictingTaskIndex],
+            startTime: timeSlots[newEndIndex]
+          };
+        }
+      }
+    });
+    
   } else if (newDuration < oldDuration) {
     // Task is getting shorter - move subsequent tasks up to fill the gap
     const tasksToMoveUp = updatedTasks
       .filter(task => {
         if (task.taskId === taskId) return false;
         const taskStartIndex = timeSlots.indexOf(task.startTime);
-        return taskStartIndex >= oldEndIndex; // Tasks that start after the old end
+        return taskStartIndex >= oldEndIndex;
       })
-      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime)); // Sort by start time
+      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
     
     // Move each subsequent task up to fill the gap
     const slotsFreed = oldSlotsNeeded - newSlotsNeeded;
