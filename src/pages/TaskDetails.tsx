@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Play, Pause, Save } from 'lucide-react';
@@ -31,6 +32,23 @@ const TaskDetails = () => {
   console.log('TaskDetails - Task data:', task);
   console.log('TaskDetails - Loading:', taskLoading);
   console.log('TaskDetails - Error:', taskError);
+
+  // Timer effect - fixed to prevent React error #310
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setTimerSeconds(prev => prev + 1);
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isTimerRunning]);
 
   if (taskLoading) {
     return (
@@ -141,17 +159,6 @@ const TaskDetails = () => {
       .toUpperCase()
       .slice(0, 2);
   };
-
-  // Timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setTimerSeconds(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
