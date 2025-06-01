@@ -12,7 +12,10 @@ const projects = [
     dueDate: '2024-07-15',
     team: ['JD', 'SM', 'RJ'],
     priority: 'High',
-    tasks: { completed: 12, total: 18 }
+    tasks: { completed: 12, total: 18 },
+    description: 'Building a modern e-commerce platform with React and Node.js',
+    budget: 50000,
+    startDate: '2024-05-01'
   },
   {
     id: "2",
@@ -23,7 +26,10 @@ const projects = [
     dueDate: '2024-08-01',
     team: ['AL', 'MK'],
     priority: 'Medium',
-    tasks: { completed: 8, total: 15 }
+    tasks: { completed: 8, total: 15 },
+    description: 'Complete redesign of mobile application interface',
+    budget: 25000,
+    startDate: '2024-06-15'
   },
   {
     id: "3",
@@ -34,7 +40,10 @@ const projects = [
     dueDate: '2024-06-20',
     team: ['PL', 'JD', 'TN'],
     priority: 'High',
-    tasks: { completed: 14, total: 16 }
+    tasks: { completed: 14, total: 16 },
+    description: 'Custom CRM dashboard with analytics and reporting',
+    budget: 35000,
+    startDate: '2024-04-01'
   },
   {
     id: "4",
@@ -45,7 +54,10 @@ const projects = [
     dueDate: '2024-06-01',
     team: ['SM', 'RJ'],
     priority: 'Low',
-    tasks: { completed: 10, total: 10 }
+    tasks: { completed: 10, total: 10 },
+    description: 'Modern portfolio website with interactive galleries',
+    budget: 15000,
+    startDate: '2024-05-15'
   },
   {
     id: "5",
@@ -56,7 +68,10 @@ const projects = [
     dueDate: '2024-09-15',
     team: ['MK', 'AL', 'PL'],
     priority: 'Medium',
-    tasks: { completed: 2, total: 12 }
+    tasks: { completed: 2, total: 12 },
+    description: 'Integration with third-party APIs and data synchronization',
+    budget: 40000,
+    startDate: '2024-07-01'
   },
   {
     id: "6",
@@ -67,7 +82,10 @@ const projects = [
     dueDate: '2024-07-10',
     team: ['TN', 'JD'],
     priority: 'High',
-    tasks: { completed: 9, total: 12 }
+    tasks: { completed: 9, total: 12 },
+    description: 'High-converting landing page with A/B testing capabilities',
+    budget: 20000,
+    startDate: '2024-06-01'
   }
 ];
 
