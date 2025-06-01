@@ -3,6 +3,7 @@ import React from 'react';
 import { Search, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { NewProjectForm } from '@/components/NewProjectForm';
+import { UserMenu } from '@/components/UserMenu';
 
 export const Header = () => {
   const handleProjectCreated = (project: any) => {
@@ -30,9 +31,7 @@ export const Header = () => {
             <Bell className="text-gray-600 hover:text-gray-900 cursor-pointer" size={24} />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
           </div>
-          <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">JD</span>
-          </div>
+          <UserMenu />
         </div>
       </div>
     </header>
