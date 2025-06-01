@@ -91,14 +91,11 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
             snapshot.isDragging ? 'shadow-lg z-50' : ''
           } ${isResizing ? 'select-none pointer-events-none' : ''}`}
           style={{ 
-            ...provided.draggableProps.style,
             height: calculateHeight(scheduledTask.duration),
             minHeight: '52px',
             top: '2px',
-            // Ensure proper positioning during drag
-            transform: snapshot.isDragging 
-              ? provided.draggableProps.style?.transform 
-              : provided.draggableProps.style?.transform || 'none'
+            // Let react-beautiful-dnd handle all transforms during drag
+            ...provided.draggableProps.style
           }}
           onMouseEnter={() => !isResizing && setShowControls(true)}
           onMouseLeave={() => setShowControls(false)}
@@ -114,7 +111,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
             dragHandleProps={provided.dragHandleProps}
           />
           
-          {!isResizing && (
+          {!snapshot.isDragging && (
             <ResizeHandle
               scheduledTask={scheduledTask}
               updateTaskDuration={updateTaskDuration}
