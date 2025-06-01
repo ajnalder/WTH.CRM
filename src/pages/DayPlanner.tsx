@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useTasks } from '@/hooks/useTasks';
@@ -46,28 +47,75 @@ const DayPlanner = () => {
     return member ? member.name : 'Unknown User';
   };
 
+  // Helper function to check if a time slot range is available for scheduling
+  const isTimeSlotAvailable = (startTime: string, duration: number, excludeTaskId?: string) => {
+    const startIndex = timeSlots.indexOf(startTime);
+    if (startIndex === -1) return false;
+    
+    const slotsNeeded = Math.ceil(duration / 15);
+    const endIndex = startIndex + slotsNeeded;
+    
+    // Check if the range extends beyond available time slots
+    if (endIndex > timeSlots.length) return false;
+    
+    // Check for conflicts with other scheduled tasks
+    for (let i = startIndex; i < endIndex; i++) {
+      const currentSlot = timeSlots[i];
+      const conflictingTask = scheduledTasks.find(task => {
+        if (excludeTaskId && task.taskId === excludeTaskId) return false;
+        
+        const taskStartIndex = timeSlots.indexOf(task.startTime);
+        const taskSlotsNeeded = Math.ceil(task.duration / 15);
+        const taskEndIndex = taskStartIndex + taskSlotsNeeded;
+        
+        return i >= taskStartIndex && i < taskEndIndex;
+      });
+      
+      if (conflictingTask) return false;
+    }
+    
+    return true;
+  };
+
   const handleDragEnd = (result: any) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
 
+    // Handle dropping task into a time slot
     if (destination.droppableId.startsWith('timeslot-')) {
-      const timeSlot = destination.droppableId.replace('timeslot-', '');
+      const targetTimeSlot = destination.droppableId.replace('timeslot-', '');
       const taskId = draggableId.replace('task-', '');
       
+      // Find the task to get its duration
+      const existingScheduledTask = scheduledTasks.find(st => st.taskId === taskId);
+      const taskDuration = existingScheduledTask ? existingScheduledTask.duration : 60;
+      
+      // Check if the target time slot is available
+      if (!isTimeSlotAvailable(targetTimeSlot, taskDuration, taskId)) {
+        console.log('Target time slot is not available');
+        return;
+      }
+      
+      // Remove the task from its current position
       const updatedSchedule = scheduledTasks.filter(st => st.taskId !== taskId);
       
-      const newScheduledTask: ScheduledTask = {
-        id: `${taskId}-${timeSlot}`,
+      // Add the task to the new position
+      const newScheduledTask: ScheduledTask = existingScheduledTask ? {
+        ...existingScheduledTask,
+        startTime: targetTimeSlot
+      } : {
+        id: `${taskId}-${targetTimeSlot}`,
         taskId,
-        startTime: timeSlot,
-        duration: 60,
+        startTime: targetTimeSlot,
+        duration: taskDuration,
         type: 'task'
       };
       
       setScheduledTasks([...updatedSchedule, newScheduledTask]);
     }
     
+    // Handle dropping task back to the pool
     if (destination.droppableId === 'task-pool') {
       const taskId = draggableId.replace('task-', '');
       setScheduledTasks(scheduledTasks.filter(st => st.taskId !== taskId));
@@ -84,19 +132,29 @@ const DayPlanner = () => {
       const taskIndex = prev.findIndex(task => task.taskId === taskId);
       if (taskIndex === -1) return prev;
       
-      const updatedTask = { ...prev[taskIndex], duration: newDuration };
+      const currentTask = prev[taskIndex];
+      const currentStartTime = currentTask.startTime;
+      
+      // Check if the new duration fits in the available space
+      if (!isTimeSlotAvailable(currentStartTime, newDuration, taskId)) {
+        console.log('Cannot resize: not enough space available');
+        return prev;
+      }
+      
+      // Update the task duration
+      const updatedTask = { ...currentTask, duration: newDuration };
       const updatedTasks = [...prev];
       updatedTasks[taskIndex] = updatedTask;
       
       // Find the time slot index for this task
-      const taskTimeIndex = timeSlots.indexOf(updatedTask.startTime);
+      const taskTimeIndex = timeSlots.indexOf(currentStartTime);
       if (taskTimeIndex === -1) return updatedTasks;
       
       // Calculate how many slots this task now occupies
       const newSlotsNeeded = Math.ceil(newDuration / 15);
       const newEndIndex = taskTimeIndex + newSlotsNeeded;
       
-      // Find tasks that start after this task and need to be shifted
+      // Find tasks that start within the new range and need to be shifted
       const tasksToShift = updatedTasks.filter(task => {
         if (task.taskId === taskId) return false;
         const taskStartIndex = timeSlots.indexOf(task.startTime);
