@@ -1,45 +1,19 @@
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, User, Tag, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, User, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useClients } from '@/hooks/useClients';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 interface TaskCardProps {
   task: TaskWithClient;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const navigate = useNavigate();
   const { teamMembers } = useTeamMembers();
-  const { clients } = useClients();
-
-  // Find the assigned team member by user ID (task.assignee is now a UUID)
-  const assignedMember = task.assignee ? teamMembers.find(member => member.id === task.assignee) : null;
-
-  // Find the client by name to get their gradient color
-  const client = clients.find(c => c.company === task.client_name);
-  const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
-  
-  // Extract the base color from the gradient for the card background with more prominent tint
-  const getCardBackgroundClass = (gradient: string) => {
-    if (gradient.includes('blue')) return 'bg-blue-50/50 border-blue-200/60';
-    if (gradient.includes('green')) return 'bg-green-50/50 border-green-200/60';
-    if (gradient.includes('purple')) return 'bg-purple-50/50 border-purple-200/60';
-    if (gradient.includes('red')) return 'bg-red-50/50 border-red-200/60';
-    if (gradient.includes('yellow')) return 'bg-yellow-50/50 border-yellow-200/60';
-    if (gradient.includes('pink')) return 'bg-pink-50/50 border-pink-200/60';
-    if (gradient.includes('indigo')) return 'bg-indigo-50/50 border-indigo-200/60';
-    if (gradient.includes('teal')) return 'bg-teal-50/50 border-teal-200/60';
-    if (gradient.includes('orange')) return 'bg-orange-50/50 border-orange-200/60';
-    if (gradient.includes('cyan')) return 'bg-cyan-50/50 border-cyan-200/60';
-    if (gradient.includes('lime')) return 'bg-lime-50/50 border-lime-200/60';
-    if (gradient.includes('rose')) return 'bg-rose-50/50 border-rose-200/60';
-    return 'bg-blue-50/50 border-blue-200/60'; // default
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -51,19 +25,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'No due date';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const getClientInitials = (clientName: string) => {
@@ -75,91 +44,77 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       .slice(0, 2);
   };
 
-  const handleCardClick = () => {
-    navigate(`/tasks/${task.id}`);
+  const getAssigneeName = (assigneeId: string | null) => {
+    if (!assigneeId) return 'Unassigned';
+    const member = teamMembers.find(m => m.id === assigneeId);
+    return member ? member.name : 'Unknown User';
   };
 
   return (
-    <Card 
-      className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}
-      onClick={handleCardClick}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
+    <Link to={`/tasks/${task.id}`}>
+      <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between mb-2">
+            <Badge className={getStatusColor(task.status)}>
+              {task.status}
+            </Badge>
             {task.client_name && (
-              <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold">
                 {getClientInitials(task.client_name)}
               </div>
             )}
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Badge className={`text-xs ${getStatusColor(task.status)}`}>
-              {task.status}
-            </Badge>
-            <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
-              {task.priority}
-            </Badge>
-          </div>
-        </div>
-        <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
-          {task.title}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        {task.description && (
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-            {task.description}
-          </p>
-        )}
-        
-        <div className="space-y-3">
-          {assignedMember && (
-            <div className="flex items-center text-sm text-gray-600">
-              <User size={16} className="mr-2" />
-              <div className="flex items-center gap-2">
-                <div className={`w-4 h-4 bg-gradient-to-r ${assignedMember.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
-                  {assignedMember.avatar}
-                </div>
-                <span>{assignedMember.name}</span>
-              </div>
-            </div>
+          <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
+            {task.title}
+          </CardTitle>
+          {task.description && (
+            <p className="text-sm text-gray-600 line-clamp-2">{task.description}</p>
           )}
-          
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-medium text-gray-700">Progress</span>
+              <span className="text-xs text-gray-600">{task.progress || 0}%</span>
+            </div>
+            <Progress value={task.progress || 0} className="h-1.5" />
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <div className="flex items-center space-x-1">
+              <User size={14} />
+              <span>{getAssigneeName(task.assignee)}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Calendar size={14} />
+              <span>{formatDate(task.due_date)}</span>
+            </div>
+          </div>
+
           {task.project && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Tag size={16} className="mr-2" />
+            <div className="flex items-center space-x-1 text-xs text-gray-600">
+              <CheckCircle2 size={14} />
               <span>{task.project}</span>
             </div>
           )}
-          
-          <div className="flex items-center text-sm text-gray-600">
-            <Calendar size={16} className="mr-2" />
-            <span>Due {formatDate(task.due_date)}</span>
-          </div>
-          
+
           {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-3">
-              {task.tags.map((tag, index) => (
+            <div className="flex flex-wrap gap-1">
+              {task.tags.slice(0, 2).map((tag, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {tag}
                 </Badge>
               ))}
+              {task.tags.length > 2 && (
+                <Badge variant="outline" className="text-xs">
+                  +{task.tags.length - 2}
+                </Badge>
+              )}
             </div>
           )}
-          
-          {task.progress != null && task.progress > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Progress</span>
-                <span>{task.progress}%</span>
-              </div>
-              <Progress value={task.progress} className="h-2" />
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };

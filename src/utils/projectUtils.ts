@@ -42,19 +42,6 @@ export const getStatusColor = (status: string) => {
   }
 };
 
-export const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'High':
-      return 'text-red-600';
-    case 'Medium':
-      return 'text-yellow-600';
-    case 'Low':
-      return 'text-green-600';
-    default:
-      return 'text-gray-600';
-  }
-};
-
 export const calculateDaysUntilDue = (dueDate: string, isRetainer: boolean = false) => {
   if (!dueDate || isRetainer) return 0;
   const now = new Date();

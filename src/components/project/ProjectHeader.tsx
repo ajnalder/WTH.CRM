@@ -1,16 +1,15 @@
 
 import React from 'react';
-import { ArrowLeft, Flag } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
+import { getStatusColor } from '@/utils/projectUtils';
 
 interface Project {
   name: string;
   client: string;
   status: string;
-  priority: string;
 }
 
 interface ProjectHeaderProps {
@@ -40,7 +39,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
           <Badge className={getStatusColor(project.status)}>
             {project.status}
           </Badge>
-          <Flag className={`${getPriorityColor(project.priority)}`} size={20} />
         </div>
       </div>
     </div>

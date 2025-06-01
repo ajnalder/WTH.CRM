@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Calendar, Users, Flag } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import {
   Table,
@@ -41,19 +42,6 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'High':
-      return 'text-red-600';
-    case 'Medium':
-      return 'text-yellow-600';
-    case 'Low':
-      return 'text-green-600';
-    default:
-      return 'text-gray-600';
-  }
-};
-
 export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
   return (
     <Table>
@@ -65,7 +53,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           <TableHead>Progress</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Team</TableHead>
-          <TableHead>Priority</TableHead>
           <TableHead>Tasks</TableHead>
         </TableRow>
       </TableHeader>
@@ -122,9 +109,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                     <span>{project.team.length}</span>
                   </div>
                 </div>
-              </TableCell>
-              <TableCell>
-                <Flag className={`${getPriorityColor(project.priority)}`} size={16} />
               </TableCell>
               <TableCell>
                 <div className="text-sm text-gray-600">

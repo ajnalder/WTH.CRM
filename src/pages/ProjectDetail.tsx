@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,6 @@ const ProjectDetail = () => {
     createTask({
       title: transformedProject.name,
       description: transformedProject.description || null,
-      priority: transformedProject.priority as 'Low' | 'Medium' | 'High',
       assignee: null,
       due_date: transformedProject.dueDate || null,
       tags: null,

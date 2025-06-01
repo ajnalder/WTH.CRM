@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Calendar, Users, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
+import { getStatusColor } from '@/utils/projectUtils';
 import { useClients } from '@/hooks/useClients';
 
 interface TeamMember {
@@ -103,9 +103,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             <div className="flex gap-2 flex-shrink-0">
               <Badge variant="secondary" className={getStatusColor(project.status)}>
                 {project.status}
-              </Badge>
-              <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>
-                {project.priority}
               </Badge>
             </div>
           </div>
