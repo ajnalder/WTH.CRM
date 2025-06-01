@@ -10,7 +10,7 @@ interface ClientOverviewTabProps {
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
-  const { contacts, isLoading } = useContacts(client.id);
+  const { contacts, isLoading } = useContacts(client.id.toString());
   
   console.log('ClientOverviewTab - Client ID:', client.id);
   console.log('ClientOverviewTab - Client ID type:', typeof client.id);
