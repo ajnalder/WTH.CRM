@@ -8,6 +8,7 @@ import { ProjectDescription } from '@/components/project/ProjectDescription';
 import { ProjectTimeline } from '@/components/project/ProjectTimeline';
 import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
+import { ProjectTasksList } from '@/components/project/ProjectTasksList';
 import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
@@ -130,6 +131,8 @@ const ProjectDetail = () => {
                 triggerText="Add multiple tasks"
               />
             </div>
+            
+            <ProjectTasksList projectName={transformedProject.name} />
             
             {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
               <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
