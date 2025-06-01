@@ -18,6 +18,14 @@ export interface Project {
   is_billable: boolean;
   created_at: string;
   updated_at: string;
+  team_members?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    avatar: string;
+    gradient: string;
+  }>;
 }
 
 export interface CreateProjectData {
@@ -68,6 +76,16 @@ export const useProjects = (clientId?: string) => {
             id,
             company,
             name
+          ),
+          project_team_members(
+            team_member:team_members(
+              id,
+              name,
+              role,
+              email,
+              avatar,
+              gradient
+            )
           )
         `)
         .order('created_at', { ascending: false });
@@ -83,8 +101,14 @@ export const useProjects = (clientId?: string) => {
         throw error;
       }
 
-      console.log('Projects fetched:', data);
-      return data as Project[];
+      // Transform the data to flatten team members
+      const transformedData = data?.map(project => ({
+        ...project,
+        team_members: project.project_team_members?.map((ptm: any) => ptm.team_member) || []
+      })) || [];
+
+      console.log('Projects fetched:', transformedData);
+      return transformedData as Project[];
     },
   });
 

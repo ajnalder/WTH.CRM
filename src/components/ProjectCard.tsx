@@ -7,6 +7,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
 
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  avatar: string;
+  gradient: string;
+}
+
 interface Project {
   id: string;
   name: string;
@@ -20,6 +29,7 @@ interface Project {
   description: string;
   budget: number;
   startDate: string;
+  team_members?: TeamMember[];
 }
 
 interface ProjectCardProps {
@@ -42,6 +52,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
 
   const timeRemaining = getTimeRemaining(project.dueDate);
+
+  // Use real team_members data if available, fallback to legacy team data
+  const teamMembers = project.team_members || [];
+  const displayTeam = teamMembers.length > 0 ? teamMembers : project.team;
 
   return (
     <Link to={`/projects/${project.id}`}>
@@ -89,21 +103,34 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           )}
 
-          {project.team && project.team.length > 0 && (
+          {displayTeam && displayTeam.length > 0 && (
             <div className="flex items-center space-x-2">
               <Users size={16} className="text-gray-400" />
               <div className="flex -space-x-1">
-                {project.team.slice(0, 3).map((member, index) => (
-                  <div
-                    key={index}
-                    className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
-                  >
-                    {member}
-                  </div>
-                ))}
-                {project.team.length > 3 && (
+                {teamMembers.length > 0 ? (
+                  // Show real team member avatars
+                  teamMembers.slice(0, 3).map((member, index) => (
+                    <div
+                      key={member.id}
+                      className={`w-6 h-6 bg-gradient-to-r ${member.gradient} rounded-full border-2 border-white flex items-center justify-center text-xs text-white font-medium`}
+                    >
+                      {member.avatar}
+                    </div>
+                  ))
+                ) : (
+                  // Fallback to legacy string-based team data
+                  project.team.slice(0, 3).map((member, index) => (
+                    <div
+                      key={index}
+                      className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+                    >
+                      {member}
+                    </div>
+                  ))
+                )}
+                {displayTeam.length > 3 && (
                   <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
-                    +{project.team.length - 3}
+                    +{displayTeam.length - 3}
                   </div>
                 )}
               </div>

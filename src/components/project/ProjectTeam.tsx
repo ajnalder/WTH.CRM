@@ -1,40 +1,146 @@
 
 import React from 'react';
-import { Users } from 'lucide-react';
+import { Users, Plus, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface Project {
-  team: string[];
-}
+import { Button } from '@/components/ui/button';
+import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface ProjectTeamProps {
-  project: Project;
+  projectId: string;
 }
 
-export const ProjectTeam: React.FC<ProjectTeamProps> = ({ project }) => {
+export const ProjectTeam: React.FC<ProjectTeamProps> = ({ projectId }) => {
+  const [isManaging, setIsManaging] = React.useState(false);
+  const [selectedMembers, setSelectedMembers] = React.useState<string[]>([]);
+  const { 
+    projectTeamMembers, 
+    isLoading, 
+    assignTeamMember, 
+    removeTeamMember,
+    isAssigning,
+    isRemoving 
+  } = useProjectTeamMembers(projectId);
+
+  const handleTeamMemberToggle = (memberId: string) => {
+    setSelectedMembers(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    setSelectedMembers(prev => prev.filter(id => id !== memberId));
+  };
+
+  const handleAssignSelected = () => {
+    selectedMembers.forEach(memberId => {
+      const isAlreadyAssigned = projectTeamMembers.some(ptm => ptm.team_member_id === memberId);
+      if (!isAlreadyAssigned) {
+        assignTeamMember({ projectId, teamMemberId: memberId });
+      }
+    });
+    setSelectedMembers([]);
+    setIsManaging(false);
+  };
+
+  const handleRemoveFromProject = (memberId: string) => {
+    removeTeamMember({ projectId, teamMemberId: memberId });
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Team Members</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Team Members</CardTitle>
+          <Dialog open={isManaging} onOpenChange={setIsManaging}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Manage Team Members</DialogTitle>
+                <DialogDescription>
+                  Select team members to assign to this project.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <TeamMemberSelector
+                  selectedMembers={selectedMembers}
+                  onMemberToggle={handleTeamMemberToggle}
+                  onRemoveMember={handleRemoveTeamMember}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsManaging(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAssignSelected}
+                    disabled={selectedMembers.length === 0 || isAssigning}
+                  >
+                    {isAssigning ? 'Assigning...' : 'Assign Selected'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
-        {project.team.length === 0 ? (
+        {projectTeamMembers.length === 0 ? (
           <div className="text-center py-8">
             <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No team members yet</h3>
-            <p className="text-gray-600 text-sm">Team members will be added to this project soon.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No team members assigned</h3>
+            <p className="text-gray-600 text-sm">Assign team members to collaborate on this project.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {project.team.map((member, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  {member}
+            {projectTeamMembers.map((ptm) => (
+              <div key={ptm.id} className="flex items-center justify-between space-x-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 bg-gradient-to-r ${ptm.team_member.gradient} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                    {ptm.team_member.avatar}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">{ptm.team_member.name}</div>
+                    <div className="text-xs text-gray-500">{ptm.team_member.role}</div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Team Member {index + 1}</div>
-                  <div className="text-xs text-gray-500">Active</div>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveFromProject(ptm.team_member_id)}
+                  disabled={isRemoving}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
             ))}
           </div>

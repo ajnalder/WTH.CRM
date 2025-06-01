@@ -25,6 +25,8 @@ import {
 import { Plus } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useClients } from '@/hooks/useClients';
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
+import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
 
 interface ProjectFormData {
   name: string;
@@ -38,8 +40,10 @@ interface ProjectFormData {
 
 export const NewProjectForm: React.FC = () => {
   const [open, setOpen] = React.useState(false);
+  const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
   const { createProject, isCreating } = useProjects();
   const { clients } = useClients();
+  const { assignTeamMember } = useProjectTeamMembers();
   
   const form = useForm<ProjectFormData>({
     defaultValues: {
@@ -54,6 +58,18 @@ export const NewProjectForm: React.FC = () => {
   });
 
   const isRetainer = form.watch('is_retainer');
+
+  const handleTeamMemberToggle = (memberId: string) => {
+    setSelectedTeamMembers(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+  };
 
   const onSubmit = (data: ProjectFormData) => {
     console.log('Creating new project:', data);
@@ -72,6 +88,7 @@ export const NewProjectForm: React.FC = () => {
     
     setOpen(false);
     form.reset();
+    setSelectedTeamMembers([]);
   };
 
   return (
@@ -82,7 +99,7 @@ export const NewProjectForm: React.FC = () => {
           New Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
@@ -148,6 +165,15 @@ export const NewProjectForm: React.FC = () => {
                 </FormItem>
               )}
             />
+
+            <div>
+              <label className="text-sm font-medium">Team Members</label>
+              <TeamMemberSelector
+                selectedMembers={selectedTeamMembers}
+                onMemberToggle={handleTeamMemberToggle}
+                onRemoveMember={handleRemoveTeamMember}
+              />
+            </div>
 
             <FormField
               control={form.control}

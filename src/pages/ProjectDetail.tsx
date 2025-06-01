@@ -115,7 +115,7 @@ const ProjectDetail = () => {
           </div>
 
           <div className="space-y-6">
-            <ProjectTeam project={transformedProject} />
+            <ProjectTeam projectId={transformedProject.id} />
             <ProjectTasks project={transformedProject} />
           </div>
         </div>
