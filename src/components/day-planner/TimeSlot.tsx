@@ -3,6 +3,7 @@ import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { ScheduledTaskCard } from './ScheduledTaskCard';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import type { Client } from '@/hooks/useClients';
 
 interface ScheduledTask {
   id: string;
@@ -18,6 +19,7 @@ interface TimeSlotProps {
   timeSlot: string;
   scheduledTask?: ScheduledTask;
   task?: TaskWithClient;
+  client?: Client;
   getAssigneeName: (assigneeId: string | null) => string;
   updateTaskDuration: (taskId: string, duration: number) => void;
   removeScheduledTask: (taskId: string) => void;
@@ -29,6 +31,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
   timeSlot,
   scheduledTask,
   task,
+  client,
   getAssigneeName,
   updateTaskDuration,
   removeScheduledTask,
@@ -56,6 +59,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
               <ScheduledTaskCard
                 scheduledTask={scheduledTask}
                 task={task}
+                client={client}
                 getAssigneeName={getAssigneeName}
                 updateTaskDuration={updateTaskDuration}
                 removeScheduledTask={removeScheduledTask}

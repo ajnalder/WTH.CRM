@@ -3,8 +3,11 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Clock, X, GripVertical } from 'lucide-react';
+import { getInitials } from '@/utils/clientGradients';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import type { Client } from '@/hooks/useClients';
 
 interface ScheduledTask {
   id: string;
@@ -19,6 +22,7 @@ interface ScheduledTask {
 interface TaskCardContentProps {
   scheduledTask: ScheduledTask;
   task?: TaskWithClient;
+  client?: Client;
   getAssigneeName: (assigneeId: string | null) => string;
   updateTaskDuration: (taskId: string, duration: number) => void;
   removeScheduledTask: (taskId: string) => void;
@@ -29,6 +33,7 @@ interface TaskCardContentProps {
 export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   scheduledTask,
   task,
+  client,
   getAssigneeName,
   updateTaskDuration,
   removeScheduledTask,
@@ -66,9 +71,18 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
       
       <div className="ml-6 mr-8 flex-1">
         <div className="flex items-start justify-between mb-2">
-          <h4 className="font-medium text-gray-900 text-sm line-clamp-1">
-            {scheduledTask.type === 'custom' ? scheduledTask.title : task?.title}
-          </h4>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {client && (
+              <Avatar className="h-6 w-6 flex-shrink-0">
+                <AvatarFallback className={`bg-gradient-to-br ${client.gradient} text-white text-xs font-semibold`}>
+                  {getInitials(client.company)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <h4 className="font-medium text-gray-900 text-sm line-clamp-1 min-w-0">
+              {scheduledTask.type === 'custom' ? scheduledTask.title : task?.title}
+            </h4>
+          </div>
           {task && (
             <Badge className={getStatusColor(task.status)}>
               {task.status}

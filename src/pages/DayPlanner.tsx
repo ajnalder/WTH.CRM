@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
 import { DayPlannerHeader } from '@/components/day-planner/DayPlannerHeader';
 import { AddCustomEntryDialog } from '@/components/day-planner/AddCustomEntryDialog';
 import { DailySchedule } from '@/components/day-planner/DailySchedule';
@@ -22,6 +22,7 @@ interface ScheduledTask {
 const DayPlanner = () => {
   const { tasks } = useTasks();
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
   const [isAddingCustom, setIsAddingCustom] = useState(false);
@@ -33,6 +34,10 @@ const DayPlanner = () => {
   
   const getTaskById = (taskId: string) => {
     return tasks.find(task => task.id === taskId);
+  };
+
+  const getClientByName = (clientName: string) => {
+    return clients.find(client => client.company === clientName);
   };
 
   const getAssigneeName = (assigneeId: string | null) => {
@@ -131,6 +136,7 @@ const DayPlanner = () => {
               timeSlots={timeSlots}
               scheduledTasks={scheduledTasks}
               getTaskById={getTaskById}
+              getClientByName={getClientByName}
               getAssigneeName={getAssigneeName}
               updateTaskDuration={updateTaskDuration}
               removeScheduledTask={removeScheduledTask}

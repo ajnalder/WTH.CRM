@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 import { TimeSlot } from './TimeSlot';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import type { Client } from '@/hooks/useClients';
 
 interface ScheduledTask {
   id: string;
@@ -18,6 +20,7 @@ interface DailyScheduleProps {
   timeSlots: string[];
   scheduledTasks: ScheduledTask[];
   getTaskById: (taskId: string) => TaskWithClient | undefined;
+  getClientByName: (clientName: string) => Client | undefined;
   getAssigneeName: (assigneeId: string | null) => string;
   updateTaskDuration: (taskId: string, duration: number) => void;
   removeScheduledTask: (taskId: string) => void;
@@ -27,6 +30,7 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
   timeSlots,
   scheduledTasks,
   getTaskById,
+  getClientByName,
   getAssigneeName,
   updateTaskDuration,
   removeScheduledTask
@@ -83,13 +87,16 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
           {visibleTimeSlots.map((timeSlot) => {
             const scheduledTask = getScheduledTaskForSlot(timeSlot);
             const isFirstSlotOfTask = scheduledTask && scheduledTask.startTime === timeSlot;
+            const task = scheduledTask && scheduledTask.type === 'task' ? getTaskById(scheduledTask.taskId) : undefined;
+            const client = task?.client_name ? getClientByName(task.client_name) : undefined;
             
             return (
               <TimeSlot
                 key={timeSlot}
                 timeSlot={timeSlot}
                 scheduledTask={isFirstSlotOfTask ? scheduledTask : undefined}
-                task={scheduledTask && scheduledTask.type === 'task' ? getTaskById(scheduledTask.taskId) : undefined}
+                task={task}
+                client={client}
                 getAssigneeName={getAssigneeName}
                 updateTaskDuration={updateTaskDuration}
                 removeScheduledTask={removeScheduledTask}
