@@ -81,8 +81,11 @@ const DayPlanner = () => {
   const getScheduledTaskForSlot = (timeSlot: string) => {
     return scheduledTasks.find(st => {
       const startIndex = timeSlots.indexOf(st.startTime);
-      const endIndex = startIndex + Math.ceil(st.duration / 15);
+      const slotsNeeded = Math.ceil(st.duration / 15);
+      const endIndex = startIndex + slotsNeeded;
       const currentIndex = timeSlots.indexOf(timeSlot);
+      
+      // Check if current slot is within the range of this scheduled task
       return currentIndex >= startIndex && currentIndex < endIndex;
     });
   };
@@ -229,7 +232,7 @@ const DayPlanner = () => {
                         updateTaskDuration={updateTaskDuration}
                         removeScheduledTask={removeScheduledTask}
                         isOccupied={!!scheduledTask}
-                        isFirstSlot={isFirstSlotOfTask}
+                        isFirstSlot={!!isFirstSlotOfTask}
                       />
                     );
                   })}
