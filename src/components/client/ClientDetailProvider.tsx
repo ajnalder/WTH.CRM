@@ -16,7 +16,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
   const { clients, isLoading: clientsLoading } = useClients();
   const { domains, createDomain, deleteDomain, isLoading: domainsLoading } = useDomains(clientId);
   const { hosting, createHosting, deleteHosting, isLoading: hostingLoading } = useHosting(clientId);
-  const { contacts, createContact, deleteContact, updateContact, isLoading: contactsLoading } = useContacts(clientId);
+  const { contacts, createContact, deleteContact, updateContact: updateContactMutation, isLoading: contactsLoading } = useContacts(clientId);
 
   const client = clients.find(c => c.id === clientId);
 
@@ -26,6 +26,11 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
     createHosting,
     createContact
   });
+
+  // Wrapper function to match the expected interface signature
+  const updateContact = (id: string, data: any) => {
+    updateContactMutation({ contactId: id, contactData: data });
+  };
 
   return children({
     client,
