@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 
 interface Project {
-  id: number;
+  id: string; // Changed from number to string to match UUID
   name: string;
   client: string;
   status: string;
