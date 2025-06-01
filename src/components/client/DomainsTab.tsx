@@ -1,7 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Globe, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Domain } from '@/types/client';
 import AddDomainDialog from './AddDomainDialog';
 
@@ -12,6 +24,7 @@ interface DomainsTabProps {
   newDomain: Omit<Domain, 'id'>;
   setNewDomain: (domain: Omit<Domain, 'id'>) => void;
   onAddDomain: () => void;
+  onDeleteDomain?: (id: number) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -33,7 +46,8 @@ const DomainsTab = ({
   setShowDomainDialog,
   newDomain,
   setNewDomain,
-  onAddDomain
+  onAddDomain,
+  onDeleteDomain
 }: DomainsTabProps) => {
   return (
     <div className="space-y-6">
@@ -61,11 +75,39 @@ const DomainsTab = ({
                     <p className="text-sm text-gray-600">Annual renewal: ${domain.renewalCost}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(domain.status)}`}>
-                    {domain.status}
-                  </span>
-                  <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiryDate).toLocaleDateString()}</p>
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(domain.status)}`}>
+                      {domain.status}
+                    </span>
+                    <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiryDate).toLocaleDateString()}</p>
+                  </div>
+                  {onDeleteDomain && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 size={16} className="text-red-500" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Domain</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{domain.name}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDeleteDomain(domain.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
             </CardContent>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -97,6 +96,10 @@ const ClientDetail = () => {
     }
   };
 
+  const deleteDomain = (id: number) => {
+    setDomains(domains.filter(domain => domain.id !== id));
+  };
+
   const addHosting = () => {
     if (newHosting.provider && newHosting.plan) {
       const newHost: HostingInfo = {
@@ -115,6 +118,10 @@ const ClientDetail = () => {
       });
       setShowHostingDialog(false);
     }
+  };
+
+  const deleteHosting = (id: number) => {
+    setHosting(hosting.filter(host => host.id !== id));
   };
 
   const addContact = () => {
@@ -194,6 +201,7 @@ const ClientDetail = () => {
             newDomain={newDomain}
             setNewDomain={setNewDomain}
             onAddDomain={addDomain}
+            onDeleteDomain={deleteDomain}
           />
         );
       case 'hosting':
@@ -205,6 +213,7 @@ const ClientDetail = () => {
             newHosting={newHosting}
             setNewHosting={setNewHosting}
             onAddHosting={addHosting}
+            onDeleteHosting={deleteHosting}
           />
         );
       case 'contacts':

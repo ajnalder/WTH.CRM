@@ -2,7 +2,18 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Server } from 'lucide-react';
+import { Server, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { HostingInfo } from '@/types/client';
 import AddHostingDialog from './AddHostingDialog';
 
@@ -13,6 +24,7 @@ interface HostingTabProps {
   newHosting: Omit<HostingInfo, 'id'>;
   setNewHosting: (hosting: Omit<HostingInfo, 'id'>) => void;
   onAddHosting: () => void;
+  onDeleteHosting?: (id: number) => void;
 }
 
 const HostingTab = ({
@@ -21,7 +33,8 @@ const HostingTab = ({
   setShowHostingDialog,
   newHosting,
   setNewHosting,
-  onAddHosting
+  onAddHosting,
+  onDeleteHosting
 }: HostingTabProps) => {
   return (
     <div className="space-y-6">
@@ -49,11 +62,39 @@ const HostingTab = ({
                     <p className="text-sm text-gray-600">Cost: ${hostingInfo.renewalCost}/month</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={hostingInfo.loginUrl} target="_blank" rel="noopener noreferrer">
-                    Access Console
-                  </a>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={hostingInfo.loginUrl} target="_blank" rel="noopener noreferrer">
+                      Access Console
+                    </a>
+                  </Button>
+                  {onDeleteHosting && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 size={16} className="text-red-500" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Hosting</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{hostingInfo.provider} - {hostingInfo.plan}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDeleteHosting(hostingInfo.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
