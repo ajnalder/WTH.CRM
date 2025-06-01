@@ -80,11 +80,45 @@ const DayPlanner = () => {
   };
 
   const updateTaskDuration = (taskId: string, newDuration: number) => {
-    setScheduledTasks(prev => 
-      prev.map(task => 
-        task.taskId === taskId ? { ...task, duration: newDuration } : task
-      )
-    );
+    setScheduledTasks(prev => {
+      const taskIndex = prev.findIndex(task => task.taskId === taskId);
+      if (taskIndex === -1) return prev;
+      
+      const updatedTask = { ...prev[taskIndex], duration: newDuration };
+      const updatedTasks = [...prev];
+      updatedTasks[taskIndex] = updatedTask;
+      
+      // Find the time slot index for this task
+      const taskTimeIndex = timeSlots.indexOf(updatedTask.startTime);
+      if (taskTimeIndex === -1) return updatedTasks;
+      
+      // Calculate how many slots this task now occupies
+      const newSlotsNeeded = Math.ceil(newDuration / 15);
+      const newEndIndex = taskTimeIndex + newSlotsNeeded;
+      
+      // Find tasks that start after this task and need to be shifted
+      const tasksToShift = updatedTasks.filter(task => {
+        if (task.taskId === taskId) return false;
+        const taskStartIndex = timeSlots.indexOf(task.startTime);
+        return taskStartIndex >= taskTimeIndex && taskStartIndex < newEndIndex;
+      });
+      
+      // Shift conflicting tasks to start after this task
+      tasksToShift.forEach(taskToShift => {
+        const shiftedStartIndex = newEndIndex;
+        if (shiftedStartIndex < timeSlots.length) {
+          const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
+          if (taskToShiftIndex !== -1) {
+            updatedTasks[taskToShiftIndex] = {
+              ...updatedTasks[taskToShiftIndex],
+              startTime: timeSlots[shiftedStartIndex]
+            };
+          }
+        }
+      });
+      
+      return updatedTasks;
+    });
   };
 
   const addCustomEntry = () => {
@@ -147,6 +181,7 @@ const DayPlanner = () => {
             <TaskPool
               tasks={getUnscheduledTasks()}
               getAssigneeName={getAssigneeName}
+              getClientByName={getClientByName}
             />
           </div>
         </div>
