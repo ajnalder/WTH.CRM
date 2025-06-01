@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
@@ -43,6 +42,34 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
     });
   };
 
+  const getVisibleTimeSlots = () => {
+    const visibleSlots: string[] = [];
+    const coveredSlots = new Set<string>();
+
+    // First pass: identify all covered slots
+    scheduledTasks.forEach(task => {
+      const startIndex = timeSlots.indexOf(task.startTime);
+      const slotsNeeded = Math.ceil(task.duration / 15);
+      
+      for (let i = startIndex + 1; i < startIndex + slotsNeeded; i++) {
+        if (i < timeSlots.length) {
+          coveredSlots.add(timeSlots[i]);
+        }
+      }
+    });
+
+    // Second pass: keep only slots that aren't covered
+    timeSlots.forEach(slot => {
+      if (!coveredSlots.has(slot)) {
+        visibleSlots.push(slot);
+      }
+    });
+
+    return visibleSlots;
+  };
+
+  const visibleTimeSlots = getVisibleTimeSlots();
+
   return (
     <Card>
       <CardHeader>
@@ -53,7 +80,7 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {timeSlots.map((timeSlot) => {
+          {visibleTimeSlots.map((timeSlot) => {
             const scheduledTask = getScheduledTaskForSlot(timeSlot);
             const isFirstSlotOfTask = scheduledTask && scheduledTask.startTime === timeSlot;
             
