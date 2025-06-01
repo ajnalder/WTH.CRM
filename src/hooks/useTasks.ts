@@ -1,6 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type Task = Tables<'tasks'>;
@@ -12,14 +14,21 @@ export interface TaskWithClient extends Task {
 
 export const useTasks = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const tasksQuery = useQuery({
-    queryKey: ['tasks'],
+    queryKey: ['tasks', user?.id],
     queryFn: async (): Promise<TaskWithClient[]> => {
+      if (!user) {
+        console.log('No authenticated user, returning empty tasks array');
+        return [];
+      }
+
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -35,7 +44,8 @@ export const useTasks = () => {
           clients (
             company
           )
-        `);
+        `)
+        .eq('user_id', user.id);
 
       if (projectsError) {
         console.error('Error fetching projects:', projectsError);
@@ -63,14 +73,26 @@ export const useTasks = () => {
 
       return tasksWithClients;
     },
+    enabled: !!user,
   });
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: Omit<TaskInsert, 'user_id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         throw new Error('User not authenticated');
+      }
+
+      // Input validation
+      if (!taskData.title || taskData.title.trim().length === 0) {
+        throw new Error('Task title is required');
+      }
+      
+      if (taskData.title.length > 255) {
+        throw new Error('Task title must be less than 255 characters');
+      }
+
+      if (taskData.description && taskData.description.length > 2000) {
+        throw new Error('Task description must be less than 2000 characters');
       }
 
       const { data, error } = await supabase
@@ -87,7 +109,7 @@ export const useTasks = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       toast({
         title: "Success",
         description: "Task created successfully",
@@ -97,7 +119,7 @@ export const useTasks = () => {
       console.error('Create task error:', error);
       toast({
         title: "Error",
-        description: "Failed to create task",
+        description: error.message || "Failed to create task",
         variant: "destructive",
       });
     },
@@ -105,10 +127,28 @@ export const useTasks = () => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Input validation
+      if (updates.title !== undefined && (!updates.title || updates.title.trim().length === 0)) {
+        throw new Error('Task title is required');
+      }
+      
+      if (updates.title && updates.title.length > 255) {
+        throw new Error('Task title must be less than 255 characters');
+      }
+
+      if (updates.description && updates.description.length > 2000) {
+        throw new Error('Task description must be less than 2000 characters');
+      }
+
       const { data, error } = await supabase
         .from('tasks')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id)
         .select()
         .single();
 
@@ -120,7 +160,7 @@ export const useTasks = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       toast({
         title: "Success",
         description: "Task updated successfully",
@@ -130,7 +170,7 @@ export const useTasks = () => {
       console.error('Update task error:', error);
       toast({
         title: "Error",
-        description: "Failed to update task",
+        description: error.message || "Failed to update task",
         variant: "destructive",
       });
     },
@@ -138,10 +178,15 @@ export const useTasks = () => {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error deleting task:', error);
@@ -149,7 +194,7 @@ export const useTasks = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       toast({
         title: "Success",
         description: "Task deleted successfully",
@@ -159,7 +204,7 @@ export const useTasks = () => {
       console.error('Delete task error:', error);
       toast({
         title: "Error",
-        description: "Failed to delete task",
+        description: error.message || "Failed to delete task",
         variant: "destructive",
       });
     },

@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type TimeEntry = Tables<'time_entries'>;
@@ -9,15 +10,35 @@ type TimeEntryInsert = TablesInsert<'time_entries'>;
 
 export const useTimeEntries = (taskId: string) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const timeEntriesQuery = useQuery({
-    queryKey: ['time_entries', taskId],
+    queryKey: ['time_entries', taskId, user?.id],
     queryFn: async () => {
+      if (!user || !taskId) {
+        console.log('No authenticated user or task ID, returning empty time entries array');
+        return [];
+      }
+
+      // First verify the task belongs to the user
+      const { data: task, error: taskError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('id', taskId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (taskError || !task) {
+        console.error('Task not found or access denied:', taskError);
+        throw new Error('Task not found or access denied');
+      }
+
       const { data, error } = await supabase
         .from('time_entries')
         .select('*')
         .eq('task_id', taskId)
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (error) {
@@ -27,14 +48,46 @@ export const useTimeEntries = (taskId: string) => {
 
       return data || [];
     },
+    enabled: !!user && !!taskId,
   });
 
   const createTimeEntryMutation = useMutation({
     mutationFn: async (timeEntryData: Omit<TimeEntryInsert, 'user_id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         throw new Error('User not authenticated');
+      }
+
+      // Input validation
+      if (!timeEntryData.description || timeEntryData.description.trim().length === 0) {
+        throw new Error('Time entry description is required');
+      }
+      
+      if (timeEntryData.description.length > 500) {
+        throw new Error('Time entry description must be less than 500 characters');
+      }
+
+      if (!timeEntryData.hours || timeEntryData.hours <= 0) {
+        throw new Error('Hours must be greater than 0');
+      }
+
+      if (timeEntryData.hours > 24) {
+        throw new Error('Hours cannot exceed 24 for a single entry');
+      }
+
+      if (!timeEntryData.task_id) {
+        throw new Error('Task ID is required');
+      }
+
+      // Verify the task belongs to the user
+      const { data: task, error: taskError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('id', timeEntryData.task_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (taskError || !task) {
+        throw new Error('Task not found or access denied');
       }
 
       const { data, error } = await supabase
@@ -51,7 +104,7 @@ export const useTimeEntries = (taskId: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time_entries', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['time_entries', taskId, user?.id] });
       toast({
         title: "Success",
         description: "Time entry logged successfully",
@@ -61,7 +114,7 @@ export const useTimeEntries = (taskId: string) => {
       console.error('Create time entry error:', error);
       toast({
         title: "Error",
-        description: "Failed to log time entry",
+        description: error.message || "Failed to log time entry",
         variant: "destructive",
       });
     },
