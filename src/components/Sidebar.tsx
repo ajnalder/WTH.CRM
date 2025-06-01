@@ -1,18 +1,22 @@
 
 import React from 'react';
 import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const navigationItems = [
-  { icon: Home, label: 'Dashboard', active: true },
-  { icon: Folder, label: 'Projects' },
-  { icon: CheckSquare, label: 'Tasks' },
-  { icon: Users, label: 'Team' },
-  { icon: Calendar, label: 'Calendar' },
-  { icon: BarChart3, label: 'Reports' },
-  { icon: Settings, label: 'Settings' },
+  { icon: Home, label: 'Dashboard', path: '/' },
+  { icon: Folder, label: 'Projects', path: '/projects' },
+  { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
+  { icon: Users, label: 'Team', path: '/team' },
+  { icon: Calendar, label: 'Calendar', path: '/calendar' },
+  { icon: BarChart3, label: 'Reports', path: '/reports' },
+  { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 export const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 shadow-sm">
       <div className="p-6">
@@ -25,19 +29,23 @@ export const Sidebar = () => {
       </div>
       
       <nav className="px-4">
-        {navigationItems.map((item, index) => (
-          <button
-            key={index}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 mb-1 ${
-              item.active
-                ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-l-4 border-blue-600'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            }`}
-          >
-            <item.icon size={20} />
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
+        {navigationItems.map((item, index) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={index}
+              onClick={() => navigate(item.path)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 mb-1 ${
+                isActive
+                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-l-4 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <item.icon size={20} />
+              <span className="font-medium">{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
