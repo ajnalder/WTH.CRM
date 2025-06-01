@@ -12,19 +12,7 @@ interface ClientOverviewTabProps {
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
   const { contacts, isLoading } = useContacts(client.id.toString());
   
-  console.log('ClientOverviewTab - Client ID:', client.id);
-  console.log('ClientOverviewTab - Client ID type:', typeof client.id);
-  console.log('ClientOverviewTab - Contacts:', contacts);
-  console.log('ClientOverviewTab - Contacts length:', contacts?.length);
-  
   const primaryContact = contacts?.find(contact => contact.is_primary);
-  console.log('ClientOverviewTab - Primary Contact:', primaryContact);
-  
-  const displayEmail = primaryContact?.email || 'No primary contact email';
-  const displayPhone = primaryContact?.phone || client.phone || 'No phone number';
-
-  console.log('ClientOverviewTab - Display Email:', displayEmail);
-  console.log('ClientOverviewTab - Display Phone:', displayPhone);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -43,15 +31,39 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
                 <Label>Industry</Label>
                 <p className="text-gray-900">{client.industry}</p>
               </div>
-              <div>
-                <Label>Email</Label>
-                <p className="text-gray-900">{isLoading ? 'Loading...' : displayEmail}</p>
-              </div>
-              <div>
-                <Label>Phone</Label>
-                <p className="text-gray-900">{isLoading ? 'Loading...' : displayPhone}</p>
-              </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Primary Contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <p className="text-gray-500">Loading contact information...</p>
+            ) : primaryContact ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Name</Label>
+                  <p className="text-gray-900">{primaryContact.name}</p>
+                </div>
+                <div>
+                  <Label>Role</Label>
+                  <p className="text-gray-900">{primaryContact.role || 'Not specified'}</p>
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <p className="text-gray-900">{primaryContact.email}</p>
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <p className="text-gray-900">{primaryContact.phone || 'Not provided'}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">No primary contact assigned</p>
+            )}
           </CardContent>
         </Card>
       </div>
