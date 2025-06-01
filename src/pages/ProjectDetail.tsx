@@ -67,19 +67,21 @@ const ProjectDetail = () => {
       <div className="p-6">
         <ProjectHeader project={transformedProject} />
         
-        <div className="flex items-center justify-between mb-6">
-          <ProjectHeaderControls project={transformedProject} />
-          <AddTaskToProjectDialog 
-            projectId={transformedProject.id} 
-            projectName={transformedProject.name} 
-          />
-        </div>
+        <ProjectHeaderControls project={transformedProject} />
         
         <ProjectStats project={transformedProject} daysUntilDue={daysUntilDue} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
+            
+            <div className="flex justify-start">
+              <AddTaskToProjectDialog 
+                projectId={transformedProject.id} 
+                projectName={transformedProject.name} 
+              />
+            </div>
+            
             {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
               <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
             )}
