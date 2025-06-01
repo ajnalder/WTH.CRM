@@ -36,11 +36,13 @@ interface TaskFormData {
 interface AddTaskToProjectDialogProps {
   projectId: string;
   projectName: string;
+  triggerText?: string;
 }
 
 export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({ 
   projectId, 
-  projectName 
+  projectName,
+  triggerText = "Add task now"
 }) => {
   const [open, setOpen] = React.useState(false);
   const { createTask, isCreating } = useTasks();
@@ -79,7 +81,7 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
           <Plus size={16} className="mr-1" />
-          Add task now
+          {triggerText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

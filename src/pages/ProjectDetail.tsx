@@ -11,12 +11,14 @@ import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
 import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, isLoading, error } = useProjects();
+  const { createTask, isCreating } = useTasks();
   
   if (isLoading) {
     return (
@@ -61,6 +63,22 @@ const ProjectDetail = () => {
   const projectDuration = transformedProject.startDate && transformedProject.dueDate 
     ? calculateProjectDuration(transformedProject.startDate, transformedProject.dueDate, transformedProject.isRetainer) 
     : 0;
+
+  const handleCreateSingleTask = () => {
+    console.log('Creating single task from project:', transformedProject);
+    
+    createTask({
+      title: transformedProject.name,
+      description: transformedProject.description || null,
+      priority: transformedProject.priority as 'Low' | 'Medium' | 'High',
+      assignee: null,
+      due_date: transformedProject.dueDate || null,
+      tags: null,
+      project: transformedProject.name,
+      status: 'To Do',
+      progress: transformedProject.progress || 0,
+    });
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -75,10 +93,19 @@ const ProjectDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             
-            <div className="flex justify-start">
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleCreateSingleTask}
+                disabled={isCreating}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isCreating ? 'Creating...' : 'Add task'}
+              </Button>
+              
               <AddTaskToProjectDialog 
                 projectId={transformedProject.id} 
-                projectName={transformedProject.name} 
+                projectName={transformedProject.name}
+                triggerText="Add multiple tasks"
               />
             </div>
             
