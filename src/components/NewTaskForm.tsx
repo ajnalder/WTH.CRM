@@ -31,12 +31,12 @@ import {
 import { Plus } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 
 interface TaskFormData {
   title: string;
   description: string;
   priority: 'Low' | 'Medium' | 'High';
-  assignee: string;
   project: string;
   dueDate: string;
   tags: string;
@@ -48,6 +48,7 @@ interface NewTaskFormProps {
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
   const [open, setOpen] = React.useState(false);
+  const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
   const { createTask, isCreating } = useTasks();
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const form = useForm<TaskFormData>({
@@ -55,23 +56,38 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       title: '',
       description: '',
       priority: 'Medium',
-      assignee: '',
       project: '',
       dueDate: '',
       tags: '',
     },
   });
 
+  const handleTeamMemberToggle = (memberId: string) => {
+    setSelectedTeamMembers(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+  };
+
   const onSubmit = (data: TaskFormData) => {
-    console.log('Creating new task:', data);
+    console.log('Creating new task:', data, 'with team members:', selectedTeamMembers);
     
     const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    
+    // For now, we'll store the first selected team member as assignee
+    // Later we can enhance this to support multiple assignees
+    const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[0] : null;
     
     createTask({
       title: data.title,
       description: data.description || null,
       priority: data.priority,
-      assignee: data.assignee || null,
+      assignee: assignee,
       due_date: data.dueDate || null,
       tags: tagsArray.length > 0 ? tagsArray : null,
       project: data.project,
@@ -81,6 +97,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     
     setOpen(false);
     form.reset();
+    setSelectedTeamMembers([]);
     
     if (onTaskCreated) {
       onTaskCreated();
@@ -169,44 +186,39 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="assignee"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div>
+              <label className="text-sm font-medium">Assign Team Members</label>
+              <div className="mt-2">
+                <TeamMemberSelector
+                  selectedMembers={selectedTeamMembers}
+                  onMemberToggle={handleTeamMemberToggle}
+                  onRemoveMember={handleRemoveTeamMember}
+                />
+              </div>
             </div>
+            
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <FormField
