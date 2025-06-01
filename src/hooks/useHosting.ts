@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,10 +8,10 @@ export interface HostingInfo {
   provider: string;
   plan: string;
   platform: string;
-  renewal_date: string;
+  renewal_date: string | null;
   login_url: string | null;
   notes: string | null;
-  renewal_cost: number;
+  renewal_cost: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,10 +21,10 @@ export interface CreateHostingData {
   provider: string;
   plan: string;
   platform: string;
-  renewal_date: string;
+  renewal_date?: string | null;
   login_url?: string;
   notes?: string;
-  renewal_cost: number;
+  renewal_cost?: number | null;
 }
 
 export const useHosting = (clientId: string) => {

@@ -161,8 +161,8 @@ export type Database = {
           plan: string
           platform: string
           provider: string
-          renewal_cost: number
-          renewal_date: string
+          renewal_cost: number | null
+          renewal_date: string | null
           updated_at: string
         }
         Insert: {
@@ -174,8 +174,8 @@ export type Database = {
           plan: string
           platform?: string
           provider: string
-          renewal_cost?: number
-          renewal_date: string
+          renewal_cost?: number | null
+          renewal_date?: string | null
           updated_at?: string
         }
         Update: {
@@ -187,8 +187,8 @@ export type Database = {
           plan?: string
           platform?: string
           provider?: string
-          renewal_cost?: number
-          renewal_date?: string
+          renewal_cost?: number | null
+          renewal_date?: string | null
           updated_at?: string
         }
         Relationships: [

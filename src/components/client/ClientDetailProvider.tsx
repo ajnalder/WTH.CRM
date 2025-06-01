@@ -46,7 +46,7 @@ export interface ClientDetailContextProps {
     renewal_date: string;
     login_url: string;
     notes: string;
-    renewal_cost: number;
+    renewal_cost: number | null;
   };
   setNewHosting: React.Dispatch<React.SetStateAction<{
     provider: string;
@@ -55,7 +55,7 @@ export interface ClientDetailContextProps {
     renewal_date: string;
     login_url: string;
     notes: string;
-    renewal_cost: number;
+    renewal_cost: number | null;
   }>>;
   newContact: {
     name: string;
@@ -112,7 +112,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
     renewal_date: '',
     login_url: '',
     notes: '',
-    renewal_cost: 0
+    renewal_cost: null as number | null
   });
 
   const [newContact, setNewContact] = useState({
@@ -140,10 +140,14 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
 
   const addHosting = () => {
     if (newHosting.provider && newHosting.plan && clientId) {
-      createHosting({
+      const hostingData = {
         client_id: clientId,
-        ...newHosting
-      });
+        ...newHosting,
+        renewal_date: newHosting.renewal_date || null,
+        renewal_cost: newHosting.renewal_cost
+      };
+      
+      createHosting(hostingData);
       setNewHosting({
         provider: '',
         plan: '',
@@ -151,7 +155,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
         renewal_date: '',
         login_url: '',
         notes: '',
-        renewal_cost: 0
+        renewal_cost: null
       });
       setShowHostingDialog(false);
     }

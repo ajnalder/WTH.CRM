@@ -24,7 +24,7 @@ interface AddHostingDialogProps {
     renewal_date: string;
     login_url: string;
     notes: string;
-    renewal_cost: number;
+    renewal_cost: number | null;
   };
   setNewHosting: (hosting: {
     provider: string;
@@ -33,7 +33,7 @@ interface AddHostingDialogProps {
     renewal_date: string;
     login_url: string;
     notes: string;
-    renewal_cost: number;
+    renewal_cost: number | null;
   }) => void;
   onAddHosting: () => void;
 }
@@ -105,7 +105,7 @@ const AddHostingDialog = ({
             </Select>
           </div>
           <div>
-            <Label htmlFor="renewal">Renewal Date</Label>
+            <Label htmlFor="renewal">Renewal Date (optional)</Label>
             <Input
               id="renewal"
               type="date"
@@ -114,12 +114,12 @@ const AddHostingDialog = ({
             />
           </div>
           <div>
-            <Label htmlFor="hosting-renewal-cost">Monthly/Annual Cost ($)</Label>
+            <Label htmlFor="hosting-renewal-cost">Monthly/Annual Cost ($) (optional)</Label>
             <Input
               id="hosting-renewal-cost"
               type="number"
-              value={newHosting.renewal_cost}
-              onChange={(e) => setNewHosting({...newHosting, renewal_cost: parseFloat(e.target.value) || 0})}
+              value={newHosting.renewal_cost || ''}
+              onChange={(e) => setNewHosting({...newHosting, renewal_cost: e.target.value ? parseFloat(e.target.value) : null})}
               placeholder="50.00"
             />
           </div>

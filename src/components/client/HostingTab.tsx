@@ -74,7 +74,9 @@ const HostingTab = ({
                   <div>
                     <h3 className="font-semibold">{hostingInfo.provider}</h3>
                     <p className="text-sm text-gray-600">{hostingInfo.plan}</p>
-                    <p className="text-sm text-gray-600">Cost: ${hostingInfo.renewal_cost}/month</p>
+                    {hostingInfo.renewal_cost && (
+                      <p className="text-sm text-gray-600">Cost: ${hostingInfo.renewal_cost}/month</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -118,10 +120,12 @@ const HostingTab = ({
                   <span className="text-gray-600">Platform:</span>
                   <p className="font-medium">{hostingInfo.platform}</p>
                 </div>
-                <div>
-                  <span className="text-gray-600">Renewal:</span>
-                  <p className="font-medium">{new Date(hostingInfo.renewal_date).toLocaleDateString()}</p>
-                </div>
+                {hostingInfo.renewal_date && (
+                  <div>
+                    <span className="text-gray-600">Renewal:</span>
+                    <p className="font-medium">{new Date(hostingInfo.renewal_date).toLocaleDateString()}</p>
+                  </div>
+                )}
               </div>
               {hostingInfo.notes && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
