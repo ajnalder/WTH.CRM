@@ -25,9 +25,9 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Prevent any drag behavior from the parent draggable
-    if (e.currentTarget.closest('[data-rbd-draggable-context-id]')) {
-      e.currentTarget.closest('[data-rbd-draggable-context-id]')?.setAttribute('data-rbd-draggable-context-id', '');
+    // Only handle if this is specifically the resize handle
+    if (!e.currentTarget.classList.contains('resize-handle')) {
+      return;
     }
     
     setIsResizing(true);
@@ -58,14 +58,6 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       setIsResizing(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      
-      // Re-enable drag behavior
-      setTimeout(() => {
-        const draggableElement = document.querySelector(`[data-rbd-draggable-id="task-${scheduledTask.taskId}"]`);
-        if (draggableElement) {
-          draggableElement.setAttribute('data-rbd-draggable-context-id', 'default');
-        }
-      }, 100);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -74,7 +66,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-gradient-to-t from-gray-400 via-gray-300 to-transparent rounded-b-lg transition-colors z-20 ${
+      className={`resize-handle absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-gradient-to-t from-gray-400 via-gray-300 to-transparent rounded-b-lg transition-colors z-20 ${
         isResizing ? 'from-blue-500 via-blue-400' : ''
       }`}
       onMouseDown={handleResizeStart}

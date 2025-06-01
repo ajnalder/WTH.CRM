@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,14 +41,24 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
     }
   };
 
+  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
+    // Prevent event propagation to avoid conflicts with resize handle
+    e.stopPropagation();
+  };
+
   return (
     <div className="p-3 h-full flex flex-col">
-      <div {...dragHandleProps} className="absolute top-2 left-2 cursor-move">
+      <div 
+        {...dragHandleProps} 
+        className="absolute top-2 left-2 cursor-move z-30 p-1 hover:bg-gray-100 rounded"
+        onMouseDown={handleDragHandleMouseDown}
+        title="Drag to move task"
+      >
         <GripVertical size={14} className="text-gray-400" />
       </div>
       
       {showControls && (
-        <div className="absolute top-2 right-2 flex gap-1">
+        <div className="absolute top-2 right-2 flex gap-1 z-30">
           <Button
             variant="ghost"
             size="sm"
