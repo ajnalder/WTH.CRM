@@ -10,16 +10,21 @@ interface ClientOverviewTabProps {
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
-  const { contacts, isLoading } = useContacts(client.id.toString());
+  const { contacts, isLoading } = useContacts(client.id);
   
   console.log('ClientOverviewTab - Client ID:', client.id);
+  console.log('ClientOverviewTab - Client ID type:', typeof client.id);
   console.log('ClientOverviewTab - Contacts:', contacts);
+  console.log('ClientOverviewTab - Contacts length:', contacts?.length);
   
-  const primaryContact = contacts.find(contact => contact.is_primary);
+  const primaryContact = contacts?.find(contact => contact.is_primary);
   console.log('ClientOverviewTab - Primary Contact:', primaryContact);
   
   const displayEmail = primaryContact?.email || 'No primary contact email';
   const displayPhone = primaryContact?.phone || client.phone || 'No phone number';
+
+  console.log('ClientOverviewTab - Display Email:', displayEmail);
+  console.log('ClientOverviewTab - Display Phone:', displayPhone);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
