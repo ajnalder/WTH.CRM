@@ -2,48 +2,20 @@
 import React from 'react';
 import { Users, Clock } from 'lucide-react';
 
-const teamMembers = [
-  {
-    id: 1,
-    name: 'John Doe',
-    role: 'Full Stack Developer',
-    avatar: 'JD',
-    status: 'online',
-    currentTask: 'E-commerce Platform',
-    hoursThisWeek: 32,
-    gradient: 'from-blue-400 to-blue-600',
-  },
-  {
-    id: 2,
-    name: 'Sarah Miller',
-    role: 'UI/UX Designer',
-    avatar: 'SM',
-    status: 'online',
-    currentTask: 'Mobile App Redesign',
-    hoursThisWeek: 28,
-    gradient: 'from-pink-400 to-pink-600',
-  },
-  {
-    id: 3,
-    name: 'Alex Lee',
-    role: 'Frontend Developer',
-    avatar: 'AL',
-    status: 'away',
-    currentTask: 'CRM Dashboard',
-    hoursThisWeek: 35,
-    gradient: 'from-green-400 to-green-600',
-  },
-  {
-    id: 4,
-    name: 'Mike Kim',
-    role: 'Backend Developer',
-    avatar: 'MK',
-    status: 'offline',
-    currentTask: 'API Integration',
-    hoursThisWeek: 30,
-    gradient: 'from-purple-400 to-purple-600',
-  },
-];
+interface TeamMember {
+  id: number;
+  name: string;
+  role: string;
+  avatar: string;
+  status: string;
+  currentTask: string;
+  hoursThisWeek: number;
+  gradient: string;
+}
+
+interface TeamOverviewProps {
+  members: TeamMember[];
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -58,7 +30,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const TeamOverview = () => {
+export const TeamOverview = ({ members }: TeamOverviewProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -67,7 +39,7 @@ export const TeamOverview = () => {
       </div>
       
       <div className="space-y-4">
-        {teamMembers.map((member) => (
+        {members.map((member) => (
           <div key={member.id} className="flex items-center space-x-3">
             <div className="relative">
               <div className={`w-10 h-10 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white font-medium text-sm`}>
