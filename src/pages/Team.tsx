@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TeamOverview } from '@/components/TeamOverview';
 import { AddTeamMemberDialog } from '@/components/AddTeamMemberDialog';
@@ -5,104 +6,15 @@ import { TeamMemberDetails } from '@/components/TeamMemberDetails';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Mail, Phone } from 'lucide-react';
-
-interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
-  email: string;
-  avatar: string;
-  status: string;
-  currentTask: string;
-  hoursThisWeek: number;
-  gradient: string;
-}
+import { useTeamMembers, type TeamMember } from '@/hooks/useTeamMembers';
 
 const Team = () => {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: 1,
-      name: 'John Doe',
-      role: 'Full Stack Developer',
-      email: 'john@example.com',
-      avatar: 'JD',
-      status: 'online',
-      currentTask: 'E-commerce Platform',
-      hoursThisWeek: 32,
-      gradient: 'from-blue-400 to-blue-600',
-    },
-    {
-      id: 2,
-      name: 'Sarah Miller',
-      role: 'UI/UX Designer',
-      email: 'sarah@example.com',
-      avatar: 'SM',
-      status: 'online',
-      currentTask: 'Mobile App Redesign',
-      hoursThisWeek: 28,
-      gradient: 'from-pink-400 to-pink-600',
-    },
-    {
-      id: 3,
-      name: 'Alex Lee',
-      role: 'Frontend Developer',
-      email: 'alex@example.com',
-      avatar: 'AL',
-      status: 'away',
-      currentTask: 'CRM Dashboard',
-      hoursThisWeek: 35,
-      gradient: 'from-green-400 to-green-600',
-    },
-    {
-      id: 4,
-      name: 'Mike Kim',
-      role: 'Backend Developer',
-      email: 'mike@example.com',
-      avatar: 'MK',
-      status: 'offline',
-      currentTask: 'API Integration',
-      hoursThisWeek: 30,
-      gradient: 'from-purple-400 to-purple-600',
-    },
-  ]);
-
+  const { teamMembers, isLoading, createTeamMember, updateTeamMember } = useTeamMembers();
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const handleAddMember = (newMember: { name: string; role: string; email: string }) => {
-    const gradients = [
-      'from-blue-400 to-blue-600',
-      'from-pink-400 to-pink-600',
-      'from-green-400 to-green-600',
-      'from-purple-400 to-purple-600',
-      'from-yellow-400 to-yellow-600',
-      'from-red-400 to-red-600',
-      'from-indigo-400 to-indigo-600',
-      'from-teal-400 to-teal-600',
-    ];
-
-    const getInitials = (name: string) => {
-      return name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    };
-
-    const member = {
-      id: teamMembers.length + 1,
-      name: newMember.name,
-      role: newMember.role,
-      email: newMember.email,
-      avatar: getInitials(newMember.name),
-      status: 'offline',
-      currentTask: 'Getting Started',
-      hoursThisWeek: 0,
-      gradient: gradients[teamMembers.length % gradients.length],
-    };
-
-    setTeamMembers([...teamMembers, member]);
+    createTeamMember(newMember);
   };
 
   const handleMemberClick = (member: TeamMember) => {
@@ -111,13 +23,21 @@ const Team = () => {
   };
 
   const handleUpdateMember = (updatedMember: TeamMember) => {
-    setTeamMembers(teamMembers.map(member => 
-      member.id === updatedMember.id ? updatedMember : member
-    ));
+    updateTeamMember(updatedMember);
     setSelectedMember(updatedMember);
   };
 
-  const totalHours = teamMembers.reduce((sum, member) => sum + member.hoursThisWeek, 0);
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const totalHours = teamMembers.reduce((sum, member) => sum + member.hours_this_week, 0);
   const onlineMembers = teamMembers.filter(member => member.status === 'online').length;
 
   return (

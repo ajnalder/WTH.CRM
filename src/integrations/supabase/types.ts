@@ -338,6 +338,51 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          avatar: string
+          created_at: string
+          current_task: string | null
+          email: string
+          gradient: string
+          hours_this_week: number
+          id: string
+          name: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar: string
+          created_at?: string
+          current_task?: string | null
+          email: string
+          gradient: string
+          hours_this_week?: number
+          id?: string
+          name: string
+          role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar?: string
+          created_at?: string
+          current_task?: string | null
+          email?: string
+          gradient?: string
+          hours_this_week?: number
+          id?: string
+          name?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       time_entries: {
         Row: {
           created_at: string

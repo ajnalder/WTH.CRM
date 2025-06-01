@@ -20,18 +20,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Clock, Edit2, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
-  email: string;
-  avatar: string;
-  status: string;
-  currentTask: string;
-  hoursThisWeek: number;
-  gradient: string;
-}
+import { type TeamMember } from '@/hooks/useTeamMembers';
 
 interface TeamMemberDetailsProps {
   member: TeamMember | null;
@@ -196,11 +185,11 @@ export const TeamMemberDetails = ({ member, isOpen, onClose, onUpdateMember }: T
               {isEditing ? (
                 <Input
                   id="currentTask"
-                  value={editedMember.currentTask}
-                  onChange={(e) => setEditedMember({ ...editedMember, currentTask: e.target.value })}
+                  value={editedMember.current_task || ''}
+                  onChange={(e) => setEditedMember({ ...editedMember, current_task: e.target.value })}
                 />
               ) : (
-                <p className="text-sm text-gray-600 mt-1">{member.currentTask}</p>
+                <p className="text-sm text-gray-600 mt-1">{member.current_task || 'No current task'}</p>
               )}
             </div>
 
@@ -213,11 +202,11 @@ export const TeamMemberDetails = ({ member, isOpen, onClose, onUpdateMember }: T
                 <Input
                   id="hours"
                   type="number"
-                  value={editedMember.hoursThisWeek}
-                  onChange={(e) => setEditedMember({ ...editedMember, hoursThisWeek: parseInt(e.target.value) || 0 })}
+                  value={editedMember.hours_this_week}
+                  onChange={(e) => setEditedMember({ ...editedMember, hours_this_week: parseInt(e.target.value) || 0 })}
                 />
               ) : (
-                <p className="text-sm text-gray-600 mt-1">{member.hoursThisWeek} hours</p>
+                <p className="text-sm text-gray-600 mt-1">{member.hours_this_week} hours</p>
               )}
             </div>
           </div>

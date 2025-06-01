@@ -1,17 +1,7 @@
 
 import React from 'react';
 import { Users, Clock } from 'lucide-react';
-
-interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
-  avatar: string;
-  status: string;
-  currentTask: string;
-  hoursThisWeek: number;
-  gradient: string;
-}
+import { type TeamMember } from '@/hooks/useTeamMembers';
 
 interface TeamOverviewProps {
   members: TeamMember[];
@@ -32,6 +22,23 @@ const getStatusColor = (status: string) => {
 };
 
 export const TeamOverview = ({ members, onMemberClick }: TeamOverviewProps) => {
+  if (members.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Team Overview</h3>
+          <Users className="text-gray-400" size={20} />
+        </div>
+        
+        <div className="text-center py-8">
+          <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No team members yet</h3>
+          <p className="text-gray-600 text-sm">Add your first team member to get started.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -55,12 +62,12 @@ export const TeamOverview = ({ members, onMemberClick }: TeamOverviewProps) => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900">{member.name}</p>
               <p className="text-xs text-gray-500">{member.role}</p>
-              <p className="text-xs text-gray-400">{member.currentTask}</p>
+              <p className="text-xs text-gray-400">{member.current_task || 'No current task'}</p>
             </div>
             <div className="text-right">
               <div className="flex items-center text-xs text-gray-500">
                 <Clock size={12} className="mr-1" />
-                {member.hoursThisWeek}h
+                {member.hours_this_week}h
               </div>
             </div>
           </div>
