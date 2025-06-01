@@ -39,6 +39,7 @@ interface Domain {
   registrar: string;
   expiryDate: string;
   status: 'active' | 'expired' | 'pending';
+  renewalCost: number;
 }
 
 interface HostingInfo {
@@ -49,6 +50,7 @@ interface HostingInfo {
   renewalDate: string;
   loginUrl: string;
   notes: string;
+  renewalCost: number;
 }
 
 interface Contact {
@@ -98,14 +100,16 @@ const mockClient: Client = {
       name: 'techcorp.com',
       registrar: 'GoDaddy',
       expiryDate: '2024-12-15',
-      status: 'active'
+      status: 'active',
+      renewalCost: 15
     },
     {
       id: 2,
       name: 'techcorp.app',
       registrar: 'Namecheap',
       expiryDate: '2024-08-20',
-      status: 'active'
+      status: 'active',
+      renewalCost: 12
     }
   ],
   hosting: [
@@ -116,7 +120,8 @@ const mockClient: Client = {
       serverLocation: 'US East (Virginia)',
       renewalDate: '2024-07-01',
       loginUrl: 'https://console.aws.amazon.com',
-      notes: 'Main production environment'
+      notes: 'Main production environment',
+      renewalCost: 50
     }
   ],
   contacts: [
@@ -149,7 +154,8 @@ const ClientDetail = () => {
     name: '',
     registrar: '',
     expiryDate: '',
-    status: 'active' as 'active' | 'expired' | 'pending'
+    status: 'active' as 'active' | 'expired' | 'pending',
+    renewalCost: 0
   });
 
   const [newHosting, setNewHosting] = useState({
@@ -158,7 +164,8 @@ const ClientDetail = () => {
     serverLocation: '',
     renewalDate: '',
     loginUrl: '',
-    notes: ''
+    notes: '',
+    renewalCost: 0
   });
 
   const [newContact, setNewContact] = useState({
@@ -183,7 +190,7 @@ const ClientDetail = () => {
         ...client,
         domains: [...client.domains, domain]
       });
-      setNewDomain({ name: '', registrar: '', expiryDate: '', status: 'active' });
+      setNewDomain({ name: '', registrar: '', expiryDate: '', status: 'active', renewalCost: 0 });
       setShowDomainDialog(false);
     }
   };
@@ -204,7 +211,8 @@ const ClientDetail = () => {
         serverLocation: '',
         renewalDate: '',
         loginUrl: '',
-        notes: ''
+        notes: '',
+        renewalCost: 0
       });
       setShowHostingDialog(false);
     }
@@ -385,6 +393,16 @@ const ClientDetail = () => {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="renewal-cost">Annual Renewal Cost ($)</Label>
+                    <Input
+                      id="renewal-cost"
+                      type="number"
+                      value={newDomain.renewalCost}
+                      onChange={(e) => setNewDomain({...newDomain, renewalCost: parseFloat(e.target.value) || 0})}
+                      placeholder="15.99"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="status">Status</Label>
                     <Select value={newDomain.status} onValueChange={(value) => setNewDomain({...newDomain, status: value as 'active' | 'expired' | 'pending'})}>
                       <SelectTrigger>
@@ -413,6 +431,7 @@ const ClientDetail = () => {
                       <div>
                         <h3 className="font-semibold">{domain.name}</h3>
                         <p className="text-sm text-gray-600">Registered with {domain.registrar}</p>
+                        <p className="text-sm text-gray-600">Annual renewal: ${domain.renewalCost}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -482,6 +501,16 @@ const ClientDetail = () => {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="hosting-renewal-cost">Monthly/Annual Cost ($)</Label>
+                    <Input
+                      id="hosting-renewal-cost"
+                      type="number"
+                      value={newHosting.renewalCost}
+                      onChange={(e) => setNewHosting({...newHosting, renewalCost: parseFloat(e.target.value) || 0})}
+                      placeholder="50.00"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="login-url">Login URL</Label>
                     <Input
                       id="login-url"
@@ -515,6 +544,7 @@ const ClientDetail = () => {
                       <div>
                         <h3 className="font-semibold">{hosting.provider}</h3>
                         <p className="text-sm text-gray-600">{hosting.plan}</p>
+                        <p className="text-sm text-gray-600">Cost: ${hosting.renewalCost}/month</p>
                       </div>
                     </div>
                     <Button variant="outline" size="sm" asChild>
