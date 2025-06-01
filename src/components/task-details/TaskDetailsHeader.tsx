@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useClients } from '@/hooks/useClients';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsHeaderProps {
@@ -12,6 +13,7 @@ interface TaskDetailsHeaderProps {
 
 export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ task }) => {
   const navigate = useNavigate();
+  const { clients } = useClients();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -41,6 +43,10 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ task }) =>
       .slice(0, 2);
   };
 
+  // Find the client by name to get their gradient color
+  const client = clients.find(c => c.company === task.client_name);
+  const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
+
   return (
     <div className="mb-6">
       <Button 
@@ -55,7 +61,7 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ task }) =>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {task.client_name && (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+            <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold`}>
               {getClientInitials(task.client_name)}
             </div>
           )}
