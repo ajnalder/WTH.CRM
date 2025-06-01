@@ -6,6 +6,7 @@ import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectTable } from '@/components/ProjectTable';
 import { NewProjectForm } from '@/components/NewProjectForm';
 import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
 import { transformProject } from '@/utils/projectUtils';
 
 // Use the transformed project type that matches what ProjectCard expects
@@ -26,11 +27,26 @@ interface TransformedProject {
 
 const Projects = () => {
   const { projects, isLoading } = useProjects();
+  const { tasks } = useTasks();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const transformedProjects: TransformedProject[] = projects.map(transformProject);
+  const transformedProjects: TransformedProject[] = projects.map(project => {
+    const transformedProject = transformProject(project);
+    
+    // Calculate real task counts for this project
+    const projectTasks = tasks.filter(task => task.project === project.name);
+    const completedTasks = projectTasks.filter(task => task.status === 'Completed' || task.status === 'Done').length;
+    
+    return {
+      ...transformedProject,
+      tasks: {
+        completed: completedTasks,
+        total: projectTasks.length
+      }
+    };
+  });
 
   const filteredProjects = transformedProjects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

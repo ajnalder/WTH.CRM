@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, isLoading, error } = useProjects();
-  const { createTask, isCreating } = useTasks();
+  const { createTask, isCreating, tasks } = useTasks();
   
   if (isLoading) {
     return (
@@ -56,6 +57,19 @@ const ProjectDetail = () => {
   }
 
   const transformedProject = transformProject(project);
+  
+  // Calculate real task counts for this project
+  const projectTasks = tasks.filter(task => task.project === transformedProject.name);
+  const completedTasks = projectTasks.filter(task => task.status === 'Completed' || task.status === 'Done').length;
+  
+  const projectWithRealTasks = {
+    ...transformedProject,
+    tasks: {
+      completed: completedTasks,
+      total: projectTasks.length
+    }
+  };
+  
   const daysUntilDue = transformedProject.dueDate 
     ? calculateDaysUntilDue(transformedProject.dueDate, transformedProject.isRetainer) 
     : 0;
@@ -81,11 +95,11 @@ const ProjectDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="p-6">
-        <ProjectHeader project={transformedProject} />
+        <ProjectHeader project={projectWithRealTasks} />
         
-        <ProjectHeaderControls project={transformedProject} />
+        <ProjectHeaderControls project={projectWithRealTasks} />
         
-        <ProjectStats project={transformedProject} daysUntilDue={daysUntilDue} />
+        <ProjectStats project={projectWithRealTasks} daysUntilDue={daysUntilDue} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -114,7 +128,7 @@ const ProjectDetail = () => {
 
           <div className="space-y-6">
             <ProjectTeam projectId={transformedProject.id} />
-            <ProjectTasks project={transformedProject} />
+            <ProjectTasks project={projectWithRealTasks} />
           </div>
         </div>
       </div>
