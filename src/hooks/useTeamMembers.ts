@@ -82,7 +82,7 @@ export const useTeamMembers = () => {
     },
     enabled: !!user,
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the data
+    gcTime: 0, // Don't cache the data (renamed from cacheTime)
   });
 
   // For now, createTeamMember is not needed since users are created through auth
