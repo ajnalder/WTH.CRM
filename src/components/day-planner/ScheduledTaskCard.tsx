@@ -88,15 +88,19 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
           ref={provided.innerRef}
           {...provided.draggableProps}
           className={`border rounded-lg shadow-sm relative group absolute left-0 right-0 z-10 ${getCardStyle()} ${
-            snapshot.isDragging ? 'shadow-lg' : ''
-          } ${isResizing ? 'select-none' : ''}`}
+            snapshot.isDragging ? 'shadow-lg z-50' : ''
+          } ${isResizing ? 'select-none pointer-events-none' : ''}`}
           style={{ 
             ...provided.draggableProps.style,
             height: calculateHeight(scheduledTask.duration),
             minHeight: '52px',
-            top: '2px'
+            top: '2px',
+            // Ensure proper positioning during drag
+            transform: snapshot.isDragging 
+              ? provided.draggableProps.style?.transform 
+              : provided.draggableProps.style?.transform || 'none'
           }}
-          onMouseEnter={() => setShowControls(true)}
+          onMouseEnter={() => !isResizing && setShowControls(true)}
           onMouseLeave={() => setShowControls(false)}
         >
           <TaskCardContent
@@ -110,12 +114,14 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
             dragHandleProps={provided.dragHandleProps}
           />
           
-          <ResizeHandle
-            scheduledTask={scheduledTask}
-            updateTaskDuration={updateTaskDuration}
-            isResizing={isResizing}
-            setIsResizing={setIsResizing}
-          />
+          {!isResizing && (
+            <ResizeHandle
+              scheduledTask={scheduledTask}
+              updateTaskDuration={updateTaskDuration}
+              isResizing={isResizing}
+              setIsResizing={setIsResizing}
+            />
+          )}
         </div>
       )}
     </Draggable>

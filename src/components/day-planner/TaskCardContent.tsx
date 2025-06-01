@@ -42,17 +42,18 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   };
 
   const handleDragHandleMouseDown = (e: React.MouseEvent) => {
-    // Prevent event propagation to avoid conflicts with resize handle
-    e.stopPropagation();
+    // Don't prevent default or stop propagation - let react-beautiful-dnd handle it
+    console.log('Drag handle mouse down');
   };
 
   return (
     <div className="p-3 h-full flex flex-col">
       <div 
         {...dragHandleProps} 
-        className="absolute top-2 left-2 cursor-move z-30 p-1 hover:bg-gray-100 rounded"
+        className="absolute top-2 left-2 cursor-move z-30 p-1 hover:bg-gray-100 rounded transition-colors"
         onMouseDown={handleDragHandleMouseDown}
         title="Drag to move task"
+        style={{ touchAction: 'none' }}
       >
         <GripVertical size={14} className="text-gray-400" />
       </div>
