@@ -9,6 +9,7 @@ import { ProjectDescription } from '@/components/project/ProjectDescription';
 import { ProjectTimeline } from '@/components/project/ProjectTimeline';
 import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
+import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
 
@@ -66,7 +67,13 @@ const ProjectDetail = () => {
       <div className="p-6">
         <ProjectHeader project={transformedProject} />
         
-        <ProjectHeaderControls project={transformedProject} />
+        <div className="flex items-center justify-between mb-6">
+          <ProjectHeaderControls project={transformedProject} />
+          <AddTaskToProjectDialog 
+            projectId={transformedProject.id} 
+            projectName={transformedProject.name} 
+          />
+        </div>
         
         <ProjectStats project={transformedProject} daysUntilDue={daysUntilDue} />
 

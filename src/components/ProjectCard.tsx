@@ -4,7 +4,6 @@ import { Calendar, Users, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
 import { Link } from 'react-router-dom';
 import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
 
@@ -45,31 +44,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const timeRemaining = getTimeRemaining(project.dueDate);
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 border-gray-100 cursor-pointer">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <Link 
-            to={`/projects/${project.id}`} 
-            className="flex-1 hover:text-blue-600 transition-colors"
-          >
-            <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
-            <p className="text-sm text-gray-600">{project.client}</p>
-          </Link>
-          <div className="flex flex-col items-end space-y-2">
+    <Link to={`/projects/${project.id}`}>
+      <Card className="hover:shadow-lg transition-all duration-200 border-gray-100 cursor-pointer">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
+              <p className="text-sm text-gray-600">{project.client}</p>
+            </div>
             <Badge variant="secondary" className={getStatusColor(project.status)}>
               {project.status}
             </Badge>
-            <div onClick={(e) => e.stopPropagation()}>
-              <AddTaskToProjectDialog 
-                projectId={project.id} 
-                projectName={project.name} 
-              />
-            </div>
           </div>
-        </div>
-      </CardHeader>
-      
-      <Link to={`/projects/${project.id}`}>
+        </CardHeader>
+        
         <CardContent className="space-y-4">
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -122,7 +110,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           )}
         </CardContent>
-      </Link>
-    </Card>
+      </Card>
+    </Link>
   );
 };
