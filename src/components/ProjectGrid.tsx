@@ -4,7 +4,7 @@ import { ProjectCard } from '@/components/ProjectCard';
 
 const projects = [
   {
-    id: 1,
+    id: "1",
     name: 'E-commerce Platform',
     client: 'TechCorp Inc.',
     status: 'In Progress',
@@ -15,7 +15,7 @@ const projects = [
     tasks: { completed: 12, total: 18 }
   },
   {
-    id: 2,
+    id: "2",
     name: 'Mobile App Redesign',
     client: 'StartupXYZ',
     status: 'In Progress',
@@ -26,7 +26,7 @@ const projects = [
     tasks: { completed: 8, total: 15 }
   },
   {
-    id: 3,
+    id: "3",
     name: 'CRM Dashboard',
     client: 'BusinessFlow',
     status: 'Review',
@@ -37,7 +37,7 @@ const projects = [
     tasks: { completed: 14, total: 16 }
   },
   {
-    id: 4,
+    id: "4",
     name: 'Portfolio Website',
     client: 'Creative Agency',
     status: 'Completed',
@@ -48,7 +48,7 @@ const projects = [
     tasks: { completed: 10, total: 10 }
   },
   {
-    id: 5,
+    id: "5",
     name: 'API Integration',
     client: 'DataFlow Systems',
     status: 'Planning',
@@ -59,7 +59,7 @@ const projects = [
     tasks: { completed: 2, total: 12 }
   },
   {
-    id: 6,
+    id: "6",
     name: 'Marketing Landing Page',
     client: 'GrowthHackers',
     status: 'In Progress',
