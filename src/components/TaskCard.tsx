@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskCardProps {
@@ -15,9 +16,27 @@ interface TaskCardProps {
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const navigate = useNavigate();
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
 
   // Find the assigned team member by ID
   const assignedMember = task.assignee ? teamMembers.find(member => member.id === task.assignee) : null;
+
+  // Find the client by name to get their gradient color
+  const client = clients.find(c => c.company === task.client_name);
+  const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
+  
+  // Extract the base color from the gradient for the card background
+  const getCardBackgroundClass = (gradient: string) => {
+    if (gradient.includes('blue')) return 'bg-blue-50/30 border-blue-100/50';
+    if (gradient.includes('green')) return 'bg-green-50/30 border-green-100/50';
+    if (gradient.includes('purple')) return 'bg-purple-50/30 border-purple-100/50';
+    if (gradient.includes('red')) return 'bg-red-50/30 border-red-100/50';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/30 border-yellow-100/50';
+    if (gradient.includes('pink')) return 'bg-pink-50/30 border-pink-100/50';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/30 border-indigo-100/50';
+    if (gradient.includes('teal')) return 'bg-teal-50/30 border-teal-100/50';
+    return 'bg-blue-50/30 border-blue-100/50'; // default
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,14 +78,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
   return (
     <Card 
-      className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}
       onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             {task.client_name && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+              <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
                 {getClientInitials(task.client_name)}
               </div>
             )}

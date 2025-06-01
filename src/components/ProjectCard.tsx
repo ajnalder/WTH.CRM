@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
+import { useClients } from '@/hooks/useClients';
 
 interface TeamMember {
   id: string;
@@ -37,6 +38,25 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+  const { clients } = useClients();
+  
+  // Find the client by name to get their gradient color
+  const client = clients.find(c => c.company === project.client);
+  const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
+  
+  // Extract the base color from the gradient for the card background
+  const getCardBackgroundClass = (gradient: string) => {
+    if (gradient.includes('blue')) return 'bg-blue-50/30 border-blue-100/50';
+    if (gradient.includes('green')) return 'bg-green-50/30 border-green-100/50';
+    if (gradient.includes('purple')) return 'bg-purple-50/30 border-purple-100/50';
+    if (gradient.includes('red')) return 'bg-red-50/30 border-red-100/50';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/30 border-yellow-100/50';
+    if (gradient.includes('pink')) return 'bg-pink-50/30 border-pink-100/50';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/30 border-indigo-100/50';
+    if (gradient.includes('teal')) return 'bg-teal-50/30 border-teal-100/50';
+    return 'bg-blue-50/30 border-blue-100/50'; // default
+  };
+
   const getTimeRemaining = (dueDate: string) => {
     if (!dueDate) return null;
     const now = new Date();
@@ -59,7 +79,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
   return (
     <Link to={`/projects/${project.id}`}>
-      <Card className="hover:shadow-lg transition-all duration-200 border-gray-100 cursor-pointer">
+      <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
