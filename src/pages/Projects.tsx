@@ -8,13 +8,29 @@ import { NewProjectForm } from '@/components/NewProjectForm';
 import { useProjects } from '@/hooks/useProjects';
 import { transformProject } from '@/utils/projectUtils';
 
+// Use the transformed project type that matches what ProjectCard expects
+interface TransformedProject {
+  id: string;
+  name: string;
+  client: string;
+  status: string;
+  progress: number;
+  dueDate: string;
+  team: any[];
+  priority: string;
+  tasks: { completed: number; total: number };
+  description: string;
+  budget: number;
+  startDate: string;
+}
+
 const Projects = () => {
   const { projects, isLoading } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const transformedProjects = projects.map(transformProject);
+  const transformedProjects: TransformedProject[] = projects.map(transformProject);
 
   const filteredProjects = transformedProjects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
