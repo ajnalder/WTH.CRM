@@ -35,7 +35,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
         {timeSlot}
       </div>
       
-      <Droppable droppableId={`timeslot-${timeSlot}`} type="TASK">
+      <Droppable droppableId={`timeslot-${timeSlot}`}>
         {(provided, snapshot) => (
           <div
             {...provided.droppableProps}

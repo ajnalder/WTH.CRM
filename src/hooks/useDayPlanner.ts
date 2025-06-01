@@ -39,10 +39,15 @@ export const useDayPlanner = () => {
 
     if (!destination) return;
 
+    console.log('Drag end:', { source, destination, draggableId });
+
     // Handle dropping task into a time slot
     if (destination.droppableId.startsWith('timeslot-')) {
       const targetTimeSlot = destination.droppableId.replace('timeslot-', '');
-      const taskId = draggableId.replace('task-', '');
+      // Remove 'task-' prefix if it exists, otherwise use the draggableId as is
+      const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
+      
+      console.log('Dropping task into timeslot:', { targetTimeSlot, taskId });
       
       // Find the task to get its duration
       const existingScheduledTask = scheduledTasks.find(st => st.taskId === taskId);
@@ -74,7 +79,9 @@ export const useDayPlanner = () => {
     
     // Handle dropping task back to the pool
     if (destination.droppableId === 'task-pool') {
-      const taskId = draggableId.replace('task-', '');
+      // Remove 'task-' prefix if it exists, otherwise use the draggableId as is
+      const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
+      console.log('Dropping task back to pool:', taskId);
       setScheduledTasks(scheduledTasks.filter(st => st.taskId !== taskId));
     }
   };

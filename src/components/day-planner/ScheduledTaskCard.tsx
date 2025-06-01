@@ -79,7 +79,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 
   return (
     <Draggable 
-      draggableId={`task-${scheduledTask.taskId}`} 
+      draggableId={scheduledTask.taskId} 
       index={0}
       isDragDisabled={isResizing}
     >
