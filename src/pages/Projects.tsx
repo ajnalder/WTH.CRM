@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
-import { Search, Filter, Plus, Grid, List } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, Filter, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectTable } from '@/components/ProjectTable';
+import { NewProjectForm } from '@/components/NewProjectForm';
 
-const projects = [
+const initialProjects = [
   {
     id: 1,
     name: 'E-commerce Platform',
@@ -98,9 +97,14 @@ const projects = [
 ];
 
 const Projects = () => {
+  const [projects, setProjects] = useState(initialProjects);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const handleProjectCreated = (newProject: any) => {
+    setProjects(prev => [newProject, ...prev]);
+  };
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,10 +168,7 @@ const Projects = () => {
                 </button>
               </div>
               
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Plus size={20} className="mr-2" />
-                New Project
-              </Button>
+              <NewProjectForm onProjectCreated={handleProjectCreated} />
             </div>
           </div>
         </div>

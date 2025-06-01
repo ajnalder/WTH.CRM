@@ -1,10 +1,15 @@
 
 import React from 'react';
-import { Search, Bell, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { NewProjectForm } from '@/components/NewProjectForm';
 
 export const Header = () => {
+  const handleProjectCreated = (project: any) => {
+    console.log('New project created from header:', project);
+    // You could add global state management here if needed
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -20,10 +25,7 @@ export const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-            <Plus size={20} className="mr-2" />
-            New Project
-          </Button>
+          <NewProjectForm onProjectCreated={handleProjectCreated} />
           <div className="relative">
             <Bell className="text-gray-600 hover:text-gray-900 cursor-pointer" size={24} />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
