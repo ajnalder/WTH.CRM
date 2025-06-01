@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Filter, Plus, Calendar, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -5,97 +6,44 @@ import { Button } from '@/components/ui/button';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskTable } from '@/components/TaskTable';
 import { NewTaskForm } from '@/components/NewTaskForm';
-
-const initialTasks = [
-  {
-    id: 1,
-    title: 'Design login page mockups',
-    description: 'Create wireframes and high-fidelity mockups for the user authentication flow',
-    status: 'In Progress',
-    priority: 'High',
-    assignee: 'Sarah Miller',
-    project: 'E-commerce Platform',
-    dueDate: '2024-06-15',
-    tags: ['Design', 'UI/UX'],
-    progress: 60
-  },
-  {
-    id: 2,
-    title: 'Implement user authentication API',
-    description: 'Build REST endpoints for login, logout, and user registration',
-    status: 'To Do',
-    priority: 'High',
-    assignee: 'John Doe',
-    project: 'E-commerce Platform',
-    dueDate: '2024-06-20',
-    tags: ['Backend', 'API'],
-    progress: 0
-  },
-  {
-    id: 3,
-    title: 'Write unit tests for payment module',
-    description: 'Create comprehensive test coverage for payment processing functionality',
-    status: 'In Progress',
-    priority: 'Medium',
-    assignee: 'Robert Johnson',
-    project: 'E-commerce Platform',
-    dueDate: '2024-06-18',
-    tags: ['Testing', 'Backend'],
-    progress: 30
-  },
-  {
-    id: 4,
-    title: 'Optimize mobile navigation',
-    description: 'Improve mobile user experience and navigation performance',
-    status: 'Review',
-    priority: 'Medium',
-    assignee: 'Alice Lee',
-    project: 'Mobile App Redesign',
-    dueDate: '2024-06-12',
-    tags: ['Mobile', 'Performance'],
-    progress: 85
-  },
-  {
-    id: 5,
-    title: 'Database schema optimization',
-    description: 'Optimize database queries and improve indexing strategy',
-    status: 'Done',
-    priority: 'Low',
-    assignee: 'Mike Kim',
-    project: 'CRM Dashboard',
-    dueDate: '2024-06-10',
-    tags: ['Database', 'Performance'],
-    progress: 100
-  },
-  {
-    id: 6,
-    title: 'Implement real-time notifications',
-    description: 'Add WebSocket support for real-time user notifications',
-    status: 'To Do',
-    priority: 'Medium',
-    assignee: 'Tom Nelson',
-    project: 'Customer Support Portal',
-    dueDate: '2024-06-25',
-    tags: ['Frontend', 'Real-time'],
-    progress: 0
-  }
-];
+import { useTasks } from '@/hooks/useTasks';
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { tasks, isLoading, error } = useTasks();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
-  const handleTaskCreated = (newTask: any) => {
-    setTasks(prev => [newTask, ...prev]);
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Tasks</h1>
+          <p className="text-gray-600 mb-4">There was an error loading the tasks.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleTaskCreated = () => {
+    // The useTasks hook will automatically refetch tasks after creation
   };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.assignee.toLowerCase().includes(searchTerm.toLowerCase());
+                         (task.project && task.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (task.assignee && task.assignee.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;

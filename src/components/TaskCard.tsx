@@ -5,19 +5,9 @@ import { Calendar, User, Tag, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  assignee: string;
-  project: string;
-  dueDate: string;
-  tags: string[];
-  progress: number;
-}
+type Task = Tables<'tasks'>;
 
 interface TaskCardProps {
   task: Task;
@@ -45,7 +35,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'No due date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
@@ -76,35 +67,43 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       </CardHeader>
       
       <CardContent>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {task.description}
-        </p>
+        {task.description && (
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+            {task.description}
+          </p>
+        )}
         
         <div className="space-y-3">
-          <div className="flex items-center text-sm text-gray-600">
-            <User size={16} className="mr-2" />
-            <span>{task.assignee}</span>
-          </div>
+          {task.assignee && (
+            <div className="flex items-center text-sm text-gray-600">
+              <User size={16} className="mr-2" />
+              <span>{task.assignee}</span>
+            </div>
+          )}
           
-          <div className="flex items-center text-sm text-gray-600">
-            <Tag size={16} className="mr-2" />
-            <span>{task.project}</span>
-          </div>
+          {task.project && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Tag size={16} className="mr-2" />
+              <span>{task.project}</span>
+            </div>
+          )}
           
           <div className="flex items-center text-sm text-gray-600">
             <Calendar size={16} className="mr-2" />
-            <span>Due {formatDate(task.dueDate)}</span>
+            <span>Due {formatDate(task.due_date)}</span>
           </div>
           
-          <div className="flex flex-wrap gap-1 mt-3">
-            {task.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {task.tags && task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-3">
+              {task.tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
           
-          {task.progress > 0 && (
+          {task.progress && task.progress > 0 && (
             <div className="mt-4">
               <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                 <span>Progress</span>

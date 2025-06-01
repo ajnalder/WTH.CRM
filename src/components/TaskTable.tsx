@@ -10,19 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  assignee: string;
-  project: string;
-  dueDate: string;
-  tags: string[];
-  progress: number;
-}
+type Task = Tables<'tasks'>;
 
 interface TaskTableProps {
   tasks: Task[];
@@ -48,7 +38,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'No due date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -77,13 +68,15 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
             <TableCell>
               <div>
                 <div className="font-medium text-gray-900">{task.title}</div>
-                <div className="text-sm text-gray-600 max-w-xs truncate">
-                  {task.description}
-                </div>
+                {task.description && (
+                  <div className="text-sm text-gray-600 max-w-xs truncate">
+                    {task.description}
+                  </div>
+                )}
               </div>
             </TableCell>
-            <TableCell className="text-gray-900">{task.project}</TableCell>
-            <TableCell className="text-gray-900">{task.assignee}</TableCell>
+            <TableCell className="text-gray-900">{task.project || 'No project'}</TableCell>
+            <TableCell className="text-gray-900">{task.assignee || 'Unassigned'}</TableCell>
             <TableCell>
               <Badge className={`${getStatusColor(task.status)}`}>
                 {task.status}
@@ -94,24 +87,30 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
                 {task.priority}
               </Badge>
             </TableCell>
-            <TableCell className="text-gray-600">{formatDate(task.dueDate)}</TableCell>
+            <TableCell className="text-gray-600">{formatDate(task.due_date)}</TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">
-                <Progress value={task.progress} className="w-16 h-2" />
-                <span className="text-sm text-gray-600">{task.progress}%</span>
+                <Progress value={task.progress || 0} className="w-16 h-2" />
+                <span className="text-sm text-gray-600">{task.progress || 0}%</span>
               </div>
             </TableCell>
             <TableCell>
               <div className="flex flex-wrap gap-1">
-                {task.tags.slice(0, 2).map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {task.tags.length > 2 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{task.tags.length - 2}
-                  </Badge>
+                {task.tags && task.tags.length > 0 ? (
+                  <>
+                    {task.tags.slice(0, 2).map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {task.tags.length > 2 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{task.tags.length - 2}
+                      </Badge>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-sm text-gray-400">No tags</span>
                 )}
               </div>
             </TableCell>

@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useTasks } from '@/hooks/useTasks';
 
 interface TaskFormData {
   title: string;
@@ -43,7 +43,7 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
   projectName 
 }) => {
   const [open, setOpen] = React.useState(false);
-  const { toast } = useToast();
+  const { createTask, isCreating } = useTasks();
   const form = useForm<TaskFormData>({
     defaultValues: {
       title: '',
@@ -56,13 +56,18 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
   });
 
   const onSubmit = (data: TaskFormData) => {
-    console.log('Creating new task for project:', projectName, data);
+    const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     
-    // For now, we'll just show a success message
-    // In the future, this should integrate with a tasks hook/API
-    toast({
-      title: "Task Created",
-      description: `${data.title} has been created for ${projectName}.`,
+    createTask({
+      title: data.title,
+      description: data.description || null,
+      priority: data.priority,
+      assignee: data.assignee || null,
+      due_date: data.dueDate || null,
+      tags: tagsArray.length > 0 ? tagsArray : null,
+      project: projectName,
+      status: 'To Do',
+      progress: 0,
     });
     
     setOpen(false);
@@ -72,11 +77,7 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          size="sm" 
-          variant="outline"
-          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-        >
+        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
           <Plus size={16} className="mr-1" />
           Add task now
         </Button>
@@ -197,7 +198,9 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Task</Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? 'Creating...' : 'Create Task'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
