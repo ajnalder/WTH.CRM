@@ -87,16 +87,8 @@ export const useClients = () => {
 
       const avatar = getInitials(clientData.company);
       
-      // Get existing clients to determine which gradients are already used
-      const existingClients = clients || [];
-      const usedGradients = existingClients.map(client => client.gradient).filter(Boolean);
-      
-      // Find the first unused gradient, or cycle back to the beginning
-      let gradient = gradients.find(g => !usedGradients.includes(g));
-      if (!gradient) {
-        // If all gradients are used, use modulo to cycle through them
-        gradient = gradients[existingClients.length % gradients.length];
-      }
+      // Get a truly random gradient for each new client
+      const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
       const { data, error } = await supabase
         .from('clients')
@@ -107,7 +99,7 @@ export const useClients = () => {
           company: clientData.company,
           industry: clientData.industry,
           avatar,
-          gradient,
+          gradient: randomGradient,
           user_id: user.id,
           status: 'pending',
           projects_count: 0,

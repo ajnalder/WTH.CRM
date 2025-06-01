@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Calendar, Users, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getStatusColor, getPriorityColor } from '@/utils/projectUtils';
 import { useClients } from '@/hooks/useClients';
@@ -45,19 +46,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   
   // Extract the base color from the gradient for the card background with more prominent tint
   const getCardBackgroundClass = (gradient: string) => {
-    if (gradient.includes('blue')) return 'bg-blue-50/50 border-blue-200/60';
-    if (gradient.includes('green')) return 'bg-green-50/50 border-green-200/60';
-    if (gradient.includes('purple')) return 'bg-purple-50/50 border-purple-200/60';
-    if (gradient.includes('red')) return 'bg-red-50/50 border-red-200/60';
-    if (gradient.includes('yellow')) return 'bg-yellow-50/50 border-yellow-200/60';
-    if (gradient.includes('pink')) return 'bg-pink-50/50 border-pink-200/60';
-    if (gradient.includes('indigo')) return 'bg-indigo-50/50 border-indigo-200/60';
-    if (gradient.includes('teal')) return 'bg-teal-50/50 border-teal-200/60';
-    if (gradient.includes('orange')) return 'bg-orange-50/50 border-orange-200/60';
-    if (gradient.includes('cyan')) return 'bg-cyan-50/50 border-cyan-200/60';
-    if (gradient.includes('lime')) return 'bg-lime-50/50 border-lime-200/60';
-    if (gradient.includes('rose')) return 'bg-rose-50/50 border-rose-200/60';
-    return 'bg-blue-50/50 border-blue-200/60'; // default
+    if (gradient.includes('blue')) return 'bg-blue-50/80 border-blue-200/80';
+    if (gradient.includes('green')) return 'bg-green-50/80 border-green-200/80';
+    if (gradient.includes('purple')) return 'bg-purple-50/80 border-purple-200/80';
+    if (gradient.includes('red')) return 'bg-red-50/80 border-red-200/80';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/80 border-yellow-200/80';
+    if (gradient.includes('pink')) return 'bg-pink-50/80 border-pink-200/80';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/80 border-indigo-200/80';
+    if (gradient.includes('teal')) return 'bg-teal-50/80 border-teal-200/80';
+    if (gradient.includes('orange')) return 'bg-orange-50/80 border-orange-200/80';
+    if (gradient.includes('cyan')) return 'bg-cyan-50/80 border-cyan-200/80';
+    if (gradient.includes('lime')) return 'bg-lime-50/80 border-lime-200/80';
+    if (gradient.includes('rose')) return 'bg-rose-50/80 border-rose-200/80';
+    return 'bg-blue-50/80 border-blue-200/80'; // default
   };
 
   const getTimeRemaining = (dueDate: string) => {
@@ -80,19 +81,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const teamMembers = project.team_members || [];
   const displayTeam = teamMembers.length > 0 ? teamMembers : project.team;
 
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <Link to={`/projects/${project.id}`}>
       <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1 hover:underline">{project.name}</h3>
-              <p className="text-sm text-gray-600">{project.client}</p>
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
+                {getClientInitials(project.client)}
+              </div>
             </div>
-            <Badge variant="secondary" className={getStatusColor(project.status)}>
-              {project.status}
-            </Badge>
+            <div className="flex gap-2 flex-shrink-0">
+              <Badge variant="secondary" className={getStatusColor(project.status)}>
+                {project.status}
+              </Badge>
+              <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>
+                {project.priority}
+              </Badge>
+            </div>
           </div>
+          <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
+            {project.name}
+          </CardTitle>
+          <p className="text-sm text-gray-600">{project.client}</p>
         </CardHeader>
         
         <CardContent className="space-y-4">
@@ -110,10 +130,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               <span className="text-gray-600">
                 {project.tasks.completed}/{project.tasks.total} tasks
               </span>
-            </div>
-            <div className={`flex items-center space-x-1 ${getPriorityColor(project.priority)}`}>
-              <AlertCircle size={16} />
-              <span className="font-medium">{project.priority}</span>
             </div>
           </div>
 
