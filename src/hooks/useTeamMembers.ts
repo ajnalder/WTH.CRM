@@ -27,6 +27,7 @@ export const useTeamMembers = () => {
     queryKey: ['team_members'],
     queryFn: async (): Promise<TeamMember[]> => {
       console.log('Fetching all team members (profiles)');
+      console.log('Current user:', user?.email);
 
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -37,6 +38,8 @@ export const useTeamMembers = () => {
         console.error('Error fetching team members (profiles):', error);
         throw error;
       }
+
+      console.log('Raw profiles data:', profiles);
 
       // Transform profiles into team members format for UI compatibility
       const teamMembers: TeamMember[] = (profiles || []).map((profile, index) => {
@@ -55,7 +58,7 @@ export const useTeamMembers = () => {
           ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
           : profile.email.slice(0, 2).toUpperCase();
 
-        return {
+        const teamMember = {
           id: profile.id,
           email: profile.email || '',
           full_name: profile.full_name || '',
@@ -68,12 +71,18 @@ export const useTeamMembers = () => {
           current_task: undefined,
           hours_this_week: 0,
         };
+
+        console.log('Processed team member:', teamMember);
+        return teamMember;
       });
 
-      console.log('Team members fetched:', teamMembers);
+      console.log('Final team members array:', teamMembers);
+      console.log('Team members count:', teamMembers.length);
       return teamMembers;
     },
     enabled: !!user,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the data
   });
 
   // For now, createTeamMember is not needed since users are created through auth
