@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -150,7 +149,7 @@ const ClientDetail = () => {
     name: '',
     registrar: '',
     expiryDate: '',
-    status: 'active' as const
+    status: 'active' as 'active' | 'expired' | 'pending'
   });
 
   const [newHosting, setNewHosting] = useState({
@@ -387,7 +386,7 @@ const ClientDetail = () => {
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <Select value={newDomain.status} onValueChange={(value: 'active' | 'expired' | 'pending') => setNewDomain({...newDomain, status: value})}>
+                    <Select value={newDomain.status} onValueChange={(value) => setNewDomain({...newDomain, status: value as 'active' | 'expired' | 'pending'})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
