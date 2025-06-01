@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { TaskCardContent } from './TaskCardContent';
@@ -81,6 +82,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
       draggableId={`task-${scheduledTask.taskId}`} 
       index={0}
       isDragDisabled={isResizing}
+      type="TASK"
     >
       {(provided, snapshot) => (
         <div
