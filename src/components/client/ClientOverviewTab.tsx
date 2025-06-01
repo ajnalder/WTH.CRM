@@ -3,12 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Client } from '@/types/client';
+import { useContacts } from '@/hooks/useContacts';
 
 interface ClientOverviewTabProps {
   client: Client;
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
+  const { contacts } = useContacts(client.id.toString());
+  
+  const primaryContact = contacts.find(contact => contact.is_primary);
+  const displayEmail = primaryContact?.email || 'No primary contact email';
+  const displayPhone = primaryContact?.phone || client.phone || 'No phone number';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
@@ -28,11 +35,11 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
               </div>
               <div>
                 <Label>Email</Label>
-                <p className="text-gray-900">{client.email}</p>
+                <p className="text-gray-900">{displayEmail}</p>
               </div>
               <div>
                 <Label>Phone</Label>
-                <p className="text-gray-900">{client.phone}</p>
+                <p className="text-gray-900">{displayPhone}</p>
               </div>
             </div>
           </CardContent>
