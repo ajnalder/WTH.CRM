@@ -45,8 +45,9 @@ export const TaskDueDateEditor: React.FC<TaskDueDateEditorProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-medium text-gray-900">Due Date</h3>
+      <h3 className="font-medium text-gray-900 mb-2">Due Date</h3>
+      <div className="flex items-center gap-2">
+        <p className="text-gray-600">{formatDisplayDate(currentDueDate)}</p>
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -79,7 +80,6 @@ export const TaskDueDateEditor: React.FC<TaskDueDateEditorProps> = ({
           </PopoverContent>
         </Popover>
       </div>
-      <p className="text-gray-600">{formatDisplayDate(currentDueDate)}</p>
     </div>
   );
 };

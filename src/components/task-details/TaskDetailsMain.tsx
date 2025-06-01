@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { TaskAssigneeEditor } from '@/components/TaskAssigneeEditor';
 import { TaskStatusEditor } from '@/components/TaskStatusEditor';
 import { TaskDueDateEditor } from '@/components/TaskDueDateEditor';
@@ -63,14 +62,6 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
             onDueDateUpdate={updateTaskDueDate}
             isUpdating={isUpdatingDueDate}
           />
-        </div>
-
-        <div>
-          <h3 className="font-medium text-gray-900 mb-2">Progress</h3>
-          <div className="flex items-center space-x-3">
-            <Progress value={task.progress || 0} className="flex-1" />
-            <span className="text-sm text-gray-600">{task.progress || 0}%</span>
-          </div>
         </div>
 
         {task.tags && task.tags.length > 0 && (
