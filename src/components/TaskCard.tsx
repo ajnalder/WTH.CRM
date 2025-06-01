@@ -58,16 +58,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
             {task.client_name && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 mt-1">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                 {getClientInitials(task.client_name)}
               </div>
             )}
-            <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
-              {task.title}
-            </CardTitle>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <Badge className={`text-xs ${getStatusColor(task.status)}`}>
@@ -78,6 +75,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             </Badge>
           </div>
         </div>
+        <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
+          {task.title}
+        </CardTitle>
       </CardHeader>
       
       <CardContent>
