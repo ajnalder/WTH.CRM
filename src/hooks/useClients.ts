@@ -41,6 +41,10 @@ export const useClients = () => {
     'from-pink-400 to-pink-600',
     'from-indigo-400 to-indigo-600',
     'from-teal-400 to-teal-600',
+    'from-orange-400 to-orange-600',
+    'from-cyan-400 to-cyan-600',
+    'from-lime-400 to-lime-600',
+    'from-rose-400 to-rose-600',
   ];
 
   const getInitials = (name: string) => {
@@ -82,7 +86,17 @@ export const useClients = () => {
       if (!user) throw new Error('User not authenticated');
 
       const avatar = getInitials(clientData.company);
-      const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+      
+      // Get existing clients to determine which gradients are already used
+      const existingClients = clients || [];
+      const usedGradients = existingClients.map(client => client.gradient).filter(Boolean);
+      
+      // Find the first unused gradient, or cycle back to the beginning
+      let gradient = gradients.find(g => !usedGradients.includes(g));
+      if (!gradient) {
+        // If all gradients are used, use modulo to cycle through them
+        gradient = gradients[existingClients.length % gradients.length];
+      }
 
       const { data, error } = await supabase
         .from('clients')

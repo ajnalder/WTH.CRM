@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, User, Tag, Clock } from 'lucide-react';
@@ -25,17 +24,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const client = clients.find(c => c.company === task.client_name);
   const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
   
-  // Extract the base color from the gradient for the card background
+  // Extract the base color from the gradient for the card background with more prominent tint
   const getCardBackgroundClass = (gradient: string) => {
-    if (gradient.includes('blue')) return 'bg-blue-50/30 border-blue-100/50';
-    if (gradient.includes('green')) return 'bg-green-50/30 border-green-100/50';
-    if (gradient.includes('purple')) return 'bg-purple-50/30 border-purple-100/50';
-    if (gradient.includes('red')) return 'bg-red-50/30 border-red-100/50';
-    if (gradient.includes('yellow')) return 'bg-yellow-50/30 border-yellow-100/50';
-    if (gradient.includes('pink')) return 'bg-pink-50/30 border-pink-100/50';
-    if (gradient.includes('indigo')) return 'bg-indigo-50/30 border-indigo-100/50';
-    if (gradient.includes('teal')) return 'bg-teal-50/30 border-teal-100/50';
-    return 'bg-blue-50/30 border-blue-100/50'; // default
+    if (gradient.includes('blue')) return 'bg-blue-50/50 border-blue-200/60';
+    if (gradient.includes('green')) return 'bg-green-50/50 border-green-200/60';
+    if (gradient.includes('purple')) return 'bg-purple-50/50 border-purple-200/60';
+    if (gradient.includes('red')) return 'bg-red-50/50 border-red-200/60';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/50 border-yellow-200/60';
+    if (gradient.includes('pink')) return 'bg-pink-50/50 border-pink-200/60';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/50 border-indigo-200/60';
+    if (gradient.includes('teal')) return 'bg-teal-50/50 border-teal-200/60';
+    if (gradient.includes('orange')) return 'bg-orange-50/50 border-orange-200/60';
+    if (gradient.includes('cyan')) return 'bg-cyan-50/50 border-cyan-200/60';
+    if (gradient.includes('lime')) return 'bg-lime-50/50 border-lime-200/60';
+    if (gradient.includes('rose')) return 'bg-rose-50/50 border-rose-200/60';
+    return 'bg-blue-50/50 border-blue-200/60'; // default
   };
 
   const getStatusColor = (status: string) => {
