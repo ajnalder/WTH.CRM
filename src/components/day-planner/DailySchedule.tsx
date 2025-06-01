@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
@@ -38,23 +39,24 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
 
   const getVisibleTimeSlots = () => {
     const visibleSlots: string[] = [];
-    const coveredSlots = new Set<string>();
+    const hiddenSlots = new Set<string>();
 
-    // First pass: identify all covered slots
+    // Only hide slots that are continuation slots (not the first slot) of a task
     scheduledTasks.forEach(task => {
       const startIndex = timeSlots.indexOf(task.startTime);
       const slotsNeeded = Math.ceil(task.duration / 15);
       
+      // Hide only the continuation slots (start from index + 1)
       for (let i = startIndex + 1; i < startIndex + slotsNeeded; i++) {
         if (i < timeSlots.length) {
-          coveredSlots.add(timeSlots[i]);
+          hiddenSlots.add(timeSlots[i]);
         }
       }
     });
 
-    // Second pass: keep only slots that aren't covered
+    // Include all slots that aren't hidden continuation slots
     timeSlots.forEach(slot => {
-      if (!coveredSlots.has(slot)) {
+      if (!hiddenSlots.has(slot)) {
         visibleSlots.push(slot);
       }
     });
