@@ -23,8 +23,14 @@ const TaskDetails = () => {
     description: ''
   });
 
+  console.log('TaskDetails - Task ID:', id);
+
   const { task, isLoading: taskLoading, error: taskError } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
+
+  console.log('TaskDetails - Task data:', task);
+  console.log('TaskDetails - Loading:', taskLoading);
+  console.log('TaskDetails - Error:', taskError);
 
   if (taskLoading) {
     return (
@@ -37,10 +43,14 @@ const TaskDetails = () => {
   }
 
   if (taskError || !task) {
+    console.error('TaskDetails - Error or no task:', taskError);
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Task Not Found</h1>
+          <p className="text-gray-600 mb-4">
+            {taskError?.message || 'The task could not be found.'}
+          </p>
           <Button onClick={() => navigate('/tasks')}>
             <ArrowLeft className="mr-2" size={16} />
             Back to Tasks

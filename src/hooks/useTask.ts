@@ -11,11 +11,15 @@ export const useTask = (taskId: string) => {
         .from('tasks')
         .select('*')
         .eq('id', taskId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching task:', error);
         throw error;
+      }
+
+      if (!task) {
+        throw new Error('Task not found');
       }
 
       // Get projects to map project names to client names
@@ -54,6 +58,7 @@ export const useTask = (taskId: string) => {
 
       return taskWithClient;
     },
+    enabled: !!taskId,
   });
 
   return {
