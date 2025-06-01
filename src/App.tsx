@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
 import TaskDetails from "./pages/TaskDetails";
+import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
