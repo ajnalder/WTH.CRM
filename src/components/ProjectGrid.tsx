@@ -3,21 +3,7 @@ import React from 'react';
 import { ProjectCard } from '@/components/ProjectCard';
 import { transformProject } from '@/utils/projectUtils';
 import { useTasks } from '@/hooks/useTasks';
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  progress?: number;
-  due_date?: string;
-  budget?: number;
-  start_date?: string;
-  description?: string;
-  priority: string;
-  clients?: {
-    company: string;
-  };
-}
+import type { Project } from '@/hooks/useProjects';
 
 interface ProjectGridProps {
   projects: Project[];
@@ -30,7 +16,13 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects }) => {
   const recentProjects = projects.slice(0, 6);
   
   const transformedProjects = recentProjects.map(project => {
-    const transformedProject = transformProject(project);
+    // Cast the project to include the clients property that transformProject expects
+    const projectWithClients = {
+      ...project,
+      clients: project.clients || { company: 'Unknown Client', name: 'Unknown Client' }
+    };
+    
+    const transformedProject = transformProject(projectWithClients);
     
     // Calculate real task counts for this project
     const projectTasks = tasks.filter(task => task.project === project.name);
