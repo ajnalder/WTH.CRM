@@ -1,19 +1,9 @@
-
 import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { ScheduledTaskCard } from './ScheduledTaskCard';
 import type { TaskWithClient } from '@/hooks/useTasks';
 import type { Client } from '@/hooks/useClients';
-
-interface ScheduledTask {
-  id: string;
-  taskId: string;
-  startTime: string;
-  duration: number;
-  type: 'task' | 'custom';
-  title?: string;
-  color?: string;
-}
+import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface TimeSlotProps {
   timeSlot: string;

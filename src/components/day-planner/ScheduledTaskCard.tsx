@@ -1,20 +1,10 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { TaskCardContent } from './TaskCardContent';
 import { ResizeHandle } from './ResizeHandle';
 import type { TaskWithClient } from '@/hooks/useTasks';
 import type { Client } from '@/hooks/useClients';
-
-interface ScheduledTask {
-  id: string;
-  taskId: string;
-  startTime: string;
-  duration: number;
-  type: 'task' | 'custom';
-  title?: string;
-  color?: string;
-}
+import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface ScheduledTaskCardProps {
   scheduledTask: ScheduledTask;

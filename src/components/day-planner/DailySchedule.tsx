@@ -1,20 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 import { TimeSlot } from './TimeSlot';
 import type { TaskWithClient } from '@/hooks/useTasks';
 import type { Client } from '@/hooks/useClients';
-
-interface ScheduledTask {
-  id: string;
-  taskId: string;
-  startTime: string;
-  duration: number;
-  type: 'task' | 'custom';
-  title?: string;
-  color?: string;
-}
+import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface DailyScheduleProps {
   timeSlots: string[];

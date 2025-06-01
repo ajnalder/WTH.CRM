@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,16 +7,7 @@ import { User, Clock, X, GripVertical } from 'lucide-react';
 import { getInitials } from '@/utils/clientGradients';
 import type { TaskWithClient } from '@/hooks/useTasks';
 import type { Client } from '@/hooks/useClients';
-
-interface ScheduledTask {
-  id: string;
-  taskId: string;
-  startTime: string;
-  duration: number;
-  type: 'task' | 'custom';
-  title?: string;
-  color?: string;
-}
+import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface TaskCardContentProps {
   scheduledTask: ScheduledTask;
