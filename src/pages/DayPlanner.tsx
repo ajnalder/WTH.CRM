@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useTasks } from '@/hooks/useTasks';
@@ -134,6 +133,7 @@ const DayPlanner = () => {
       
       const currentTask = prev[taskIndex];
       const currentStartTime = currentTask.startTime;
+      const oldDuration = currentTask.duration;
       
       // Check if the new duration fits in the available space
       if (!isTimeSlotAvailable(currentStartTime, newDuration, taskId)) {
@@ -150,30 +150,60 @@ const DayPlanner = () => {
       const taskTimeIndex = timeSlots.indexOf(currentStartTime);
       if (taskTimeIndex === -1) return updatedTasks;
       
-      // Calculate how many slots this task now occupies
+      // Calculate the old and new end positions
+      const oldSlotsNeeded = Math.ceil(oldDuration / 15);
       const newSlotsNeeded = Math.ceil(newDuration / 15);
+      const oldEndIndex = taskTimeIndex + oldSlotsNeeded;
       const newEndIndex = taskTimeIndex + newSlotsNeeded;
       
-      // Find tasks that start within the new range and need to be shifted
-      const tasksToShift = updatedTasks.filter(task => {
-        if (task.taskId === taskId) return false;
-        const taskStartIndex = timeSlots.indexOf(task.startTime);
-        return taskStartIndex >= taskTimeIndex && taskStartIndex < newEndIndex;
-      });
-      
-      // Shift conflicting tasks to start after this task
-      tasksToShift.forEach(taskToShift => {
-        const shiftedStartIndex = newEndIndex;
-        if (shiftedStartIndex < timeSlots.length) {
-          const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
-          if (taskToShiftIndex !== -1) {
-            updatedTasks[taskToShiftIndex] = {
-              ...updatedTasks[taskToShiftIndex],
-              startTime: timeSlots[shiftedStartIndex]
-            };
+      if (newDuration > oldDuration) {
+        // Task is getting longer - shift conflicting tasks down
+        const tasksToShift = updatedTasks.filter(task => {
+          if (task.taskId === taskId) return false;
+          const taskStartIndex = timeSlots.indexOf(task.startTime);
+          return taskStartIndex >= taskTimeIndex && taskStartIndex < newEndIndex;
+        });
+        
+        // Shift conflicting tasks to start after this task
+        tasksToShift.forEach(taskToShift => {
+          const shiftedStartIndex = newEndIndex;
+          if (shiftedStartIndex < timeSlots.length) {
+            const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
+            if (taskToShiftIndex !== -1) {
+              updatedTasks[taskToShiftIndex] = {
+                ...updatedTasks[taskToShiftIndex],
+                startTime: timeSlots[shiftedStartIndex]
+              };
+            }
           }
-        }
-      });
+        });
+      } else if (newDuration < oldDuration) {
+        // Task is getting shorter - move subsequent tasks up to fill the gap
+        const tasksToMoveUp = updatedTasks
+          .filter(task => {
+            if (task.taskId === taskId) return false;
+            const taskStartIndex = timeSlots.indexOf(task.startTime);
+            return taskStartIndex >= oldEndIndex; // Tasks that start after the old end
+          })
+          .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime)); // Sort by start time
+        
+        // Move each subsequent task up to fill the gap
+        const slotsFreed = oldSlotsNeeded - newSlotsNeeded;
+        tasksToMoveUp.forEach(taskToMove => {
+          const currentStartIndex = timeSlots.indexOf(taskToMove.startTime);
+          const newStartIndex = Math.max(newEndIndex, currentStartIndex - slotsFreed);
+          
+          if (newStartIndex !== currentStartIndex && newStartIndex < timeSlots.length) {
+            const taskToMoveIndex = updatedTasks.findIndex(t => t.taskId === taskToMove.taskId);
+            if (taskToMoveIndex !== -1) {
+              updatedTasks[taskToMoveIndex] = {
+                ...updatedTasks[taskToMoveIndex],
+                startTime: timeSlots[newStartIndex]
+              };
+            }
+          }
+        });
+      }
       
       return updatedTasks;
     });
