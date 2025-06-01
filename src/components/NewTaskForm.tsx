@@ -36,7 +36,6 @@ import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 interface TaskFormData {
   title: string;
   description: string;
-  priority: 'Low' | 'Medium' | 'High';
   project: string;
   dueDate: string;
   tags: string;
@@ -55,7 +54,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     defaultValues: {
       title: '',
       description: '',
-      priority: 'Medium',
       project: '',
       dueDate: '',
       tags: '',
@@ -86,7 +84,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     createTask({
       title: data.title,
       description: data.description || null,
-      priority: data.priority,
       assignee: assignee,
       due_date: data.dueDate || null,
       tags: tagsArray.length > 0 ? tagsArray : null,
@@ -196,29 +193,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
                 />
               </div>
             </div>
-            
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Priority</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <div className="grid grid-cols-2 gap-4">
               <FormField

@@ -30,15 +30,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'No due date';
     const date = new Date(dateString);
@@ -73,7 +64,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
           <TableHead>Project</TableHead>
           <TableHead>Assignee</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Priority</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Progress</TableHead>
           <TableHead>Tags</TableHead>
@@ -107,11 +97,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
             <TableCell>
               <Badge className={`${getStatusColor(task.status)}`}>
                 {task.status}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <Badge className={`${getPriorityColor(task.priority)}`}>
-                {task.priority}
               </Badge>
             </TableCell>
             <TableCell className="text-gray-600">{formatDate(task.due_date)}</TableCell>

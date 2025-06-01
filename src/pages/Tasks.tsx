@@ -7,12 +7,14 @@ import { TaskCard } from '@/components/TaskCard';
 import { TaskTable } from '@/components/TaskTable';
 import { NewTaskForm } from '@/components/NewTaskForm';
 import { useTasks } from '@/hooks/useTasks';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 const Tasks = () => {
   const { tasks, isLoading, error } = useTasks();
+  const { teamMembers } = useTeamMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('created_at');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   if (isLoading) {
@@ -40,18 +42,51 @@ const Tasks = () => {
     // The useTasks hook will automatically refetch tasks after creation
   };
 
-  const filteredTasks = tasks.filter(task => {
+  const getAssigneeName = (assigneeId: string | null) => {
+    if (!assigneeId) return 'Unassigned';
+    const member = teamMembers.find(m => m.id === assigneeId);
+    return member ? member.name : 'Unknown User';
+  };
+
+  let filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (task.project && task.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (task.assignee && task.assignee.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (task.assignee && getAssigneeName(task.assignee).toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (task.client_name && task.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-    const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Sort tasks based on selected sort criteria
+  filteredTasks = [...filteredTasks].sort((a, b) => {
+    switch (sortBy) {
+      case 'assignee':
+        const nameA = getAssigneeName(a.assignee);
+        const nameB = getAssigneeName(b.assignee);
+        return nameA.localeCompare(nameB);
+      case 'status':
+        return a.status.localeCompare(b.status);
+      case 'due_date':
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      case 'title':
+        return a.title.localeCompare(b.title);
+      case 'created_at':
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
   });
 
   const statusOptions = ['All', 'To Do', 'In Progress', 'Review', 'Done'];
-  const priorityOptions = ['All', 'Low', 'Medium', 'High'];
+  const sortOptions = [
+    { value: 'created_at', label: 'Date Created' },
+    { value: 'title', label: 'Title' },
+    { value: 'status', label: 'Status' },
+    { value: 'assignee', label: 'Staff Member' },
+    { value: 'due_date', label: 'Due Date' }
+  ];
 
   const getStatusCounts = () => {
     return {
@@ -124,12 +159,12 @@ const Tasks = () => {
               </select>
               
               <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
                 className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {priorityOptions.map(priority => (
-                  <option key={priority} value={priority}>Priority: {priority}</option>
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>Sort by: {option.label}</option>
                 ))}
               </select>
             </div>

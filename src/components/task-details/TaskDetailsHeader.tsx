@@ -40,15 +40,6 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const handleDelete = () => {
     if (onDelete) {
       onDelete();
@@ -89,9 +80,6 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
         <div className="flex items-center gap-3 mb-4">
           <Badge className={getStatusColor(task.status)}>
             {task.status}
-          </Badge>
-          <Badge className={getPriorityColor(task.priority)}>
-            {task.priority}
           </Badge>
           {task.client_name && (
             <Badge variant="outline">

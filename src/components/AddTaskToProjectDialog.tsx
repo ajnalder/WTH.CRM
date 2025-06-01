@@ -27,7 +27,6 @@ import { useTasks } from '@/hooks/useTasks';
 interface TaskFormData {
   title: string;
   description: string;
-  priority: 'Low' | 'Medium' | 'High';
   assignee: string;
   dueDate: string;
   tags: string;
@@ -50,7 +49,6 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
     defaultValues: {
       title: '',
       description: '',
-      priority: 'Medium',
       assignee: '',
       dueDate: '',
       tags: '',
@@ -63,7 +61,6 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
     createTask({
       title: data.title,
       description: data.description || null,
-      priority: data.priority,
       assignee: data.assignee || null,
       due_date: data.dueDate || null,
       tags: tagsArray.length > 0 ? tagsArray : null,
@@ -143,29 +140,6 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
               
               <FormField
                 control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <FormControl>
-                      <select 
-                        {...field}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
@@ -177,24 +151,24 @@ export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Frontend, React"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Frontend, React"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

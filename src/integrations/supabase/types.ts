@@ -333,7 +333,6 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
-          priority: string
           progress: number | null
           project: string | null
           status: string
@@ -348,7 +347,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          priority?: string
           progress?: number | null
           project?: string | null
           status?: string
@@ -363,7 +361,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          priority?: string
           progress?: number | null
           project?: string | null
           status?: string
