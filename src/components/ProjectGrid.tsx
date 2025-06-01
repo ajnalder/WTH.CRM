@@ -16,11 +16,11 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects }) => {
   const recentProjects = projects.slice(0, 6);
   
   const transformedProjects = recentProjects.map(project => {
-    // The project already includes client data from the join in useProjects
-    // We need to create the clients property that transformProject expects
+    // Since the Project type doesn't include clients but the query returns client data,
+    // we need to access it through the any type and provide fallback
     const projectWithClients = {
       ...project,
-      clients: project.clients || { company: 'Unknown Client', name: 'Unknown Client' }
+      clients: (project as any).clients || { company: 'Unknown Client', name: 'Unknown Client' }
     };
     
     const transformedProject = transformProject(projectWithClients);
