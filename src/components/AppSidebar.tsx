@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare } from 'lucide-react';
+import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare, Building2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -19,6 +19,7 @@ const navigationItems = [
   { icon: Folder, label: 'Projects', path: '/projects' },
   { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
   { icon: Users, label: 'Team', path: '/team' },
+  { icon: Building2, label: 'Clients', path: '/clients' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
   { icon: BarChart3, label: 'Reports', path: '/reports' },
   { icon: Settings, label: 'Settings', path: '/settings' },
