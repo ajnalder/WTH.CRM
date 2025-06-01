@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Filter, Plus, Calendar, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -118,125 +117,123 @@ const Tasks = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
-          <p className="text-gray-600">Manage and track all project tasks</p>
-        </div>
+    <div className="flex-1 p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
+        <p className="text-gray-600">Manage and track all project tasks</p>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <div className="text-2xl font-bold text-gray-900">{statusCounts.total}</div>
-            <div className="text-sm text-gray-600">Total Tasks</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <div className="text-2xl font-bold text-blue-600">{statusCounts.todo}</div>
-            <div className="text-sm text-gray-600">To Do</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <div className="text-2xl font-bold text-orange-600">{statusCounts.inProgress}</div>
-            <div className="text-sm text-gray-600">In Progress</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <div className="text-2xl font-bold text-purple-600">{statusCounts.review}</div>
-            <div className="text-sm text-gray-600">Review</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <div className="text-2xl font-bold text-green-600">{statusCounts.done}</div>
-            <div className="text-sm text-gray-600">Done</div>
-          </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="text-2xl font-bold text-gray-900">{statusCounts.total}</div>
+          <div className="text-sm text-gray-600">Total Tasks</div>
         </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="text-2xl font-bold text-blue-600">{statusCounts.todo}</div>
+          <div className="text-sm text-gray-600">To Do</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="text-2xl font-bold text-orange-600">{statusCounts.inProgress}</div>
+          <div className="text-sm text-gray-600">In Progress</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="text-2xl font-bold text-purple-600">{statusCounts.review}</div>
+          <div className="text-sm text-gray-600">Review</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="text-2xl font-bold text-green-600">{statusCounts.done}</div>
+          <div className="text-sm text-gray-600">Done</div>
+        </div>
+      </div>
 
-        {/* Controls */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <Input
-                  placeholder="Search tasks, projects, or assignees..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+      {/* Controls */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                placeholder="Search tasks, projects, or assignees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Filter className="text-gray-400" size={20} />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {statusOptions.map(status => (
+                  <option key={status} value={status}>Status: {status}</option>
+                ))}
+              </select>
               
-              <div className="flex items-center gap-2">
-                <Filter className="text-gray-400" size={20} />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {statusOptions.map(status => (
-                    <option key={status} value={status}>Status: {status}</option>
-                  ))}
-                </select>
-                
-                <select
-                  value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {priorityOptions.map(priority => (
-                    <option key={priority} value={priority}>Priority: {priority}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center border border-gray-200 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('cards')}
-                  className={`px-3 py-1 rounded text-sm ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-                >
-                  Cards
-                </button>
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`px-3 py-1 rounded text-sm ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-                >
-                  Table
-                </button>
-              </div>
-              
-              <NewTaskForm onTaskCreated={handleTaskCreated} />
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {priorityOptions.map(priority => (
+                  <option key={priority} value={priority}>Priority: {priority}</option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
 
-        {/* Tasks Display */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {filteredTasks.length} Task{filteredTasks.length !== 1 ? 's' : ''}
-            </h2>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center border border-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
+              >
+                Cards
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
+              >
+                Table
+              </button>
+            </div>
+            
+            <NewTaskForm onTaskCreated={handleTaskCreated} />
           </div>
-
-          {viewMode === 'cards' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredTasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </div>
-          ) : (
-            <TaskTable tasks={filteredTasks} />
-          )}
-
-          {filteredTasks.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Search size={48} className="mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
-              <p className="text-gray-600">Try adjusting your search or filter criteria</p>
-            </div>
-          )}
         </div>
+      </div>
+
+      {/* Tasks Display */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">
+            {filteredTasks.length} Task{filteredTasks.length !== 1 ? 's' : ''}
+          </h2>
+        </div>
+
+        {viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredTasks.map((task) => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </div>
+        ) : (
+          <TaskTable tasks={filteredTasks} />
+        )}
+
+        {filteredTasks.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <Search size={48} className="mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+            <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+          </div>
+        )}
       </div>
     </div>
   );
