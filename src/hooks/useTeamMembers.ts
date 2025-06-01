@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,34 +26,22 @@ export const useTeamMembers = () => {
   const teamMembersQuery = useQuery({
     queryKey: ['team_members'],
     queryFn: async (): Promise<TeamMember[]> => {
-      console.log('=== FETCHING TEAM MEMBERS ===');
-      console.log('Current user ID:', user?.id);
-      console.log('Current user email:', user?.email);
+      console.log('Fetching team members from profiles table...');
 
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .order('full_name');
 
-      console.log('Supabase query executed');
-      console.log('Error:', error);
-      console.log('Raw profiles data:', profiles);
-      console.log('Number of profiles found:', profiles?.length || 0);
-
       if (error) {
-        console.error('Error fetching team members (profiles):', error);
+        console.error('Error fetching team members:', error);
         throw error;
       }
 
+      console.log(`Found ${profiles?.length || 0} profiles in database`);
+
       // Transform profiles into team members format for UI compatibility
       const teamMembers: TeamMember[] = (profiles || []).map((profile, index) => {
-        console.log(`Processing profile ${index + 1}:`, {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          created_at: profile.created_at
-        });
-
         const gradients = [
           'from-blue-400 to-blue-600',
           'from-green-400 to-green-600',
@@ -84,13 +71,10 @@ export const useTeamMembers = () => {
           hours_this_week: 0,
         };
 
-        console.log('Processed team member:', teamMember);
         return teamMember;
       });
 
-      console.log('=== FINAL RESULTS ===');
-      console.log('Total team members processed:', teamMembers.length);
-      console.log('Team members array:', teamMembers);
+      console.log(`Processed ${teamMembers.length} team members for display`);
       return teamMembers;
     },
     enabled: !!user,
