@@ -133,6 +133,40 @@ export const useTask = (taskId: string) => {
     },
   });
 
+  const updateTaskDueDate = useMutation({
+    mutationFn: async (dueDate: string | null) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ due_date: dueDate })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task due date:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Success",
+        description: "Task due date updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Update task due date error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task due date",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
@@ -141,5 +175,7 @@ export const useTask = (taskId: string) => {
     isUpdating: updateTaskAssignee.isPending,
     updateTaskStatus: updateTaskStatus.mutate,
     isUpdatingStatus: updateTaskStatus.isPending,
+    updateTaskDueDate: updateTaskDueDate.mutate,
+    isUpdatingDueDate: updateTaskDueDate.isPending,
   };
 };
