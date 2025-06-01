@@ -99,11 +99,47 @@ export const useTask = (taskId: string) => {
     },
   });
 
+  const updateTaskStatus = useMutation({
+    mutationFn: async (status: string) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ status })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task status:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Success",
+        description: "Task status updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Update task status error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
     error: taskQuery.error,
     updateTaskAssignee: updateTaskAssignee.mutate,
     isUpdating: updateTaskAssignee.isPending,
+    updateTaskStatus: updateTaskStatus.mutate,
+    isUpdatingStatus: updateTaskStatus.isPending,
   };
 };

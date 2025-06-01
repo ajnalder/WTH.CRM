@@ -16,7 +16,15 @@ const TaskDetails = () => {
 
   console.log('TaskDetails - Task ID:', id);
 
-  const { task, isLoading: taskLoading, error: taskError, updateTaskAssignee, isUpdating } = useTask(id || '');
+  const { 
+    task, 
+    isLoading: taskLoading, 
+    error: taskError, 
+    updateTaskAssignee, 
+    isUpdating,
+    updateTaskStatus,
+    isUpdatingStatus
+  } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
   console.log('TaskDetails - Task data:', task);
@@ -63,6 +71,8 @@ const TaskDetails = () => {
               task={task}
               updateTaskAssignee={updateTaskAssignee}
               isUpdating={isUpdating}
+              updateTaskStatus={updateTaskStatus}
+              isUpdatingStatus={isUpdatingStatus}
             />
 
             <TaskTimeEntries timeEntries={timeEntries} />

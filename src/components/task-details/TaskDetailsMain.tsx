@@ -4,18 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TaskAssigneeEditor } from '@/components/TaskAssigneeEditor';
+import { TaskStatusEditor } from '@/components/TaskStatusEditor';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsMainProps {
   task: TaskWithClient;
   updateTaskAssignee: (assignee: string | null) => void;
   isUpdating: boolean;
+  updateTaskStatus: (status: string) => void;
+  isUpdatingStatus: boolean;
 }
 
 export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ 
   task, 
   updateTaskAssignee, 
-  isUpdating 
+  isUpdating,
+  updateTaskStatus,
+  isUpdatingStatus
 }) => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'No due date';
@@ -49,9 +54,17 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
             />
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">Due Date</h3>
-            <p className="text-gray-600">{formatDate(task.due_date)}</p>
+            <TaskStatusEditor
+              currentStatus={task.status}
+              onStatusUpdate={updateTaskStatus}
+              isUpdating={isUpdatingStatus}
+            />
           </div>
+        </div>
+
+        <div>
+          <h3 className="font-medium text-gray-900 mb-1">Due Date</h3>
+          <p className="text-gray-600">{formatDate(task.due_date)}</p>
         </div>
 
         <div>
