@@ -1,112 +1,22 @@
+
 import React, { useState } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectTable } from '@/components/ProjectTable';
 import { NewProjectForm } from '@/components/NewProjectForm';
-
-const initialProjects = [
-  {
-    id: 1,
-    name: 'E-commerce Platform',
-    client: 'TechCorp Inc.',
-    status: 'In Progress',
-    progress: 65,
-    dueDate: '2024-07-15',
-    team: ['JD', 'SM', 'RJ'],
-    priority: 'High',
-    tasks: { completed: 12, total: 18 }
-  },
-  {
-    id: 2,
-    name: 'Mobile App Redesign',
-    client: 'StartupXYZ',
-    status: 'In Progress',
-    progress: 40,
-    dueDate: '2024-08-01',
-    team: ['AL', 'MK'],
-    priority: 'Medium',
-    tasks: { completed: 8, total: 15 }
-  },
-  {
-    id: 3,
-    name: 'CRM Dashboard',
-    client: 'BusinessFlow',
-    status: 'Review',
-    progress: 90,
-    dueDate: '2024-06-20',
-    team: ['PL', 'JD', 'TN'],
-    priority: 'High',
-    tasks: { completed: 14, total: 16 }
-  },
-  {
-    id: 4,
-    name: 'Portfolio Website',
-    client: 'Creative Agency',
-    status: 'Completed',
-    progress: 100,
-    dueDate: '2024-06-01',
-    team: ['SM', 'RJ'],
-    priority: 'Low',
-    tasks: { completed: 10, total: 10 }
-  },
-  {
-    id: 5,
-    name: 'API Integration',
-    client: 'DataFlow Systems',
-    status: 'Planning',
-    progress: 15,
-    dueDate: '2024-09-15',
-    team: ['MK', 'AL', 'PL'],
-    priority: 'Medium',
-    tasks: { completed: 2, total: 12 }
-  },
-  {
-    id: 6,
-    name: 'Marketing Landing Page',
-    client: 'GrowthHackers',
-    status: 'In Progress',
-    progress: 75,
-    dueDate: '2024-07-10',
-    team: ['TN', 'JD'],
-    priority: 'High',
-    tasks: { completed: 9, total: 12 }
-  },
-  {
-    id: 7,
-    name: 'Inventory Management System',
-    client: 'RetailCorp',
-    status: 'Planning',
-    progress: 5,
-    dueDate: '2024-10-01',
-    team: ['AL', 'SM'],
-    priority: 'Medium',
-    tasks: { completed: 1, total: 20 }
-  },
-  {
-    id: 8,
-    name: 'Customer Support Portal',
-    client: 'ServiceHub',
-    status: 'In Progress',
-    progress: 55,
-    dueDate: '2024-08-15',
-    team: ['RJ', 'PL', 'TN'],
-    priority: 'High',
-    tasks: { completed: 11, total: 16 }
-  }
-];
+import { useProjects } from '@/hooks/useProjects';
+import { transformProject } from '@/utils/projectUtils';
 
 const Projects = () => {
-  const [projects, setProjects] = useState(initialProjects);
+  const { projects, isLoading } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const handleProjectCreated = (newProject: any) => {
-    setProjects(prev => [newProject, ...prev]);
-  };
+  const transformedProjects = projects.map(transformProject);
 
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = transformedProjects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.client.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || project.status === statusFilter;
@@ -114,6 +24,18 @@ const Projects = () => {
   });
 
   const statusOptions = ['All', 'Planning', 'In Progress', 'Review', 'Completed'];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -168,7 +90,7 @@ const Projects = () => {
                 </button>
               </div>
               
-              <NewProjectForm onProjectCreated={handleProjectCreated} />
+              <NewProjectForm />
             </div>
           </div>
         </div>
