@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -26,23 +27,34 @@ export const useTeamMembers = () => {
   const teamMembersQuery = useQuery({
     queryKey: ['team_members'],
     queryFn: async (): Promise<TeamMember[]> => {
-      console.log('Fetching all team members (profiles)');
-      console.log('Current user:', user?.email);
+      console.log('=== FETCHING TEAM MEMBERS ===');
+      console.log('Current user ID:', user?.id);
+      console.log('Current user email:', user?.email);
 
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .order('full_name');
 
+      console.log('Supabase query executed');
+      console.log('Error:', error);
+      console.log('Raw profiles data:', profiles);
+      console.log('Number of profiles found:', profiles?.length || 0);
+
       if (error) {
         console.error('Error fetching team members (profiles):', error);
         throw error;
       }
 
-      console.log('Raw profiles data:', profiles);
-
       // Transform profiles into team members format for UI compatibility
       const teamMembers: TeamMember[] = (profiles || []).map((profile, index) => {
+        console.log(`Processing profile ${index + 1}:`, {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          created_at: profile.created_at
+        });
+
         const gradients = [
           'from-blue-400 to-blue-600',
           'from-green-400 to-green-600',
@@ -56,7 +68,7 @@ export const useTeamMembers = () => {
 
         const initials = profile.full_name 
           ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-          : profile.email.slice(0, 2).toUpperCase();
+          : profile.email?.slice(0, 2).toUpperCase() || 'UN';
 
         const teamMember = {
           id: profile.id,
@@ -76,8 +88,9 @@ export const useTeamMembers = () => {
         return teamMember;
       });
 
-      console.log('Final team members array:', teamMembers);
-      console.log('Team members count:', teamMembers.length);
+      console.log('=== FINAL RESULTS ===');
+      console.log('Total team members processed:', teamMembers.length);
+      console.log('Team members array:', teamMembers);
       return teamMembers;
     },
     enabled: !!user,
