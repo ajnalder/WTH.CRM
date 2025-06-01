@@ -67,7 +67,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
       id: parseInt(h.id),
       provider: h.provider,
       plan: h.plan,
-      serverLocation: h.server_location,
+      serverLocation: h.platform, // Using platform as serverLocation for backward compatibility
       renewalDate: h.renewal_date,
       loginUrl: h.login_url || '',
       notes: h.notes || '',

@@ -42,7 +42,7 @@ export interface ClientDetailContextProps {
   newHosting: {
     provider: string;
     plan: string;
-    server_location: string;
+    platform: string;
     renewal_date: string;
     login_url: string;
     notes: string;
@@ -51,7 +51,7 @@ export interface ClientDetailContextProps {
   setNewHosting: React.Dispatch<React.SetStateAction<{
     provider: string;
     plan: string;
-    server_location: string;
+    platform: string;
     renewal_date: string;
     login_url: string;
     notes: string;
@@ -108,7 +108,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
   const [newHosting, setNewHosting] = useState({
     provider: '',
     plan: '',
-    server_location: '',
+    platform: 'Other',
     renewal_date: '',
     login_url: '',
     notes: '',
@@ -147,7 +147,7 @@ const ClientDetailProvider = ({ clientId, children }: ClientDetailProviderProps)
       setNewHosting({
         provider: '',
         plan: '',
-        server_location: '',
+        platform: 'Other',
         renewal_date: '',
         login_url: '',
         notes: '',

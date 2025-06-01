@@ -159,10 +159,10 @@ export type Database = {
           login_url: string | null
           notes: string | null
           plan: string
+          platform: string
           provider: string
           renewal_cost: number
           renewal_date: string
-          server_location: string
           updated_at: string
         }
         Insert: {
@@ -172,10 +172,10 @@ export type Database = {
           login_url?: string | null
           notes?: string | null
           plan: string
+          platform?: string
           provider: string
           renewal_cost?: number
           renewal_date: string
-          server_location: string
           updated_at?: string
         }
         Update: {
@@ -185,10 +185,10 @@ export type Database = {
           login_url?: string | null
           notes?: string | null
           plan?: string
+          platform?: string
           provider?: string
           renewal_cost?: number
           renewal_date?: string
-          server_location?: string
           updated_at?: string
         }
         Relationships: [

@@ -8,7 +8,7 @@ export interface HostingInfo {
   client_id: string;
   provider: string;
   plan: string;
-  server_location: string;
+  platform: string;
   renewal_date: string;
   login_url: string | null;
   notes: string | null;
@@ -21,7 +21,7 @@ export interface CreateHostingData {
   client_id: string;
   provider: string;
   plan: string;
-  server_location: string;
+  platform: string;
   renewal_date: string;
   login_url?: string;
   notes?: string;

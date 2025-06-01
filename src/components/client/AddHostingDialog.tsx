@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ interface AddHostingDialogProps {
   newHosting: {
     provider: string;
     plan: string;
-    server_location: string;
+    platform: string;
     renewal_date: string;
     login_url: string;
     notes: string;
@@ -28,7 +29,7 @@ interface AddHostingDialogProps {
   setNewHosting: (hosting: {
     provider: string;
     plan: string;
-    server_location: string;
+    platform: string;
     renewal_date: string;
     login_url: string;
     notes: string;
@@ -36,6 +37,16 @@ interface AddHostingDialogProps {
   }) => void;
   onAddHosting: () => void;
 }
+
+const platformOptions = [
+  'Shopify',
+  'Webflow',
+  'WordPress',
+  'Squarespace',
+  'Wix',
+  'Custom',
+  'Other'
+];
 
 const AddHostingDialog = ({
   isOpen,
@@ -76,13 +87,22 @@ const AddHostingDialog = ({
             />
           </div>
           <div>
-            <Label htmlFor="location">Server Location</Label>
-            <Input
-              id="location"
-              value={newHosting.server_location}
-              onChange={(e) => setNewHosting({...newHosting, server_location: e.target.value})}
-              placeholder="US East, Europe, etc."
-            />
+            <Label htmlFor="platform">Platform</Label>
+            <Select
+              value={newHosting.platform}
+              onValueChange={(value) => setNewHosting({...newHosting, platform: value})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                {platformOptions.map((platform) => (
+                  <SelectItem key={platform} value={platform}>
+                    {platform}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="renewal">Renewal Date</Label>
