@@ -16,7 +16,7 @@ export const useTasks = () => {
 
   const tasksQuery = useQuery({
     queryKey: ['tasks'],
-    queryFn: async () => {
+    queryFn: async (): Promise<TaskWithClient[]> => {
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
@@ -39,7 +39,10 @@ export const useTasks = () => {
 
       if (projectsError) {
         console.error('Error fetching projects:', projectsError);
-        return tasks || [];
+        return (tasks || []).map(task => ({
+          ...task,
+          client_name: undefined
+        }));
       }
 
       // Create a map of project names to client company names
