@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Toggle } from '@/components/ui/toggle';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProjects } from '@/hooks/useProjects';
@@ -19,14 +19,14 @@ export const ProjectHeaderControls: React.FC<ProjectHeaderControlsProps> = ({ pr
   const { updateProject } = useProjects();
   const { toast } = useToast();
 
-  const handleToggle = (pressed: boolean) => {
-    // When pressed (true) = Retainer mode
-    // When not pressed (false) = Billable mode
+  const handleToggle = (checked: boolean) => {
+    // When checked (true) = Retainer mode
+    // When not checked (false) = Billable mode
     updateProject({
       projectId: project.id,
       projectData: { 
-        is_retainer: pressed,
-        is_billable: !pressed
+        is_retainer: checked,
+        is_billable: !checked
       }
     });
   };
@@ -43,11 +43,11 @@ export const ProjectHeaderControls: React.FC<ProjectHeaderControlsProps> = ({ pr
               <span className={`text-sm ${!project.isRetainer ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
                 Billable
               </span>
-              <Toggle
+              <Switch
                 id="project-type-toggle"
-                pressed={project.isRetainer}
-                onPressedChange={handleToggle}
-                className="data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                checked={project.isRetainer}
+                onCheckedChange={handleToggle}
+                className="data-[state=checked]:bg-green-600"
               />
               <span className={`text-sm ${project.isRetainer ? 'font-medium text-green-600' : 'text-gray-500'}`}>
                 Retainer
