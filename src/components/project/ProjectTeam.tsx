@@ -44,7 +44,7 @@ export const ProjectTeam: React.FC<ProjectTeamProps> = ({ projectId }) => {
 
   const handleAssignSelected = () => {
     selectedMembers.forEach(memberId => {
-      const isAlreadyAssigned = projectTeamMembers.some(ptm => ptm.team_member_id === memberId);
+      const isAlreadyAssigned = projectTeamMembers.some(ptm => ptm.user_id === memberId);
       if (!isAlreadyAssigned) {
         assignTeamMember({ projectId, teamMemberId: memberId });
       }
@@ -125,18 +125,18 @@ export const ProjectTeam: React.FC<ProjectTeamProps> = ({ projectId }) => {
             {projectTeamMembers.map((ptm) => (
               <div key={ptm.id} className="flex items-center justify-between space-x-3">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 bg-gradient-to-r ${ptm.team_member.gradient} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
-                    {ptm.team_member.avatar}
+                  <div className={`w-8 h-8 bg-gradient-to-r ${ptm.user.gradient} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                    {ptm.user.avatar}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">{ptm.team_member.name}</div>
-                    <div className="text-xs text-gray-500">{ptm.team_member.role}</div>
+                    <div className="text-sm font-medium text-gray-900">{ptm.user.name}</div>
+                    <div className="text-xs text-gray-500">{ptm.user.role}</div>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveFromProject(ptm.team_member_id)}
+                  onClick={() => handleRemoveFromProject(ptm.user_id)}
                   disabled={isRemoving}
                 >
                   <X className="w-4 h-4" />

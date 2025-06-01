@@ -233,33 +233,33 @@ export type Database = {
           assigned_at: string
           id: string
           project_id: string
-          team_member_id: string
+          user_id: string
         }
         Insert: {
           assigned_at?: string
           id?: string
           project_id: string
-          team_member_id: string
+          user_id: string
         }
         Update: {
           assigned_at?: string
           id?: string
           project_id?: string
-          team_member_id?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_team_members_project_id_fkey"
+            foreignKeyName: "fk_project_team_members_project_id"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_team_members_team_member_id_fkey"
-            columns: ["team_member_id"]
+            foreignKeyName: "project_team_members_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "team_members"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -369,51 +369,6 @@ export type Database = {
           status?: string
           tags?: string[] | null
           title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      team_members: {
-        Row: {
-          avatar: string
-          created_at: string
-          current_task: string | null
-          email: string
-          gradient: string
-          hours_this_week: number
-          id: string
-          name: string
-          role: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avatar: string
-          created_at?: string
-          current_task?: string | null
-          email: string
-          gradient: string
-          hours_this_week?: number
-          id?: string
-          name: string
-          role: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avatar?: string
-          created_at?: string
-          current_task?: string | null
-          email?: string
-          gradient?: string
-          hours_this_week?: number
-          id?: string
-          name?: string
-          role?: string
-          status?: string
           updated_at?: string
           user_id?: string
         }

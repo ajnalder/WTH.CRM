@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskTableProps {
@@ -17,6 +18,8 @@ interface TaskTableProps {
 }
 
 export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
+  const { teamMembers } = useTeamMembers();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'To Do': return 'bg-gray-100 text-gray-800';
@@ -53,6 +56,12 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getAssigneeName = (assigneeId: string | null) => {
+    if (!assigneeId) return 'Unassigned';
+    const member = teamMembers.find(m => m.id === assigneeId);
+    return member ? member.name : 'Unknown User';
   };
 
   return (
@@ -94,7 +103,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
               )}
             </TableCell>
             <TableCell className="text-gray-900">{task.project || 'No project'}</TableCell>
-            <TableCell className="text-gray-900">{task.assignee || 'Unassigned'}</TableCell>
+            <TableCell className="text-gray-900">{getAssigneeName(task.assignee)}</TableCell>
             <TableCell>
               <Badge className={`${getStatusColor(task.status)}`}>
                 {task.status}

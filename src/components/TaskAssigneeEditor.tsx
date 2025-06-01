@@ -17,7 +17,7 @@ export const TaskAssigneeEditor: React.FC<TaskAssigneeEditorProps> = ({
 }) => {
   const { teamMembers } = useTeamMembers();
 
-  // Find the current team member by ID
+  // Find the current team member by user ID
   const currentTeamMember = teamMembers.find(member => member.id === currentAssignee);
 
   const handleAssigneeChange = (value: string) => {

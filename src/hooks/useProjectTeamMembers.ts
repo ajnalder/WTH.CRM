@@ -6,13 +6,16 @@ import { useToast } from '@/hooks/use-toast';
 export interface ProjectTeamMember {
   id: string;
   project_id: string;
-  team_member_id: string;
+  user_id: string;
   assigned_at: string;
-  team_member: {
+  user: {
     id: string;
+    full_name: string;
+    email: string;
+    avatar_url?: string;
+    // Computed fields for UI compatibility
     name: string;
     role: string;
-    email: string;
     avatar: string;
     gradient: string;
   };
@@ -31,13 +34,11 @@ export const useProjectTeamMembers = (projectId?: string) => {
         .from('project_team_members')
         .select(`
           *,
-          team_member:team_members(
+          user:profiles(
             id,
-            name,
-            role,
+            full_name,
             email,
-            avatar,
-            gradient
+            avatar_url
           )
         `)
         .eq('project_id', projectId);
@@ -47,7 +48,44 @@ export const useProjectTeamMembers = (projectId?: string) => {
         throw error;
       }
 
-      return data || [];
+      // Transform the data to match the expected interface
+      const transformedData: ProjectTeamMember[] = (data || []).map((ptm, index) => {
+        const gradients = [
+          'from-blue-400 to-blue-600',
+          'from-green-400 to-green-600',
+          'from-purple-400 to-purple-600',
+          'from-red-400 to-red-600',
+          'from-yellow-400 to-yellow-600',
+          'from-pink-400 to-pink-600',
+          'from-indigo-400 to-indigo-600',
+          'from-teal-400 to-teal-600',
+        ];
+
+        const user = ptm.user as any;
+        const name = user?.full_name || user?.email || 'Unknown User';
+        const initials = user?.full_name 
+          ? user.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+          : (user?.email || 'UN').slice(0, 2).toUpperCase();
+
+        return {
+          id: ptm.id,
+          project_id: ptm.project_id,
+          user_id: ptm.user_id,
+          assigned_at: ptm.assigned_at,
+          user: {
+            id: user?.id || '',
+            full_name: user?.full_name || '',
+            email: user?.email || '',
+            avatar_url: user?.avatar_url,
+            name,
+            role: 'Team Member',
+            avatar: initials,
+            gradient: gradients[index % gradients.length],
+          },
+        };
+      });
+
+      return transformedData;
     },
     enabled: !!projectId,
   });
@@ -58,7 +96,7 @@ export const useProjectTeamMembers = (projectId?: string) => {
         .from('project_team_members')
         .insert({
           project_id: projectId,
-          team_member_id: teamMemberId,
+          user_id: teamMemberId,
         })
         .select()
         .single();
@@ -93,7 +131,7 @@ export const useProjectTeamMembers = (projectId?: string) => {
         .from('project_team_members')
         .delete()
         .eq('project_id', projectId)
-        .eq('team_member_id', teamMemberId);
+        .eq('user_id', teamMemberId);
 
       if (error) {
         console.error('Error removing team member:', error);

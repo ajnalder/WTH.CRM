@@ -17,7 +17,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
 
-  // Find the assigned team member by ID
+  // Find the assigned team member by user ID (task.assignee is now a UUID)
   const assignedMember = task.assignee ? teamMembers.find(member => member.id === task.assignee) : null;
 
   // Find the client by name to get their gradient color
