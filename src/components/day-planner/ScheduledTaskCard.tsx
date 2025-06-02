@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { TaskCardContent } from './TaskCardContent';
@@ -15,7 +16,7 @@ interface ScheduledTaskCardProps {
   removeScheduledTask: (taskId: string) => void;
 }
 
-export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
+export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = React.memo(({
   scheduledTask,
   task,
   client,
@@ -139,4 +140,15 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
       )}
     </Draggable>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.scheduledTask.duration === nextProps.scheduledTask.duration &&
+    prevProps.scheduledTask.task_id === nextProps.scheduledTask.task_id &&
+    prevProps.scheduledTask.start_time === nextProps.scheduledTask.start_time &&
+    prevProps.task?.id === nextProps.task?.id &&
+    prevProps.client?.id === nextProps.client?.id
+  );
+});
+
+ScheduledTaskCard.displayName = 'ScheduledTaskCard';

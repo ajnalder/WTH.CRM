@@ -22,6 +22,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const finalDurationRef = useRef(0);
 
   const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
     const slotHeight = 69; // Each 15-minute slot height
@@ -40,6 +41,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     setIsResizing(true);
     startYRef.current = e.clientY;
     startDurationRef.current = scheduledTask.duration;
+    finalDurationRef.current = scheduledTask.duration;
     
     // Find the card element
     const handle = e.currentTarget as HTMLElement;
@@ -53,6 +55,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       const deltaY = e.clientY - startYRef.current;
       const snappedDuration = snapToSlot(deltaY, startDurationRef.current);
+      finalDurationRef.current = snappedDuration;
       
       // Calculate new height
       const slots = Math.ceil(snappedDuration / 15);
@@ -76,9 +79,6 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       isDraggingRef.current = false;
       
-      const deltaY = e.clientY - startYRef.current;
-      const finalDuration = snapToSlot(deltaY, startDurationRef.current);
-      
       // Reset the direct style manipulation and re-enable transitions
       if (cardRef.current) {
         cardRef.current.style.height = '';
@@ -86,14 +86,17 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       }
       
       // Only update if duration actually changed
-      if (finalDuration !== scheduledTask.duration) {
-        updateTaskDuration(scheduledTask.task_id, finalDuration);
+      if (finalDurationRef.current !== scheduledTask.duration) {
+        // Use requestAnimationFrame to defer the update and prevent immediate re-render
+        requestAnimationFrame(() => {
+          updateTaskDuration(scheduledTask.task_id, finalDurationRef.current);
+        });
       }
       
       // Set resizing to false after a brief delay to prevent flicker
       setTimeout(() => {
         setIsResizing(false);
-      }, 50);
+      }, 100);
       
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
