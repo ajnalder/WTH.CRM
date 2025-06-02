@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientMutations } from './useClientMutations';
-import { getRandomGradient } from '@/utils/clientGradients';
+import { gradients } from '@/utils/clientGradients';
 import type { Client } from '@/types/clientTypes';
 
 export const useClients = () => {
@@ -30,27 +30,39 @@ export const useClients = () => {
         throw error;
       }
 
-      // Check for clients without gradients and update them
+      // Check for clients without gradients and update them with unique colors
       const clientsWithoutGradients = data.filter(client => !client.gradient);
+      const clientsWithGradients = data.filter(client => client.gradient);
       
       if (clientsWithoutGradients.length > 0) {
-        console.log(`Found ${clientsWithoutGradients.length} clients without gradients, assigning random gradients...`);
+        console.log(`Found ${clientsWithoutGradients.length} clients without gradients, assigning unique gradients...`);
         
-        // Update each client with a random gradient
-        const updatePromises = clientsWithoutGradients.map(async (client) => {
-          const randomGradient = getRandomGradient();
+        // Get already used gradients
+        const usedGradients = clientsWithGradients.map(client => client.gradient);
+        
+        // Get available gradients (ones not already used)
+        const availableGradients = gradients.filter(gradient => !usedGradients.includes(gradient));
+        
+        // If we need more gradients than available, we'll cycle through all gradients
+        const gradientsToUse = availableGradients.length >= clientsWithoutGradients.length 
+          ? availableGradients 
+          : [...availableGradients, ...gradients];
+        
+        // Update each client with a unique gradient
+        const updatePromises = clientsWithoutGradients.map(async (client, index) => {
+          const assignedGradient = gradientsToUse[index % gradientsToUse.length];
           const { error: updateError } = await supabase
             .from('clients')
-            .update({ gradient: randomGradient })
+            .update({ gradient: assignedGradient })
             .eq('id', client.id);
           
           if (updateError) {
             console.error(`Error updating gradient for client ${client.id}:`, updateError);
           } else {
-            console.log(`Updated client ${client.company} with gradient: ${randomGradient}`);
+            console.log(`Updated client ${client.company} with gradient: ${assignedGradient}`);
           }
           
-          return { ...client, gradient: randomGradient };
+          return { ...client, gradient: assignedGradient };
         });
         
         await Promise.all(updatePromises);

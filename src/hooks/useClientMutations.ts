@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getInitials, getRandomGradient } from '@/utils/clientGradients';
+import { getInitials, gradients } from '@/utils/clientGradients';
 import type { CreateClientData, Client } from '@/types/clientTypes';
 
 export const useClientMutations = () => {
@@ -16,7 +16,22 @@ export const useClientMutations = () => {
       if (!user) throw new Error('User not authenticated');
 
       const avatar = getInitials(clientData.company);
-      const randomGradient = getRandomGradient();
+      
+      // Get existing clients to determine used gradients
+      const { data: existingClients } = await supabase
+        .from('clients')
+        .select('gradient')
+        .eq('user_id', user.id);
+
+      const usedGradients = existingClients?.map(client => client.gradient).filter(Boolean) || [];
+      
+      // Find the first available gradient that's not already used
+      let selectedGradient = gradients.find(gradient => !usedGradients.includes(gradient));
+      
+      // If all gradients are used, cycle through them starting from the beginning
+      if (!selectedGradient) {
+        selectedGradient = gradients[usedGradients.length % gradients.length];
+      }
 
       const { data, error } = await supabase
         .from('clients')
@@ -27,7 +42,7 @@ export const useClientMutations = () => {
           company: clientData.company,
           industry: clientData.industry,
           avatar,
-          gradient: randomGradient,
+          gradient: selectedGradient,
           user_id: user.id,
           status: 'pending',
           projects_count: 0,
