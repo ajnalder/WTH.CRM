@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTask } from '@/hooks/useTask';
@@ -10,6 +9,7 @@ import { TaskTimeSummary } from '@/components/task-details/TaskTimeSummary';
 import { TaskTimeTracker } from '@/components/task-details/TaskTimeTracker';
 import { TaskTimeLogger } from '@/components/task-details/TaskTimeLogger';
 import { TaskTimeEntries } from '@/components/task-details/TaskTimeEntries';
+import { TaskFiles } from '@/components/task-details/TaskFiles';
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -108,6 +108,8 @@ const TaskDetails = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             <TaskTimeSummary totalHours={totalHours} />
+
+            <TaskFiles taskId={id!} />
 
             <TaskTimeTracker onTimerComplete={handleTimerComplete} />
 
