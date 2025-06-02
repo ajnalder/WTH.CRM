@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      checklist_templates: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items: Json
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_checklists: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          completed_items: Json
+          created_at: string
+          id: string
+          status: string
+          template_id: string
+          template_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          completed_items?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          template_id: string
+          template_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          completed_items?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          template_id?: string
+          template_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_checklists_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_checklists_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           avatar: string | null
