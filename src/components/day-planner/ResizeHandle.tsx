@@ -1,12 +1,9 @@
 
 import React, { useRef } from 'react';
+import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface ResizeHandleProps {
-  scheduledTask: {
-    id: string;
-    taskId: string;
-    duration: number;
-  };
+  scheduledTask: ScheduledTask;
   updateTaskDuration: (taskId: string, duration: number) => void;
   isResizing: boolean;
   setIsResizing: (resizing: boolean) => void;
@@ -47,7 +44,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       const cappedDuration = Math.min(newDuration, 480);
       
       if (cappedDuration !== scheduledTask.duration) {
-        updateTaskDuration(scheduledTask.taskId, cappedDuration);
+        updateTaskDuration(scheduledTask.task_id, cappedDuration);
       }
     };
 
