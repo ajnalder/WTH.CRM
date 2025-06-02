@@ -48,10 +48,10 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
     setNewItem(updatedItem);
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.description.trim()) return;
     
-    addItem({
+    console.log('Adding item:', {
       invoice_id: invoiceId,
       description: newItem.description,
       quantity: newItem.quantity,
@@ -59,17 +59,33 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
       amount: newItem.amount
     });
     
-    setNewItem({
-      description: '',
-      quantity: 1,
-      rate: 0,
-      amount: 0
-    });
-    
-    onItemsChange?.();
+    try {
+      await addItem({
+        invoice_id: invoiceId,
+        description: newItem.description,
+        quantity: newItem.quantity,
+        rate: newItem.rate,
+        amount: newItem.amount
+      });
+      
+      // Reset the form
+      setNewItem({
+        description: '',
+        quantity: 1,
+        rate: 0,
+        amount: 0
+      });
+      
+      // Trigger callback
+      onItemsChange?.();
+      
+      console.log('Item added successfully');
+    } catch (error) {
+      console.error('Error adding item:', error);
+    }
   };
 
-  const handleUpdateItem = (itemId: string, field: keyof InvoiceItem, value: string | number) => {
+  const handleUpdateItem = async (itemId: string, field: keyof InvoiceItem, value: string | number) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     
@@ -79,22 +95,30 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
       updatedItem.amount = calculateAmount(updatedItem.quantity, updatedItem.rate);
     }
     
-    updateItem({
-      id: itemId,
-      updates: {
-        description: updatedItem.description,
-        quantity: updatedItem.quantity,
-        rate: updatedItem.rate,
-        amount: updatedItem.amount
-      }
-    });
-    
-    onItemsChange?.();
+    try {
+      await updateItem({
+        id: itemId,
+        updates: {
+          description: updatedItem.description,
+          quantity: updatedItem.quantity,
+          rate: updatedItem.rate,
+          amount: updatedItem.amount
+        }
+      });
+      
+      onItemsChange?.();
+    } catch (error) {
+      console.error('Error updating item:', error);
+    }
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    deleteItem(itemId);
-    onItemsChange?.();
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await deleteItem(itemId);
+      onItemsChange?.();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
   };
 
   if (isLoading) {
