@@ -26,6 +26,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 }) => {
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [displayDuration, setDisplayDuration] = useState(scheduledTask.duration);
 
   const getCustomColor = (color: string) => {
     switch (color) {
@@ -79,6 +80,17 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     return 'bg-white border-gray-200';
   };
 
+  const handleTempDurationChange = (duration: number) => {
+    setDisplayDuration(duration);
+  };
+
+  // Reset display duration when scheduled task changes (from external updates)
+  React.useEffect(() => {
+    if (!isResizing) {
+      setDisplayDuration(scheduledTask.duration);
+    }
+  }, [scheduledTask.duration, isResizing]);
+
   return (
     <Draggable 
       draggableId={scheduledTask.task_id} 
@@ -93,7 +105,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
           } ${isResizing ? 'select-none' : ''}`}
           style={{ 
-            height: calculateHeight(scheduledTask.duration),
+            height: calculateHeight(displayDuration),
             minHeight: '60px',
             top: '4px',
             left: '4px',
@@ -121,6 +133,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
               updateTaskDuration={updateTaskDuration}
               isResizing={isResizing}
               setIsResizing={setIsResizing}
+              onTempDurationChange={handleTempDurationChange}
             />
           )}
         </div>

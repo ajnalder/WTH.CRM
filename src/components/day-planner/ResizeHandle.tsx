@@ -7,13 +7,15 @@ interface ResizeHandleProps {
   updateTaskDuration: (taskId: string, duration: number) => void;
   isResizing: boolean;
   setIsResizing: (resizing: boolean) => void;
+  onTempDurationChange: (duration: number) => void;
 }
 
 export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   scheduledTask,
   updateTaskDuration,
   isResizing,
-  setIsResizing
+  setIsResizing,
+  onTempDurationChange
 }) => {
   const startYRef = useRef(0);
   const initialDurationRef = useRef(0);
@@ -47,6 +49,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       // Update local state for visual feedback
       setTempDuration(cappedDuration);
+      onTempDurationChange(cappedDuration);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -72,8 +75,9 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   React.useEffect(() => {
     if (!isResizing) {
       setTempDuration(scheduledTask.duration);
+      onTempDurationChange(scheduledTask.duration);
     }
-  }, [scheduledTask.duration, isResizing]);
+  }, [scheduledTask.duration, isResizing, onTempDurationChange]);
 
   return (
     <div
