@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,8 @@ interface TaskFormData {
 interface NewTaskFormProps {
   onTaskCreated?: () => void;
   prefilledProject?: string;
+  prefilledTitle?: string;
+  prefilledDescription?: string;
   triggerText?: string;
   triggerVariant?: 'default' | 'outline';
 }
@@ -51,6 +54,8 @@ interface NewTaskFormProps {
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ 
   onTaskCreated, 
   prefilledProject, 
+  prefilledTitle = '',
+  prefilledDescription = '',
   triggerText = "New Task",
   triggerVariant = "default"
 }) => {
@@ -60,8 +65,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const form = useForm<TaskFormData>({
     defaultValues: {
-      title: '',
-      description: '',
+      title: prefilledTitle,
+      description: prefilledDescription,
       project: prefilledProject || '',
       dueDate: '',
       tags: '',
@@ -69,12 +74,18 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     },
   });
 
-  // Update form when prefilledProject changes
+  // Update form when prefilled values change
   React.useEffect(() => {
     if (prefilledProject) {
       form.setValue('project', prefilledProject);
     }
-  }, [prefilledProject, form]);
+    if (prefilledTitle) {
+      form.setValue('title', prefilledTitle);
+    }
+    if (prefilledDescription) {
+      form.setValue('description', prefilledDescription);
+    }
+  }, [prefilledProject, prefilledTitle, prefilledDescription, form]);
 
   const handleTeamMemberToggle = (memberId: string) => {
     console.log('NewTaskForm - Team member toggle:', memberId);
@@ -125,8 +136,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     
     setOpen(false);
     form.reset({
-      title: '',
-      description: '',
+      title: prefilledTitle,
+      description: prefilledDescription,
       project: prefilledProject || '',
       dueDate: '',
       tags: '',
