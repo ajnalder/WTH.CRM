@@ -54,10 +54,18 @@ export const useCompanySettings = () => {
         if (error) throw error;
         return data;
       } else {
-        // Create new settings
+        // Create new settings - ensure user_id is included
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        const newSettings = {
+          ...updates,
+          user_id: user.id,
+        };
+
         const { data, error } = await supabase
           .from('company_settings')
-          .insert([updates])
+          .insert([newSettings])
           .select()
           .single();
 

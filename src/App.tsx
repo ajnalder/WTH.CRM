@@ -22,6 +22,7 @@ import DayPlanner from "./pages/DayPlanner";
 import Invoices from "./pages/Invoices";
 import NewInvoice from "./pages/NewInvoice";
 import InvoiceDetail from "./pages/InvoiceDetail";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -65,6 +66,7 @@ const App = () => (
                           <Route path="/invoices/:id/edit" element={<InvoiceDetail editMode />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route path="/day-planner" element={<DayPlanner />} />
+                          <Route path="/settings" element={<Settings />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </SidebarInset>
