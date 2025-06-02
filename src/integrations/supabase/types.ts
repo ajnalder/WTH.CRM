@@ -332,6 +332,7 @@ export type Database = {
           id: string
           invoice_number: string
           issued_date: string | null
+          last_emailed_at: string | null
           paid_date: string | null
           project_id: string | null
           status: string
@@ -355,6 +356,7 @@ export type Database = {
           id?: string
           invoice_number: string
           issued_date?: string | null
+          last_emailed_at?: string | null
           paid_date?: string | null
           project_id?: string | null
           status?: string
@@ -378,6 +380,7 @@ export type Database = {
           id?: string
           invoice_number?: string
           issued_date?: string | null
+          last_emailed_at?: string | null
           paid_date?: string | null
           project_id?: string | null
           status?: string

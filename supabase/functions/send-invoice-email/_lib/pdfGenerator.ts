@@ -51,7 +51,7 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
   pdf.text(dueDate, rightAlign, marginTop + 84, { align: 'right' });
   
-  // Invoice Date - moved down to prevent overlap
+  // Invoice Date - moved down further to prevent overlap
   pdf.setFont('helvetica', 'bold');
   pdf.text('Invoice Date', rightAlign, marginTop + 100, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
@@ -93,18 +93,19 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     yPos += 10;
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    const descriptionLines = pdf.splitTextToSize(invoice.description, pageWidth - marginLeft - marginRight - 20);
+    // Handle long descriptions with proper text wrapping - increased width to prevent overlap
+    const descriptionLines = pdf.splitTextToSize(invoice.description, pageWidth - marginLeft - marginRight - 10);
     pdf.text(descriptionLines, marginLeft, yPos);
     yPos += descriptionLines.length * 6;
   }
   
-  // Items table header - adjusted positioning to prevent overlap with Amount column
-  yPos += 25;
+  // Items table header - moved down more and adjusted positioning
+  yPos += 30;
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
   pdf.text('Description', marginLeft, yPos);
-  pdf.text('Qty', pageWidth - 90, yPos, { align: 'center' });
-  pdf.text('Rate', pageWidth - 60, yPos, { align: 'center' });
+  pdf.text('Qty', pageWidth - 95, yPos, { align: 'center' });
+  pdf.text('Rate', pageWidth - 65, yPos, { align: 'center' });
   pdf.text('Amount', pageWidth - marginRight, yPos, { align: 'right' });
   
   // Underline for table header
@@ -112,17 +113,17 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   pdf.setLineWidth(0.5);
   pdf.line(marginLeft, yPos, pageWidth - marginRight, yPos);
   
-  // Items - adjusted column positioning to match header
+  // Items - adjusted column positioning to match header exactly
   pdf.setFont('helvetica', 'normal');
   items.forEach((item) => {
     yPos += 12;
     
-    // Handle long descriptions with text wrapping - use smaller width to prevent overlap
-    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 150);
+    // Handle long descriptions with text wrapping - use smaller width to prevent overlap with Amount column
+    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 160);
     pdf.text(descriptionLines, marginLeft, yPos);
     
-    pdf.text(item.quantity.toString(), pageWidth - 90, yPos, { align: 'center' });
-    pdf.text(`$${item.rate.toLocaleString()}`, pageWidth - 60, yPos, { align: 'center' });
+    pdf.text(item.quantity.toString(), pageWidth - 95, yPos, { align: 'center' });
+    pdf.text(`$${item.rate.toLocaleString()}`, pageWidth - 65, yPos, { align: 'center' });
     pdf.text(`$${item.amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
     
     if (descriptionLines.length > 1) {
