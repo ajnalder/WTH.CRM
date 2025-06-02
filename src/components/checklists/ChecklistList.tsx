@@ -13,7 +13,7 @@ interface ChecklistListProps {
 }
 
 export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist }) => {
-  const { clientChecklists, checklistTemplates, createClientChecklist, isLoading } = useChecklists();
+  const { clientChecklists, templates, createChecklist, templatesLoading, checklistsLoading } = useChecklists();
   const { clients } = useClients();
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
@@ -21,9 +21,13 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
   const handleCreateChecklist = async () => {
     if (!selectedClient || !selectedTemplate) return;
     
-    await createClientChecklist({
-      client_id: selectedClient,
-      template_id: selectedTemplate
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (!template) return;
+    
+    createChecklist({
+      clientId: selectedClient,
+      templateId: selectedTemplate,
+      templateName: template.name
     });
     
     // Reset selections
@@ -33,7 +37,7 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
 
   const getCompletionStats = (checklist: ClientChecklistWithClient) => {
     const completedItems = checklist.completed_items || [];
-    const template = checklistTemplates.find(t => t.id === checklist.template_id);
+    const template = templates.find(t => t.id === checklist.template_id);
     const totalItems = template?.items?.length || 0;
     const completed = completedItems.length;
     const percentage = totalItems > 0 ? Math.round((completed / totalItems) * 100) : 0;
@@ -52,6 +56,8 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
     if (percentage > 0) return <Badge className="bg-orange-100 text-orange-800">In Progress</Badge>;
     return <Badge variant="secondary">Not Started</Badge>;
   };
+
+  const isLoading = templatesLoading || checklistsLoading;
 
   if (isLoading) {
     return (
@@ -97,7 +103,7 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
                   <SelectValue placeholder="Select template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {checklistTemplates.map((template) => (
+                  {templates.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
                     </SelectItem>
@@ -109,7 +115,7 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
             <Button 
               onClick={handleCreateChecklist}
               disabled={!selectedClient || !selectedTemplate}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transform hover:scale-105 transition-all duration-200"
             >
               <Plus size={16} className="mr-2" />
               Create Checklist
@@ -134,7 +140,7 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {clientChecklists.map((checklist) => {
-                const template = checklistTemplates.find(t => t.id === checklist.template_id);
+                const template = templates.find(t => t.id === checklist.template_id);
                 const stats = getCompletionStats(checklist);
                 
                 return (
