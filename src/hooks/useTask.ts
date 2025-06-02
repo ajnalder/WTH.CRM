@@ -10,6 +10,8 @@ export const useTask = (taskId: string) => {
   const taskQuery = useQuery({
     queryKey: ['task', taskId],
     queryFn: async (): Promise<TaskWithClient> => {
+      console.log('useTask - Fetching task with ID:', taskId);
+      
       const { data: task, error } = await supabase
         .from('tasks')
         .select('*')
@@ -17,13 +19,16 @@ export const useTask = (taskId: string) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching task:', error);
+        console.error('useTask - Error fetching task:', error);
         throw error;
       }
 
       if (!task) {
+        console.error('useTask - Task not found for ID:', taskId);
         throw new Error('Task not found');
       }
+
+      console.log('useTask - Fetched task:', task);
 
       // Get projects to map project names to client names
       const { data: projects, error: projectsError } = await supabase
@@ -36,7 +41,7 @@ export const useTask = (taskId: string) => {
         `);
 
       if (projectsError) {
-        console.error('Error fetching projects:', projectsError);
+        console.error('useTask - Error fetching projects:', projectsError);
         return {
           ...task,
           client_name: undefined
@@ -59,6 +64,7 @@ export const useTask = (taskId: string) => {
         client_name: task.project ? projectClientMap.get(task.project) : undefined
       };
 
+      console.log('useTask - Final task with client info:', taskWithClient);
       return taskWithClient;
     },
     enabled: !!taskId,

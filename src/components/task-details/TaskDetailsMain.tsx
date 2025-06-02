@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +20,9 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
 }) => {
   const { teamMembers } = useTeamMembers();
 
+  console.log('TaskDetailsMain - Task assignee:', task.assignee);
+  console.log('TaskDetailsMain - Available team members:', teamMembers);
+
   const formatDisplayDate = (dateString: string | null) => {
     if (!dateString) return 'No due date';
     const date = new Date(dateString);
@@ -28,6 +30,7 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
   };
 
   const currentTeamMember = teamMembers.find(member => member.id === task.assignee);
+  console.log('TaskDetailsMain - Found team member:', currentTeamMember);
 
   return (
     <Card>

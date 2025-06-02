@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -78,27 +77,37 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   }, [prefilledProject, form]);
 
   const handleTeamMemberToggle = (memberId: string) => {
-    setSelectedTeamMembers(prev => 
-      prev.includes(memberId) 
+    console.log('NewTaskForm - Team member toggle:', memberId);
+    setSelectedTeamMembers(prev => {
+      const newSelection = prev.includes(memberId) 
         ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
-    );
+        : [...prev, memberId];
+      console.log('NewTaskForm - Updated selected team members:', newSelection);
+      return newSelection;
+    });
   };
 
   const handleRemoveTeamMember = (memberId: string) => {
-    setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+    console.log('NewTaskForm - Removing team member:', memberId);
+    setSelectedTeamMembers(prev => {
+      const newSelection = prev.filter(id => id !== memberId);
+      console.log('NewTaskForm - Updated selected team members after removal:', newSelection);
+      return newSelection;
+    });
   };
 
   const onSubmit = (data: TaskFormData) => {
-    console.log('Creating new task:', data, 'with team members:', selectedTeamMembers);
+    console.log('NewTaskForm - Creating new task:', data);
+    console.log('NewTaskForm - Selected team members at submission:', selectedTeamMembers);
     
     const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     
     // For now, we'll store the first selected team member as assignee
     // Later we can enhance this to support multiple assignees
     const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[0] : null;
+    console.log('NewTaskForm - Assignee being set:', assignee);
     
-    createTask({
+    const taskData = {
       title: data.title,
       description: data.description || null,
       assignee: assignee,
@@ -108,7 +117,11 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       status: 'To Do',
       progress: 0,
       dropbox_url: data.dropboxUrl || null,
-    });
+    };
+    
+    console.log('NewTaskForm - Final task data being submitted:', taskData);
+    
+    createTask(taskData);
     
     setOpen(false);
     form.reset({
