@@ -29,7 +29,12 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <InvoiceActions onPrint={handlePrint} onDownloadPDF={handleDownloadPDF} />
+      <InvoiceActions 
+        invoice={invoice}
+        client={client}
+        onPrint={handlePrint} 
+        onDownloadPDF={handleDownloadPDF} 
+      />
 
       <Card className="print:shadow-none print:border-none invoice-content">
         <CardContent className="p-8">
