@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InvoiceItemRow } from './InvoiceItemRow';
 import { NewInvoiceItemRow } from './NewInvoiceItemRow';
-import { InvoiceItem } from '@/hooks/useInvoices';
+import { InvoiceItem } from '@/types/invoiceTypes';
 
 interface InvoiceItemsTableProps {
   items: InvoiceItem[];

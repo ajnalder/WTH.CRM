@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Invoice, useInvoices } from '@/hooks/useInvoices';
+import { Invoice } from '@/types/invoiceTypes';
+import { useInvoices } from '@/hooks/useInvoices';
 import { useNavigate } from 'react-router-dom';
 
 interface InvoiceTableProps {

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Invoice } from '@/hooks/useInvoices';
+import { Invoice } from '@/types/invoiceTypes';
 
 interface InvoiceHeaderProps {
   invoice: Invoice;

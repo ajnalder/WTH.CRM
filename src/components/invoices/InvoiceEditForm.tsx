@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Save, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Invoice, useInvoices } from '@/hooks/useInvoices';
+import { Invoice } from '@/types/invoiceTypes';
+import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { InvoiceItemsManager } from './InvoiceItemsManager';
 

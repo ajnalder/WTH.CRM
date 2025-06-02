@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { InvoiceItem } from '@/hooks/useInvoices';
+import { InvoiceItem } from '@/types/invoiceTypes';
 
 interface InvoiceItemsTablePreviewProps {
   items: InvoiceItem[];

@@ -1,5 +1,6 @@
+
 import jsPDF from 'jspdf';
-import { Invoice, InvoiceItem } from '@/hooks/useInvoices';
+import { Invoice, InvoiceItem } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 
 export const generateInvoicePDF = async (invoice: Invoice, client: Client | undefined, items: InvoiceItem[]) => {
