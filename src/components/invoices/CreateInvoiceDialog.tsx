@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useProjects } from '@/hooks/useProjects';
 import { Client } from '@/hooks/useClients';
@@ -26,8 +25,6 @@ export const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     project_id: '',
     invoice_number: '',
     title: '',
-    description: '',
-    deposit_percentage: 50,
     gst_rate: 15,
     due_date: '',
   });
@@ -58,8 +55,6 @@ export const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
       project_id: '',
       invoice_number: '',
       title: '',
-      description: '',
-      deposit_percentage: 50,
       gst_rate: 15,
       due_date: '',
     });
@@ -150,40 +145,15 @@ export const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Additional invoice details..."
-              rows={3}
+            <Label htmlFor="gst_rate">GST Rate (%)</Label>
+            <Input
+              id="gst_rate"
+              type="number"
+              min="0"
+              max="30"
+              value={formData.gst_rate}
+              onChange={(e) => setFormData({ ...formData, gst_rate: Number(e.target.value) })}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="deposit_percentage">Deposit Percentage (%)</Label>
-              <Input
-                id="deposit_percentage"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.deposit_percentage}
-                onChange={(e) => setFormData({ ...formData, deposit_percentage: Number(e.target.value) })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gst_rate">GST Rate (%)</Label>
-              <Input
-                id="gst_rate"
-                type="number"
-                min="0"
-                max="30"
-                value={formData.gst_rate}
-                onChange={(e) => setFormData({ ...formData, gst_rate: Number(e.target.value) })}
-              />
-            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

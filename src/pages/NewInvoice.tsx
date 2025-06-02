@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
@@ -23,8 +22,6 @@ const NewInvoice = () => {
     project_id: '',
     invoice_number: '',
     title: '',
-    description: '',
-    deposit_percentage: 50,
     gst_rate: 15,
     due_date: '',
     issued_date: new Date().toISOString().split('T')[0],
@@ -159,17 +156,6 @@ const NewInvoice = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Additional invoice details..."
-                  rows={3}
-                />
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="issued_date">Issue Date</Label>
@@ -203,18 +189,6 @@ const NewInvoice = () => {
                     onChange={(e) => handleInputChange('gst_rate', parseFloat(e.target.value) || 0)}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="deposit_percentage">Deposit Percentage (%)</Label>
-                <Input
-                  id="deposit_percentage"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.deposit_percentage}
-                  onChange={(e) => handleInputChange('deposit_percentage', parseFloat(e.target.value) || 0)}
-                />
               </div>
 
               <div className="flex justify-end gap-4 pt-6 border-t">
