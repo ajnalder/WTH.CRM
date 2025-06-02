@@ -36,7 +36,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       e.stopPropagation();
       
       const deltaY = e.clientY - startYRef.current;
-      const slotHeight = 64; // Each 15-minute slot is 64px (including gap)
+      const slotHeight = 69; // Each 15-minute slot is 69px (60px + 8px padding + 1px border)
       const slotsChanged = Math.round(deltaY / slotHeight);
       const newDuration = Math.max(15, initialDurationRef.current + (slotsChanged * 15));
       

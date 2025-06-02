@@ -30,8 +30,8 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
   const isFirstSlot = scheduledTask && scheduledTask.start_time === timeSlot;
 
   return (
-    <div className="flex items-start border-b border-gray-100 py-2 min-h-[60px]">
-      <div className="w-20 text-sm text-gray-500 font-mono">
+    <div className="flex items-start border-b border-gray-100 py-2 h-[69px]">
+      <div className="w-20 text-sm text-gray-500 font-mono pt-1">
         {timeSlot}
       </div>
       
@@ -40,7 +40,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`flex-1 ml-4 min-h-[56px] border-2 rounded-lg p-2 transition-all duration-200 relative ${
+            className={`flex-1 ml-4 h-[60px] border-2 rounded-lg transition-all duration-200 relative ${
               snapshot.isDraggingOver
                 ? 'border-blue-400 bg-blue-50 border-solid shadow-md'
                 : isOccupied

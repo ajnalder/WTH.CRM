@@ -62,7 +62,9 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 
   const calculateHeight = (duration: number) => {
     const slots = Math.ceil(duration / 15);
-    return `${slots * 64 - 8}px`; // 64px per slot (60px + 4px gap) minus final gap
+    // Each time slot is 60px + 8px padding + 1px border = 69px total
+    // Subtract 8px for the bottom margin to prevent overlap
+    return `${slots * 69 - 8}px`;
   };
 
   const getCardStyle = () => {
@@ -87,13 +89,15 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`border rounded-lg shadow-sm relative group absolute left-0 right-0 z-10 ${getCardStyle()} ${
+          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 ${getCardStyle()} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
           } ${isResizing ? 'select-none pointer-events-none' : ''}`}
           style={{ 
             height: calculateHeight(scheduledTask.duration),
-            minHeight: '52px',
-            top: '2px',
+            minHeight: '60px',
+            top: '4px',
+            left: '4px',
+            right: '4px',
             // Let react-beautiful-dnd handle all transforms during drag
             ...provided.draggableProps.style
           }}
