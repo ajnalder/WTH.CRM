@@ -23,19 +23,6 @@ export const InvoiceTotalsPreview: React.FC<InvoiceTotalsPreviewProps> = ({ invo
             <span className="font-semibold text-gray-900">Total Amount:</span>
             <span className="font-bold text-lg">${invoice.total_amount.toLocaleString()}</span>
           </div>
-          
-          {invoice.deposit_percentage > 0 && invoice.deposit_amount > 0 && (
-            <>
-              <div className="flex justify-between mt-4 pt-2 border-t border-gray-100">
-                <span className="text-gray-600">Deposit ({invoice.deposit_percentage}%):</span>
-                <span className="font-medium">${invoice.deposit_amount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-orange-600">Balance Due:</span>
-                <span className="font-bold text-lg text-orange-600">${invoice.balance_due.toLocaleString()}</span>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>

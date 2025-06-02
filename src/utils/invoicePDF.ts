@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Invoice, InvoiceItem } from '@/hooks/useInvoices';
 import { Client } from '@/hooks/useClients';
@@ -160,19 +159,6 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
   pdf.setFont('helvetica', 'bold');
   pdf.text('Total Amount:', totalsXPos, yPos);
   pdf.text(`$${invoice.total_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
-  
-  // Deposit and balance if applicable
-  if (invoice.deposit_percentage > 0 && invoice.deposit_amount > 0) {
-    yPos += 12;
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`Deposit (${invoice.deposit_percentage}%):`, totalsXPos, yPos);
-    pdf.text(`$${invoice.deposit_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
-    
-    yPos += 8;
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Balance Due:', totalsXPos, yPos);
-    pdf.text(`$${invoice.balance_due.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
-  }
 
   // Footer
   yPos = pageHeight - 30;
