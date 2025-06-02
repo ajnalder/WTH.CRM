@@ -20,28 +20,35 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     
-    // Header
+    // Header with logo placeholder
     pdf.setFontSize(24);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('INVOICE', pageWidth / 2, 30, { align: 'center' });
+    pdf.text('Tax Invoice - ' + invoice.invoice_number, 20, 30);
     
-    // Invoice details
+    // Business details on right
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Invoice #: ${invoice.invoice_number}`, 20, 60);
-    pdf.text(`Date: ${invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : 'Not set'}`, 20, 70);
-    pdf.text(`Due Date: ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}`, 20, 80);
+    pdf.text('What the Heck', pageWidth - 20, 30, { align: 'right' });
+    pdf.text('8 King Street', pageWidth - 20, 40, { align: 'right' });
+    pdf.text('Te Puke 3119', pageWidth - 20, 50, { align: 'right' });
+    pdf.text('NEW ZEALAND', pageWidth - 20, 60, { align: 'right' });
+    
+    pdf.text('GST Number', pageWidth - 20, 80, { align: 'right' });
+    pdf.text('125-651-445', pageWidth - 20, 90, { align: 'right' });
+    
+    pdf.text('Invoice Date', pageWidth - 20, 110, { align: 'right' });
+    pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), pageWidth - 20, 120, { align: 'right' });
     
     // Client info
     if (client) {
-      pdf.text('Bill To:', 20, 100);
-      pdf.text(client.company, 20, 110);
-      if (client.name) pdf.text(client.name, 20, 120);
-      if (client.email) pdf.text(client.email, 20, 130);
+      pdf.text('Bill To:', 20, 80);
+      pdf.text(client.company, 20, 90);
+      if (client.name) pdf.text(client.name, 20, 100);
+      if (client.email) pdf.text(client.email, 20, 110);
     }
     
     // Items table
-    let yPos = 160;
+    let yPos = 150;
     pdf.setFont('helvetica', 'bold');
     pdf.text('Description', 20, yPos);
     pdf.text('Qty', 120, yPos);
@@ -84,7 +91,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center no-print">
         <h1 className="text-2xl font-bold">Invoice Preview</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => window.print()}>
@@ -98,52 +105,57 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
         </div>
       </div>
 
-      <Card className="print:shadow-none print:border-none">
+      <Card className="print:shadow-none print:border-none invoice-content">
         <CardContent className="p-8">
-          {/* Invoice Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">INVOICE</h1>
-            <div className="text-lg text-gray-600">
-              Invoice #{invoice.invoice_number}
-            </div>
-          </div>
-
-          {/* Invoice Details and Client Info */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Invoice Details</h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-600">Invoice Number:</span>
-                  <span className="ml-2 font-mono">{invoice.invoice_number}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Date:</span>
-                  <span className="ml-2">{invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : 'Not set'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Due Date:</span>
-                  <span className="ml-2">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Status:</span>
-                  <span className="ml-2 capitalize">{invoice.status}</span>
-                </div>
+          {/* Invoice Header with Logo and Business Details */}
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex-1">
+              <div className="mb-4">
+                <img 
+                  src="/lovable-uploads/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png" 
+                  alt="What the Heck Logo" 
+                  className="h-16 w-auto"
+                />
               </div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Tax Invoice - {invoice.invoice_number}
+              </h1>
             </div>
-
-            {client && (
+            
+            <div className="text-right">
+              <div className="mb-6">
+                <div className="font-bold text-lg">What the Heck</div>
+                <div className="text-sm text-gray-600">8 King Street</div>
+                <div className="text-sm text-gray-600">Te Puke 3119</div>
+                <div className="text-sm text-gray-600">NEW ZEALAND</div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="font-semibold">GST Number</div>
+                <div className="text-sm">125-651-445</div>
+              </div>
+              
               <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Bill To</h3>
-                <div className="space-y-1 text-sm">
-                  <div className="font-medium">{client.company}</div>
-                  {client.name && <div>{client.name}</div>}
-                  {client.email && <div>{client.email}</div>}
-                  {client.phone && <div>{client.phone}</div>}
+                <div className="font-semibold">Invoice Date</div>
+                <div className="text-sm">
+                  {invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString()}
                 </div>
               </div>
-            )}
+            </div>
           </div>
+
+          {/* Client Information */}
+          {client && (
+            <div className="mb-8">
+              <h3 className="font-semibold text-gray-900 mb-4">Bill To</h3>
+              <div className="space-y-1 text-sm">
+                <div className="font-medium">{client.company}</div>
+                {client.name && <div>{client.name}</div>}
+                {client.email && <div>{client.email}</div>}
+                {client.phone && <div>{client.phone}</div>}
+              </div>
+            </div>
+          )}
 
           {/* Project Description */}
           {invoice.description && (
