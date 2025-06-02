@@ -16,6 +16,7 @@ import { Mail, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
+import { useContacts } from '@/hooks/useContacts';
 
 interface EmailInvoiceDialogProps {
   invoice: Invoice;
@@ -24,9 +25,17 @@ interface EmailInvoiceDialogProps {
 
 export const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({ invoice, client }) => {
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState(client?.email || '');
+  const { contacts } = useContacts(client?.id || '');
+  const { toast } = useToast();
+
+  // Get primary contact or first contact, fallback to client email
+  const primaryContact = contacts?.find(contact => contact.is_primary) || contacts?.[0];
+  const recipientEmail = primaryContact?.email || client?.email || '';
+  const recipientName = primaryContact?.name || client?.name || client?.company || '';
+
+  const [email, setEmail] = useState(recipientEmail);
   const [subject, setSubject] = useState(`Invoice ${invoice.invoice_number} from What the Heck`);
-  const [message, setMessage] = useState(`Hi ${client?.name || 'there'},
+  const [message, setMessage] = useState(`Hi ${recipientName},
 
 Please find attached your invoice ${invoice.invoice_number}.
 
@@ -35,7 +44,24 @@ Thank you for your business!
 Best regards,
 What the Heck Team`);
   const [sending, setSending] = useState(false);
-  const { toast } = useToast();
+
+  // Update email and message when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      const currentEmail = primaryContact?.email || client?.email || '';
+      const currentName = primaryContact?.name || client?.name || client?.company || '';
+      
+      setEmail(currentEmail);
+      setMessage(`Hi ${currentName},
+
+Please find attached your invoice ${invoice.invoice_number}.
+
+Thank you for your business!
+
+Best regards,
+What the Heck Team`);
+    }
+  }, [open, primaryContact, client, invoice.invoice_number]);
 
   const handleSendEmail = async () => {
     if (!email.trim()) {
@@ -82,7 +108,7 @@ What the Heck Team`);
         <DialogHeader>
           <DialogTitle>Email Invoice</DialogTitle>
           <DialogDescription>
-            Send invoice {invoice.invoice_number} to your customer
+            Send invoice {invoice.invoice_number} to {client?.company || 'your customer'}
           </DialogDescription>
         </DialogHeader>
         
