@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Trash2, Download, FileText, Image } from 'lucide-react';
 import { TaskFileUpload } from './TaskFileUpload';
 import { useTaskFiles, type TaskFile } from '@/hooks/useTaskFiles';
@@ -152,12 +153,25 @@ const FileItem: React.FC<FileItemProps> = ({
       
       {isImage && (
         <div className="mt-2">
-          <img
-            src={fileUrl}
-            alt={file.file_name}
-            className="max-w-full h-auto max-h-48 rounded border object-cover"
-            loading="lazy"
-          />
+          <Dialog>
+            <DialogTrigger asChild>
+              <img
+                src={fileUrl}
+                alt={file.file_name}
+                className="max-w-full h-auto max-h-48 rounded border object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                loading="lazy"
+              />
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+              <div className="flex items-center justify-center">
+                <img
+                  src={fileUrl}
+                  alt={file.file_name}
+                  className="max-w-full max-h-[80vh] object-contain"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>
