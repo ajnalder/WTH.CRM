@@ -66,7 +66,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
   };
 
   const getCardStyle = () => {
-    if (scheduledTask.type === 'custom') {
+    if (scheduledTask.task_type === 'custom') {
       return getCustomColor(scheduledTask.color || 'blue');
     }
     
@@ -79,7 +79,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 
   return (
     <Draggable 
-      draggableId={scheduledTask.taskId} 
+      draggableId={scheduledTask.task_id} 
       index={0}
       isDragDisabled={isResizing}
     >

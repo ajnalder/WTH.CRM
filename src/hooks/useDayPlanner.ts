@@ -3,9 +3,7 @@ import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
-import { useScheduledTasks } from '@/hooks/useScheduledTasks';
-import { generateTimeSlots } from '@/utils/timeUtils';
-import { isTimeSlotAvailable, updateTaskDurationWithShifting } from '@/utils/schedulingUtils';
+import { useTimeSlots } from '@/hooks/useTimeSlots';
 import type { ScheduledTask } from '@/types/dayPlanner';
 
 export const useDayPlanner = () => {
@@ -19,14 +17,17 @@ export const useDayPlanner = () => {
   const [customColor, setCustomColor] = useState('blue');
   
   const { 
-    scheduledTasks, 
-    isLoading, 
-    updateScheduledTasks, 
-    saveScheduledTask, 
-    removeScheduledTask: removeFromDatabase 
-  } = useScheduledTasks(selectedDate);
+    timeSlots,
+    isLoading,
+    assignTaskToSlots,
+    clearTaskSlots,
+    clearTimeSlot,
+    isSlotOccupied,
+    getTaskSlots,
+    generateTimeSlots
+  } = useTimeSlots(selectedDate);
   
-  const timeSlots = generateTimeSlots('09:00', '17:00', 15);
+  const timeSlotStrings = generateTimeSlots();
   
   const getTaskById = (taskId: string) => {
     return tasks.find(task => task.id === taskId);
@@ -56,78 +57,118 @@ export const useDayPlanner = () => {
       
       console.log('Dropping task into timeslot:', { targetTimeSlot, taskId });
       
-      const existingScheduledTask = scheduledTasks.find(st => st.taskId === taskId);
-      const taskDuration = existingScheduledTask ? existingScheduledTask.duration : 60;
+      // Check if task is already scheduled
+      const existingTaskSlots = getTaskSlots(taskId);
+      const taskDuration = existingTaskSlots.length > 0 ? existingTaskSlots.length * 15 : 60;
       
-      if (!isTimeSlotAvailable(targetTimeSlot, taskDuration, timeSlots, scheduledTasks, taskId)) {
-        console.log('Target time slot is not available');
-        return;
-      }
-      
-      const updatedSchedule = scheduledTasks.filter(st => st.taskId !== taskId);
-      
-      const newScheduledTask: ScheduledTask = existingScheduledTask ? {
-        ...existingScheduledTask,
-        startTime: targetTimeSlot
-      } : {
-        id: crypto.randomUUID(),
-        taskId,
-        startTime: targetTimeSlot,
-        duration: taskDuration,
-        type: 'task'
-      };
-      
-      await updateScheduledTasks([...updatedSchedule, newScheduledTask]);
+      await assignTaskToSlots(taskId, targetTimeSlot, taskDuration, 'task');
     }
     
     // Handle dropping task back to the pool
     if (destination.droppableId === 'task-pool') {
       const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
       console.log('Dropping task back to pool:', taskId);
-      const updatedTasks = scheduledTasks.filter(st => st.taskId !== taskId);
-      await updateScheduledTasks(updatedTasks);
+      await clearTaskSlots(taskId);
     }
   };
 
   const getUnscheduledTasks = () => {
-    const scheduledTaskIds = scheduledTasks.filter(st => st.type === 'task').map(st => st.taskId);
-    return tasks.filter(task => !scheduledTaskIds.includes(task.id));
+    // Get all task IDs that are scheduled in any time slot
+    const scheduledTaskIds = new Set<string>();
+    timeSlots.forEach(slot => {
+      if (slot.task_id && slot.task_type === 'task') {
+        scheduledTaskIds.add(slot.task_id);
+      }
+    });
+    
+    // Return tasks that are not in the scheduled tasks set
+    return tasks.filter(task => !scheduledTaskIds.has(task.id));
   };
 
   const updateTaskDuration = async (taskId: string, newDuration: number) => {
-    const updatedTasks = updateTaskDurationWithShifting(taskId, newDuration, scheduledTasks, timeSlots);
-    await updateScheduledTasks(updatedTasks);
+    // Find the earliest time slot for this task
+    const taskSlots = getTaskSlots(taskId);
+    if (taskSlots.length === 0) return;
+    
+    // Sort to get the earliest slot
+    taskSlots.sort((a, b) => a.time_slot.localeCompare(b.time_slot));
+    const startTime = taskSlots[0].time_slot;
+    
+    // Get the task type and other properties
+    const taskType = taskSlots[0].task_type as 'task' | 'custom';
+    const title = taskSlots[0].title;
+    const color = taskSlots[0].color;
+    
+    // Re-assign with new duration
+    await assignTaskToSlots(taskId, startTime, newDuration, taskType, title, color);
   };
 
   const addCustomEntry = async () => {
     if (!customTitle.trim()) return;
     
-    const newCustomEntry: ScheduledTask = {
-      id: crypto.randomUUID(),
-      taskId: crypto.randomUUID(),
-      startTime: '12:00',
-      duration: parseInt(customDuration),
-      type: 'custom',
-      title: customTitle,
-      color: customColor
-    };
+    const customId = crypto.randomUUID();
+    await assignTaskToSlots(
+      customId,
+      '12:00', // Default start time
+      parseInt(customDuration),
+      'custom',
+      customTitle,
+      customColor
+    );
     
-    await updateScheduledTasks([...scheduledTasks, newCustomEntry]);
     setCustomTitle('');
     setCustomDuration('30');
     setIsAddingCustom(false);
   };
 
   const removeScheduledTask = async (taskId: string) => {
-    const updatedTasks = scheduledTasks.filter(task => task.taskId !== taskId);
-    await updateScheduledTasks(updatedTasks);
+    await clearTaskSlots(taskId);
+  };
+
+  // Group time slots by task to generate scheduled tasks
+  const getScheduledTasks = (): ScheduledTask[] => {
+    const taskMap = new Map<string, TimeSlot[]>();
+    
+    // Group slots by task ID
+    timeSlots.forEach(slot => {
+      if (slot.task_id) {
+        if (!taskMap.has(slot.task_id)) {
+          taskMap.set(slot.task_id, []);
+        }
+        taskMap.get(slot.task_id)?.push(slot);
+      }
+    });
+    
+    // Convert grouped slots to scheduled tasks
+    const scheduledTasks: ScheduledTask[] = [];
+    taskMap.forEach((slots, taskId) => {
+      if (slots.length === 0) return;
+      
+      // Sort slots by time
+      slots.sort((a, b) => a.time_slot.localeCompare(b.time_slot));
+      
+      const firstSlot = slots[0];
+      const lastSlot = slots[slots.length - 1];
+      
+      scheduledTasks.push({
+        task_id: taskId,
+        task_type: firstSlot.task_type as 'task' | 'custom',
+        start_time: firstSlot.time_slot,
+        end_time: lastSlot.time_slot,
+        duration: slots.length * 15,
+        title: firstSlot.title,
+        color: firstSlot.color
+      });
+    });
+    
+    return scheduledTasks;
   };
 
   return {
     // State
     selectedDate,
     setSelectedDate,
-    scheduledTasks,
+    timeSlots,
     isLoading,
     isAddingCustom,
     setIsAddingCustom,
@@ -137,13 +178,15 @@ export const useDayPlanner = () => {
     setCustomDuration,
     customColor,
     setCustomColor,
-    timeSlots,
+    timeSlotStrings,
     
     // Helper functions
     getTaskById,
     getClientByName,
     getAssigneeName,
     getUnscheduledTasks,
+    getScheduledTasks,
+    isSlotOccupied,
     
     // Actions
     handleDragEnd,

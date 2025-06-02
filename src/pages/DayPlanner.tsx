@@ -12,7 +12,7 @@ const DayPlanner = () => {
   const {
     selectedDate,
     setSelectedDate,
-    scheduledTasks,
+    timeSlots: dbTimeSlots,
     isLoading,
     isAddingCustom,
     setIsAddingCustom,
@@ -22,16 +22,29 @@ const DayPlanner = () => {
     setCustomDuration,
     customColor,
     setCustomColor,
-    timeSlots,
+    timeSlotStrings,
     getTaskById,
     getClientByName,
     getAssigneeName,
     getUnscheduledTasks,
+    getScheduledTasks,
+    isSlotOccupied,
     handleDragEnd,
     updateTaskDuration,
     addCustomEntry,
     removeScheduledTask
   } = useDayPlanner();
+
+  // Get the occupied slots for rendering
+  const occupiedSlots = new Set<string>();
+  dbTimeSlots.forEach(slot => {
+    if (slot.task_id) {
+      occupiedSlots.add(slot.time_slot);
+    }
+  });
+
+  // Get the scheduled tasks
+  const scheduledTasks = getScheduledTasks();
 
   if (isLoading) {
     return (
@@ -74,8 +87,9 @@ const DayPlanner = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <DailySchedule
-              timeSlots={timeSlots}
+              timeSlots={timeSlotStrings}
               scheduledTasks={scheduledTasks}
+              occupiedSlots={occupiedSlots}
               getTaskById={getTaskById}
               getClientByName={getClientByName}
               getAssigneeName={getAssigneeName}

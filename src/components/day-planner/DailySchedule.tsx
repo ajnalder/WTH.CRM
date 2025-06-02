@@ -10,6 +10,7 @@ import type { ScheduledTask } from '@/types/dayPlanner';
 interface DailyScheduleProps {
   timeSlots: string[];
   scheduledTasks: ScheduledTask[];
+  occupiedSlots: Set<string>;
   getTaskById: (taskId: string) => TaskWithClient | undefined;
   getClientByName: (clientName: string) => Client | undefined;
   getAssigneeName: (assigneeId: string | null) => string;
@@ -20,51 +21,24 @@ interface DailyScheduleProps {
 export const DailySchedule: React.FC<DailyScheduleProps> = ({
   timeSlots,
   scheduledTasks,
+  occupiedSlots,
   getTaskById,
   getClientByName,
   getAssigneeName,
   updateTaskDuration,
   removeScheduledTask
 }) => {
+  // Find the scheduled task that covers a specific time slot
   const getScheduledTaskForSlot = (timeSlot: string) => {
     return scheduledTasks.find(st => {
-      const startIndex = timeSlots.indexOf(st.startTime);
-      const slotsNeeded = Math.ceil(st.duration / 15);
-      const endIndex = startIndex + slotsNeeded;
+      // Check if this time slot is between the start and end time of the task
+      const startTimeIndex = timeSlots.indexOf(st.start_time);
+      const endTimeIndex = timeSlots.indexOf(st.end_time);
       const currentIndex = timeSlots.indexOf(timeSlot);
       
-      return currentIndex >= startIndex && currentIndex < endIndex;
+      return currentIndex >= startTimeIndex && currentIndex <= endTimeIndex;
     });
   };
-
-  const getVisibleTimeSlots = () => {
-    const visibleSlots: string[] = [];
-    const hiddenSlots = new Set<string>();
-
-    // Only hide slots that are continuation slots (not the first slot) of a task
-    scheduledTasks.forEach(task => {
-      const startIndex = timeSlots.indexOf(task.startTime);
-      const slotsNeeded = Math.ceil(task.duration / 15);
-      
-      // Hide only the continuation slots (start from index + 1)
-      for (let i = startIndex + 1; i < startIndex + slotsNeeded; i++) {
-        if (i < timeSlots.length) {
-          hiddenSlots.add(timeSlots[i]);
-        }
-      }
-    });
-
-    // Include all slots that aren't hidden continuation slots
-    timeSlots.forEach(slot => {
-      if (!hiddenSlots.has(slot)) {
-        visibleSlots.push(slot);
-      }
-    });
-
-    return visibleSlots;
-  };
-
-  const visibleTimeSlots = getVisibleTimeSlots();
 
   return (
     <Card>
@@ -76,24 +50,27 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {visibleTimeSlots.map((timeSlot) => {
+          {timeSlots.map((timeSlot) => {
             const scheduledTask = getScheduledTaskForSlot(timeSlot);
-            const isFirstSlotOfTask = scheduledTask && scheduledTask.startTime === timeSlot;
-            const task = scheduledTask && scheduledTask.type === 'task' ? getTaskById(scheduledTask.taskId) : undefined;
+            const isOccupied = occupiedSlots.has(timeSlot);
+            
+            const task = scheduledTask && scheduledTask.task_type === 'task' 
+              ? getTaskById(scheduledTask.task_id) 
+              : undefined;
+              
             const client = task?.client_name ? getClientByName(task.client_name) : undefined;
             
             return (
               <TimeSlot
                 key={timeSlot}
                 timeSlot={timeSlot}
-                scheduledTask={isFirstSlotOfTask ? scheduledTask : undefined}
+                scheduledTask={scheduledTask}
                 task={task}
                 client={client}
                 getAssigneeName={getAssigneeName}
                 updateTaskDuration={updateTaskDuration}
                 removeScheduledTask={removeScheduledTask}
-                isOccupied={!!scheduledTask}
-                isFirstSlot={!!isFirstSlotOfTask}
+                isOccupied={isOccupied}
               />
             );
           })}

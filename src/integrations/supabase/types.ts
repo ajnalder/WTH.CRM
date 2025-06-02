@@ -578,48 +578,6 @@ export type Database = {
           },
         ]
       }
-      scheduled_tasks: {
-        Row: {
-          color: string | null
-          created_at: string
-          duration: number
-          id: string
-          scheduled_date: string
-          start_time: string
-          task_id: string
-          title: string | null
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          duration: number
-          id?: string
-          scheduled_date: string
-          start_time: string
-          task_id: string
-          title?: string | null
-          type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          duration?: number
-          id?: string
-          scheduled_date?: string
-          start_time?: string
-          task_id?: string
-          title?: string | null
-          type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       task_files: {
         Row: {
           created_at: string
@@ -749,6 +707,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      time_slots: {
+        Row: {
+          color: string | null
+          created_at: string
+          date: string
+          id: string
+          task_id: string | null
+          task_type: string | null
+          time_slot: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          task_id?: string | null
+          task_type?: string | null
+          time_slot: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          task_id?: string | null
+          task_type?: string | null
+          time_slot?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
