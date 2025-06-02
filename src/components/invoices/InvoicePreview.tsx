@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Invoice } from '@/hooks/useInvoices';
+import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
-import { useInvoiceItems } from '@/hooks/useInvoices';
+import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { InvoiceHeader } from './InvoiceHeader';
 import { InvoiceClientInfo } from './InvoiceClientInfo';
 import { InvoiceItemsTablePreview } from './InvoiceItemsTablePreview';

@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useInvoiceItems, InvoiceItem } from '@/hooks/useInvoices';
+import { useInvoiceItems } from '@/hooks/useInvoiceItems';
+import { InvoiceItem } from '@/types/invoiceTypes';
 import { InvoiceItemsTable } from './InvoiceItemsTable';
 import { InvoiceTotals } from './InvoiceTotals';
 
