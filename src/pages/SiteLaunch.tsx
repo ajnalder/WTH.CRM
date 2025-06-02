@@ -19,14 +19,7 @@ const SiteLaunch = () => {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Site Launch</h1>
-        <p className="text-gray-600 mt-2">
-          Manage site launch checklists for Shopify and Webflow clients
-        </p>
-      </div>
-
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       {selectedChecklist && selectedTemplate ? (
         <ChecklistForm
           checklist={selectedChecklist}
@@ -35,7 +28,15 @@ const SiteLaunch = () => {
           onBack={handleBackToList}
         />
       ) : (
-        <ChecklistList onViewChecklist={handleViewChecklist} />
+        <div className="p-6">
+          <div className="mb-6 max-w-6xl mx-auto">
+            <h1 className="text-3xl font-bold text-gray-900">Site Launch</h1>
+            <p className="text-gray-600 mt-2">
+              Manage site launch checklists for Shopify and Webflow clients
+            </p>
+          </div>
+          <ChecklistList onViewChecklist={handleViewChecklist} />
+        </div>
       )}
     </div>
   );
