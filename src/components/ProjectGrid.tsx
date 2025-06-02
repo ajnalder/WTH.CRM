@@ -3,14 +3,25 @@ import React from 'react';
 import { ProjectCard } from '@/components/ProjectCard';
 import { transformProject } from '@/utils/projectUtils';
 import { useTasks } from '@/hooks/useTasks';
-import type { Project } from '@/hooks/useProjects';
+import { useProjects } from '@/hooks/useProjects';
 
-interface ProjectGridProps {
-  projects: Project[];
-}
-
-export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects }) => {
+export const ProjectGrid: React.FC = () => {
+  const { projects, isLoading } = useProjects();
   const { tasks } = useTasks();
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
+          <button className="text-blue-600 hover:text-blue-800 font-medium">View All</button>
+        </div>
+        <div className="text-center py-8 text-gray-500">
+          <p>Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Show only the most recent 6 projects
   const recentProjects = projects.slice(0, 6);
