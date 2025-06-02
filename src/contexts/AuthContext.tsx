@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,9 +15,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Session timeout duration (30 minutes)
-const SESSION_TIMEOUT = 30 * 60 * 1000;
-const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
+// Extended session timeout duration (24 hours)
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+const WARNING_TIME = 30 * 60 * 1000; // Show warning 30 minutes before timeout
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -35,26 +34,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [sessionTimeoutWarning, setSessionTimeoutWarning] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
 
-  // Track user activity
+  // Track user activity - more comprehensive activity tracking
   useEffect(() => {
     const updateActivity = () => {
       setLastActivity(Date.now());
       setSessionTimeoutWarning(false);
     };
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    // More comprehensive list of user activity events
+    const events = [
+      'mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 
+      'click', 'focus', 'blur', 'resize', 'beforeunload'
+    ];
+    
     events.forEach(event => {
       document.addEventListener(event, updateActivity, true);
     });
+
+    // Also track page visibility changes
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updateActivity();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       events.forEach(event => {
         document.removeEventListener(event, updateActivity, true);
       });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  // Session timeout management
+  // Session timeout management with longer intervals
   useEffect(() => {
     if (!session) return;
 
@@ -62,18 +76,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const now = Date.now();
       const timeSinceActivity = now - lastActivity;
       
+      // Only log out after 24 hours of inactivity
       if (timeSinceActivity >= SESSION_TIMEOUT) {
-        console.log('Session timeout - signing out user');
+        console.log('Session timeout after 24 hours - signing out user');
         signOut();
         return;
       }
       
+      // Show warning 30 minutes before timeout (23.5 hours of inactivity)
       if (timeSinceActivity >= SESSION_TIMEOUT - WARNING_TIME) {
         setSessionTimeoutWarning(true);
       }
     };
 
-    const interval = setInterval(checkSessionTimeout, 60000); // Check every minute
+    // Check every 5 minutes instead of every minute
+    const interval = setInterval(checkSessionTimeout, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [session, lastActivity]);
 
