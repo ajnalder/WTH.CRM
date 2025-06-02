@@ -3,18 +3,11 @@ import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InvoiceItemRow } from './InvoiceItemRow';
 import { NewInvoiceItemRow } from './NewInvoiceItemRow';
-
-interface InvoiceItem {
-  id?: string;
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
+import { InvoiceItem } from '@/hooks/useInvoices';
 
 interface InvoiceItemsTableProps {
   items: InvoiceItem[];
-  newItem: InvoiceItem;
+  newItem: Omit<InvoiceItem, 'id' | 'created_at' | 'invoice_id'>;
   onItemUpdate: (itemId: string, field: keyof InvoiceItem, value: string | number) => void;
   onItemDelete: (itemId: string) => void;
   onNewItemChange: (field: keyof InvoiceItem, value: string | number) => void;
@@ -45,8 +38,8 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({
           <InvoiceItemRow
             key={item.id}
             item={item}
-            onUpdate={(field, value) => onItemUpdate(item.id!, field, value)}
-            onDelete={() => onItemDelete(item.id!)}
+            onUpdate={(field, value) => onItemUpdate(item.id, field, value)}
+            onDelete={() => onItemDelete(item.id)}
           />
         ))}
         <NewInvoiceItemRow

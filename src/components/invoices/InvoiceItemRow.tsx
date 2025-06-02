@@ -5,14 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Trash } from 'lucide-react';
-
-interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
+import { InvoiceItem } from '@/hooks/useInvoices';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;

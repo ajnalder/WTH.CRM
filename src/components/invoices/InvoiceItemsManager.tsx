@@ -1,17 +1,9 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useInvoiceItems } from '@/hooks/useInvoices';
+import { useInvoiceItems, InvoiceItem } from '@/hooks/useInvoices';
 import { InvoiceItemsTable } from './InvoiceItemsTable';
 import { InvoiceTotals } from './InvoiceTotals';
-
-interface InvoiceItem {
-  id?: string;
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
 
 interface InvoiceItemsManagerProps {
   invoiceId: string;
@@ -23,7 +15,7 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
   onItemsChange
 }) => {
   const { items, isLoading, addItem, updateItem, deleteItem } = useInvoiceItems(invoiceId);
-  const [newItem, setNewItem] = useState<InvoiceItem>({
+  const [newItem, setNewItem] = useState<Omit<InvoiceItem, 'id' | 'created_at' | 'invoice_id'>>({
     description: '',
     quantity: 1,
     rate: 0,

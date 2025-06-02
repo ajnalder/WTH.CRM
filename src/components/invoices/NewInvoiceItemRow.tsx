@@ -5,16 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Plus } from 'lucide-react';
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
+import { InvoiceItem } from '@/hooks/useInvoices';
 
 interface NewInvoiceItemRowProps {
-  newItem: InvoiceItem;
+  newItem: Omit<InvoiceItem, 'id' | 'created_at' | 'invoice_id'>;
   onChange: (field: keyof InvoiceItem, value: string | number) => void;
   onAdd: () => void;
 }
