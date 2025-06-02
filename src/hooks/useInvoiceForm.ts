@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,15 +111,20 @@ export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
       // Use the form's invoice number or generate a new one if empty
       const invoiceNumber = formData.invoice_number || await generateNextInvoiceNumber();
       
-      await createInvoice({
-        ...formData,
-        invoice_number: invoiceNumber,
-        project_id: formData.project_id || undefined,
-        due_date: formData.due_date || undefined,
-        issued_date: formData.issued_date || undefined,
+      const result = await new Promise((resolve, reject) => {
+        createInvoice({
+          ...formData,
+          invoice_number: invoiceNumber,
+          project_id: formData.project_id || undefined,
+          due_date: formData.due_date || undefined,
+          issued_date: formData.issued_date || undefined,
+        }, {
+          onSuccess: (data) => resolve(data),
+          onError: (error) => reject(error)
+        });
       });
       
-      return true;
+      return result;
     } catch (error) {
       console.error('Error creating invoice:', error);
       return false;

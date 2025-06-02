@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +17,10 @@ const NewInvoice = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const success = await submitForm();
-    if (success) {
-      navigate('/invoices');
+    const result = await submitForm();
+    if (result && typeof result === 'object' && 'id' in result) {
+      // Navigate to the invoice detail page in edit mode to add items
+      navigate(`/invoices/${result.id}/edit`);
     }
   };
 

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,40 +29,46 @@ export const useInvoices = (clientId?: string) => {
     },
   });
 
-  const createInvoice = useMutation({
-    mutationFn: async (invoiceData: Partial<Invoice> & { client_id: string; invoice_number: string; title: string }) => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('User not authenticated');
+  const createInvoice = (invoiceData: Partial<Invoice> & { client_id: string; invoice_number: string; title: string }, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) throw new Error('User not authenticated');
 
-      const invoiceToCreate = {
-        ...invoiceData,
-        user_id: user.user.id,
-      };
+        const invoiceToCreate = {
+          ...invoiceData,
+          user_id: user.user.id,
+        };
 
-      const { data, error } = await supabase
-        .from('invoices')
-        .insert(invoiceToCreate)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast({
-        title: "Success",
-        description: "Invoice created successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create invoice",
-        variant: "destructive",
-      });
-      console.error('Error creating invoice:', error);
-    },
-  });
+        const { data, error } = await supabase
+          .from('invoices')
+          .insert(invoiceToCreate)
+          .select()
+          .single();
+        
+        if (error) throw error;
+
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        toast({
+          title: "Success",
+          description: "Invoice created successfully",
+        });
+        
+        if (callbacks?.onSuccess) callbacks.onSuccess(data);
+        resolve(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create invoice",
+          variant: "destructive",
+        });
+        console.error('Error creating invoice:', error);
+        
+        if (callbacks?.onError) callbacks.onError(error);
+        reject(error);
+      }
+    });
+  };
 
   const updateInvoice = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Invoice> }) => {
@@ -121,7 +126,7 @@ export const useInvoices = (clientId?: string) => {
   return {
     invoices,
     isLoading,
-    createInvoice: createInvoice.mutate,
+    createInvoice,
     updateInvoice: updateInvoice.mutate,
     deleteInvoice: deleteInvoice.mutate,
   };
