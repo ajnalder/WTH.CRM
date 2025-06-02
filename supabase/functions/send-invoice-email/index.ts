@@ -40,6 +40,11 @@ const generateInvoicePDF = async (invoice: any, client: any, items: any[]): Prom
   const marginRight = 10;
   const marginTop = 10;
 
+  // Add logo - using a simple placeholder since we can't easily load external images in Deno
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('What the Heck', marginLeft, marginTop + 10);
+
   // Header with invoice title
   pdf.setFontSize(24);
   pdf.setFont('helvetica', 'bold');
@@ -64,11 +69,18 @@ const generateInvoicePDF = async (invoice: any, client: any, items: any[]): Prom
   pdf.setFont('helvetica', 'normal');
   pdf.text('125-651-445', rightAlign, marginTop + 60, { align: 'right' });
   
+  // Due Date
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Due Date', rightAlign, marginTop + 76, { align: 'right' });
+  pdf.setFont('helvetica', 'normal');
+  const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
+  pdf.text(dueDate, rightAlign, marginTop + 84, { align: 'right' });
+  
   // Invoice Date
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Invoice Date', rightAlign, marginTop + 76, { align: 'right' });
+  pdf.text('Invoice Date', rightAlign, marginTop + 92, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
-  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 84, { align: 'right' });
+  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 100, { align: 'right' });
   
   // Client info (Bill To)
   let yPos = marginTop + 65;
@@ -160,6 +172,20 @@ const generateInvoicePDF = async (invoice: any, client: any, items: any[]): Prom
   pdf.text('Total Amount:', totalsXPos, yPos);
   pdf.text(`$${invoice.total_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
 
+  // Payment options section
+  yPos += 30;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(12);
+  pdf.text('PAYMENT OPTIONS:', marginLeft, yPos);
+  
+  yPos += 12;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  pdf.text('Direct Credit - Mackay Distribution 2018 Limited', marginLeft, yPos);
+  
+  yPos += 8;
+  pdf.text('06-0556-0955531-00', marginLeft, yPos);
+
   // Footer
   yPos = pageHeight - 30;
   pdf.setFont('helvetica', 'normal');
@@ -187,6 +213,13 @@ const handler = async (req: Request): Promise<Response> => {
       invoiceData.items
     );
 
+    // Create email body with invoice details
+    const invoiceDetails = invoiceData.invoice.description ? 
+      `<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        <h4 style="margin: 0 0 10px 0; color: #333;">Invoice Details:</h4>
+        <p style="margin: 0; color: #666;">${invoiceData.invoice.description}</p>
+       </div>` : '';
+
     const emailResponse = await resend.emails.send({
       from: "Andrew <andrew@whattheheck.co.nz>",
       to: [to],
@@ -198,8 +231,17 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #666; margin: 0;">Invoice #${invoiceNumber}</p>
           </div>
           
+          ${invoiceDetails}
+          
           <div style="background-color: white; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px;">
             ${message.split('\n').map(line => `<p style="margin: 10px 0; color: #333;">${line}</p>`).join('')}
+          </div>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">Payment Details:</h4>
+            <p style="margin: 5px 0; color: #666;"><strong>Due Date:</strong> ${invoiceData.invoice.due_date ? new Date(invoiceData.invoice.due_date).toLocaleDateString() : 'Upon receipt'}</p>
+            <p style="margin: 5px 0; color: #666;"><strong>Direct Credit:</strong> Mackay Distribution 2018 Limited</p>
+            <p style="margin: 5px 0; color: #666;"><strong>Account:</strong> 06-0556-0955531-00</p>
           </div>
           
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #666; font-size: 12px;">

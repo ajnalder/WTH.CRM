@@ -32,7 +32,7 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
         resolve(null);
       };
       logoImg.onerror = reject;
-      logoImg.src = '/lovable-uploads/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png';
+      logoImg.src = `${window.location.origin}/lovable-uploads/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png`;
     });
   } catch (error) {
     console.warn('Could not load logo for PDF:', error);
@@ -62,11 +62,18 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
   pdf.setFont('helvetica', 'normal');
   pdf.text('125-651-445', rightAlign, marginTop + 60, { align: 'right' });
   
+  // Due Date
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Due Date', rightAlign, marginTop + 76, { align: 'right' });
+  pdf.setFont('helvetica', 'normal');
+  const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
+  pdf.text(dueDate, rightAlign, marginTop + 84, { align: 'right' });
+  
   // Invoice Date
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Invoice Date', rightAlign, marginTop + 76, { align: 'right' });
+  pdf.text('Invoice Date', rightAlign, marginTop + 92, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
-  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 84, { align: 'right' });
+  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 100, { align: 'right' });
   
   // Client info (Bill To)
   let yPos = marginTop + 65;
@@ -160,6 +167,20 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
   pdf.setFont('helvetica', 'bold');
   pdf.text('Total Amount:', totalsXPos, yPos);
   pdf.text(`$${invoice.total_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
+
+  // Payment options section
+  yPos += 30;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(12);
+  pdf.text('PAYMENT OPTIONS:', marginLeft, yPos);
+  
+  yPos += 12;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  pdf.text('Direct Credit - Mackay Distribution 2018 Limited', marginLeft, yPos);
+  
+  yPos += 8;
+  pdf.text('06-0556-0955531-00', marginLeft, yPos);
 
   // Footer
   yPos = pageHeight - 30;
