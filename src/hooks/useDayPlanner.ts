@@ -48,6 +48,9 @@ export const useDayPlanner = () => {
 
     if (!destination) return;
 
+    // Capture scroll position before any operations
+    const scrollBeforeDrag = window.scrollY;
+
     console.log('Drag end:', { source, destination, draggableId });
 
     // Handle dropping task into a time slot
@@ -62,6 +65,13 @@ export const useDayPlanner = () => {
       const taskDuration = existingTaskSlots.length > 0 ? existingTaskSlots.length * 15 : 60;
       
       await assignTaskToSlots(taskId, targetTimeSlot, taskDuration, 'task');
+      
+      // Restore scroll position after the operation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollBeforeDrag);
+        });
+      });
     }
     
     // Handle dropping task back to the pool
@@ -69,6 +79,13 @@ export const useDayPlanner = () => {
       const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
       console.log('Dropping task back to pool:', taskId);
       await clearTaskSlots(taskId);
+      
+      // Restore scroll position after the operation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollBeforeDrag);
+        });
+      });
     }
   };
 
