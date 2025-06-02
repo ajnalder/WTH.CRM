@@ -10,10 +10,26 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
-import { Project } from '@/hooks/useProjects';
+
+// Use the transformed project interface that matches what we're passing
+interface TransformedProject {
+  id: string;
+  name: string;
+  client: string;
+  status: string;
+  progress: number;
+  dueDate: string;
+  team: any[];
+  priority: string;
+  tasks: { completed: number; total: number };
+  description: string;
+  budget: number;
+  startDate: string;
+  client_id?: string; // Optional for backward compatibility
+}
 
 interface ProjectTableProps {
-  projects: Project[];
+  projects: TransformedProject[];
 }
 
 const getStatusColor = (status: string) => {
@@ -34,10 +50,8 @@ const getStatusColor = (status: string) => {
 export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
   const { clients } = useClients();
 
-  const getClientInitials = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    if (!client) return 'UK';
-    return client.company
+  const getClientInitials = (clientName: string) => {
+    return clientName
       .split(' ')
       .map(word => word[0])
       .join('')
@@ -45,13 +59,9 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
       .slice(0, 2);
   };
 
-  const getClientName = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    return client?.company || 'Unknown Client';
-  };
-
-  const getClientGradient = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
+  const getClientGradient = (clientName: string) => {
+    // Find client by name to get their gradient
+    const client = clients.find(c => c.company === clientName);
     return client?.gradient || 'from-blue-400 to-blue-600';
   };
 
@@ -69,10 +79,10 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
       </TableHeader>
       <TableBody>
         {projects.map((project) => {
-          const daysUntilDue = project.due_date 
-            ? Math.ceil((new Date(project.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))
+          const daysUntilDue = project.dueDate 
+            ? Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))
             : null;
-          const clientGradient = getClientGradient(project.client_id);
+          const clientGradient = getClientGradient(project.client);
           
           return (
             <TableRow key={project.id} className="hover:bg-gray-50">
@@ -89,9 +99,9 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
               <TableCell>
                 <div className="flex items-center gap-2">
                   <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
-                    {getClientInitials(project.client_id)}
+                    {getClientInitials(project.client)}
                   </div>
-                  <span className="text-sm text-gray-600">{getClientName(project.client_id)}</span>
+                  <span className="text-sm text-gray-600">{project.client}</span>
                 </div>
               </TableCell>
               <TableCell>
@@ -113,23 +123,23 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
               <TableCell>
                 <div className="flex items-center space-x-2">
                   <div className="flex -space-x-2">
-                    {project.team_members?.slice(0, 3).map((member, index) => (
+                    {project.team?.slice(0, 3).map((member, index) => (
                       <div
                         key={index}
-                        className={`w-6 h-6 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white`}
+                        className={`w-6 h-6 bg-gradient-to-r ${member.gradient || 'from-blue-400 to-blue-600'} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white`}
                       >
-                        {member.avatar}
+                        {member.avatar || member.name?.charAt(0) || 'U'}
                       </div>
                     ))}
-                    {project.team_members && project.team_members.length > 3 && (
+                    {project.team && project.team.length > 3 && (
                       <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
-                        +{project.team_members.length - 3}
+                        +{project.team.length - 3}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <Users size={14} />
-                    <span>{project.team_members?.length || 0}</span>
+                    <span>{project.team?.length || 0}</span>
                   </div>
                 </div>
               </TableCell>
