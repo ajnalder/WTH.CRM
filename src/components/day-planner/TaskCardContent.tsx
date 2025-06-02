@@ -57,7 +57,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            onClick={() => removeScheduledTask(scheduledTask.taskId)}
+            onClick={() => removeScheduledTask(scheduledTask.task_id)}
           >
             <X size={12} />
           </Button>
@@ -75,7 +75,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
               </Avatar>
             )}
             <h4 className="font-medium text-gray-900 text-sm line-clamp-1 min-w-0">
-              {scheduledTask.type === 'custom' ? scheduledTask.title : task?.title}
+              {scheduledTask.task_type === 'custom' ? scheduledTask.title : task?.title}
             </h4>
           </div>
           {task && (
@@ -102,7 +102,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
           <div className="mt-2">
             <Select
               value={scheduledTask.duration.toString()}
-              onValueChange={(value) => updateTaskDuration(scheduledTask.taskId, parseInt(value))}
+              onValueChange={(value) => updateTaskDuration(scheduledTask.task_id, parseInt(value))}
             >
               <SelectTrigger className="h-6 text-xs">
                 <SelectValue />

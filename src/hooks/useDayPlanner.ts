@@ -4,7 +4,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
 import { useTimeSlots } from '@/hooks/useTimeSlots';
-import type { ScheduledTask } from '@/types/dayPlanner';
+import type { ScheduledTask, TimeSlot } from '@/types/dayPlanner';
 
 export const useDayPlanner = () => {
   const { tasks } = useTasks();
