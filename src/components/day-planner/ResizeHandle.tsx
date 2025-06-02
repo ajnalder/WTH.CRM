@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface ResizeHandleProps {
@@ -17,6 +17,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
 }) => {
   const startYRef = useRef(0);
   const initialDurationRef = useRef(0);
+  const [tempDuration, setTempDuration] = useState(scheduledTask.duration);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -30,6 +31,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     setIsResizing(true);
     startYRef.current = e.clientY;
     initialDurationRef.current = scheduledTask.duration;
+    setTempDuration(scheduledTask.duration);
 
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault();
@@ -43,9 +45,8 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       // Cap at reasonable maximum (8 hours)
       const cappedDuration = Math.min(newDuration, 480);
       
-      if (cappedDuration !== scheduledTask.duration) {
-        updateTaskDuration(scheduledTask.task_id, cappedDuration);
-      }
+      // Update local state for visual feedback
+      setTempDuration(cappedDuration);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -53,6 +54,12 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       e.stopPropagation();
       
       setIsResizing(false);
+      
+      // Only update database if duration actually changed
+      if (tempDuration !== scheduledTask.duration) {
+        updateTaskDuration(scheduledTask.task_id, tempDuration);
+      }
+      
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -60,6 +67,13 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
+
+  // Reset temp duration when scheduled task changes (from external updates)
+  React.useEffect(() => {
+    if (!isResizing) {
+      setTempDuration(scheduledTask.duration);
+    }
+  }, [scheduledTask.duration, isResizing]);
 
   return (
     <div
@@ -71,6 +85,11 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       style={{ pointerEvents: 'auto' }}
     >
       <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gray-600 rounded-t pointer-events-none"></div>
+      {isResizing && (
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+          {tempDuration}min
+        </div>
+      )}
     </div>
   );
 };

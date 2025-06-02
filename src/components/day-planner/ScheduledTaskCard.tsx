@@ -89,9 +89,9 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 ${getCardStyle()} ${
+          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle()} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
-          } ${isResizing ? 'select-none pointer-events-none' : ''}`}
+          } ${isResizing ? 'select-none' : ''}`}
           style={{ 
             height: calculateHeight(scheduledTask.duration),
             minHeight: '60px',
@@ -102,7 +102,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
             ...provided.draggableProps.style
           }}
           onMouseEnter={() => !isResizing && setShowControls(true)}
-          onMouseLeave={() => setShowControls(false)}
+          onMouseLeave={() => !isResizing && setShowControls(false)}
         >
           <TaskCardContent
             scheduledTask={scheduledTask}
