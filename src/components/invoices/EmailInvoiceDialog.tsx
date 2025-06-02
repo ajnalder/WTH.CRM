@@ -27,6 +27,7 @@ interface EmailInvoiceDialogProps {
 export const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({ invoice, client }) => {
   const [open, setOpen] = useState(false);
   const { contacts } = useContacts(client?.id || '');
+  const { items } = useInvoiceItems(invoice.id);
   const { toast } = useToast();
 
   // Get primary contact or first contact, fallback to client email
@@ -81,7 +82,7 @@ What the Heck Team`);
     setSending(true);
     
     try {
-      console.log('Sending invoice email via Supabase Edge Function...');
+      console.log('Sending invoice email with PDF via Supabase Edge Function...');
       
       const { data, error } = await supabase.functions.invoke('send-invoice-email', {
         body: {
@@ -89,7 +90,12 @@ What the Heck Team`);
           subject: subject,
           message: message,
           invoiceNumber: invoice.invoice_number,
-          clientName: client?.company || client?.name || 'Customer'
+          clientName: client?.company || client?.name || 'Customer',
+          invoiceData: {
+            invoice: invoice,
+            client: client,
+            items: items
+          }
         }
       });
 
@@ -100,7 +106,7 @@ What the Heck Team`);
       if (data.success) {
         toast({
           title: "Success",
-          description: `Invoice emailed successfully to ${email}`,
+          description: `Invoice with PDF attachment emailed successfully to ${email}`,
         });
         
         setOpen(false);
