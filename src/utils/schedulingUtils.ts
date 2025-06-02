@@ -86,10 +86,11 @@ export const updateTaskDurationWithShifting = (
     conflictingTasks.forEach(conflictingTask => {
       const conflictingTaskIndex = updatedTasks.findIndex(t => t.taskId === conflictingTask.taskId);
       if (conflictingTaskIndex !== -1) {
-        // Move conflicting task to start after the expanded task
+        // Move conflicting task to start after the expanded task and generate new ID
         if (newEndIndex < timeSlots.length) {
           updatedTasks[conflictingTaskIndex] = {
             ...updatedTasks[conflictingTaskIndex],
+            id: crypto.randomUUID(), // Generate new ID when shifting
             startTime: timeSlots[newEndIndex]
           };
         }
@@ -115,6 +116,7 @@ export const updateTaskDurationWithShifting = (
         if (taskToShiftIndex !== -1) {
           updatedTasks[taskToShiftIndex] = {
             ...updatedTasks[taskToShiftIndex],
+            id: crypto.randomUUID(), // Generate new ID when shifting
             startTime: timeSlots[newStartIndex]
           };
         }
@@ -160,6 +162,7 @@ export const updateTaskDurationWithShifting = (
           if (taskToMoveIndex !== -1) {
             updatedTasks[taskToMoveIndex] = {
               ...updatedTasks[taskToMoveIndex],
+              id: crypto.randomUUID(), // Generate new ID when shifting
               startTime: timeSlots[potentialNewStartIndex]
             };
           }
