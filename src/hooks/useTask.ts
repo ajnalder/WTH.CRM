@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -65,17 +64,31 @@ export const useTask = (taskId: string) => {
     enabled: !!taskId,
   });
 
-  const updateTaskAssignee = useMutation({
-    mutationFn: async (assignee: string | null) => {
+  const updateTaskDetails = useMutation({
+    mutationFn: async (updateData: { 
+      title: string; 
+      description: string; 
+      assignee: string | null; 
+      status: string; 
+      due_date: string | null; 
+      dropbox_url: string | null 
+    }) => {
       const { data, error } = await supabase
         .from('tasks')
-        .update({ assignee })
+        .update({
+          title: updateData.title,
+          description: updateData.description || null,
+          assignee: updateData.assignee,
+          status: updateData.status,
+          due_date: updateData.due_date,
+          dropbox_url: updateData.dropbox_url
+        })
         .eq('id', taskId)
         .select()
         .single();
 
       if (error) {
-        console.error('Error updating task assignee:', error);
+        console.error('Error updating task details:', error);
         throw error;
       }
 
@@ -86,116 +99,14 @@ export const useTask = (taskId: string) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: "Success",
-        description: "Task assignee updated successfully",
+        description: "Task updated successfully",
       });
     },
     onError: (error) => {
-      console.error('Update task assignee error:', error);
+      console.error('Update task details error:', error);
       toast({
         title: "Error",
-        description: "Failed to update task assignee",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskStatus = useMutation({
-    mutationFn: async (status: string) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', taskId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task status:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Success",
-        description: "Task status updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update task status error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskDueDate = useMutation({
-    mutationFn: async (dueDate: string | null) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ due_date: dueDate })
-        .eq('id', taskId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task due date:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Success",
-        description: "Task due date updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update task due date error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task due date",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskDropboxUrl = useMutation({
-    mutationFn: async (dropboxUrl: string | null) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ dropbox_url: dropboxUrl })
-        .eq('id', taskId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task dropbox URL:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Success",
-        description: "Task Dropbox URL updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update task dropbox URL error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task Dropbox URL",
+        description: "Failed to update task",
         variant: "destructive",
       });
     },
@@ -205,13 +116,7 @@ export const useTask = (taskId: string) => {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
     error: taskQuery.error,
-    updateTaskAssignee: updateTaskAssignee.mutate,
-    isUpdating: updateTaskAssignee.isPending,
-    updateTaskStatus: updateTaskStatus.mutate,
-    isUpdatingStatus: updateTaskStatus.isPending,
-    updateTaskDueDate: updateTaskDueDate.mutate,
-    isUpdatingDueDate: updateTaskDueDate.isPending,
-    updateTaskDropboxUrl: updateTaskDropboxUrl.mutate,
-    isUpdatingDropboxUrl: updateTaskDropboxUrl.isPending,
+    updateTaskDetails: updateTaskDetails.mutate,
+    isUpdatingDetails: updateTaskDetails.isPending,
   };
 };

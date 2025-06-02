@@ -14,21 +14,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { TaskEditDialog } from '@/components/task-details/TaskEditDialog';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsHeaderProps {
   task: TaskWithClient;
   onDelete?: () => void;
   isDeleting?: boolean;
+  onEdit?: (data: { title: string; description: string; assignee: string | null; status: string; due_date: string | null; dropbox_url: string | null }) => void;
+  isUpdatingDetails?: boolean;
 }
 
 export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({ 
   task, 
   onDelete, 
-  isDeleting = false 
+  isDeleting = false,
+  onEdit,
+  isUpdatingDetails = false
 }) => {
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,6 +53,13 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     }
   };
 
+  const handleEdit = (data: { title: string; description: string; assignee: string | null; status: string; due_date: string | null; dropbox_url: string | null }) => {
+    if (onEdit) {
+      onEdit(data);
+      setShowEditDialog(false);
+    }
+  };
+
   return (
     <>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -60,9 +73,14 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
           </Link>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              disabled={isUpdatingDetails}
+            >
               <Edit2 size={16} className="mr-2" />
-              Edit
+              {isUpdatingDetails ? 'Updating...' : 'Edit'}
             </Button>
             <Button 
               variant="outline" 
@@ -94,6 +112,14 @@ export const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
           <p className="text-gray-600">Project: {task.project}</p>
         )}
       </div>
+
+      <TaskEditDialog
+        task={task}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={handleEdit}
+        isUpdating={isUpdatingDetails}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

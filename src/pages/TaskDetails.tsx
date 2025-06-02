@@ -22,14 +22,8 @@ const TaskDetails = () => {
     task, 
     isLoading: taskLoading, 
     error: taskError, 
-    updateTaskAssignee, 
-    isUpdating,
-    updateTaskStatus,
-    isUpdatingStatus,
-    updateTaskDueDate,
-    isUpdatingDueDate,
-    updateTaskDropboxUrl,
-    isUpdatingDropboxUrl
+    updateTaskDetails, 
+    isUpdatingDetails
   } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
@@ -71,6 +65,17 @@ const TaskDetails = () => {
     }
   };
 
+  const handleEditTask = (data: { 
+    title: string; 
+    description: string; 
+    assignee: string | null; 
+    status: string; 
+    due_date: string | null; 
+    dropbox_url: string | null 
+  }) => {
+    updateTaskDetails(data);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -78,22 +83,14 @@ const TaskDetails = () => {
           task={task} 
           onDelete={handleDeleteTask}
           isDeleting={isDeleting}
+          onEdit={handleEditTask}
+          isUpdatingDetails={isUpdatingDetails}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            <TaskDetailsMain
-              task={task}
-              updateTaskAssignee={updateTaskAssignee}
-              isUpdating={isUpdating}
-              updateTaskStatus={updateTaskStatus}
-              isUpdatingStatus={isUpdatingStatus}
-              updateTaskDueDate={updateTaskDueDate}
-              isUpdatingDueDate={isUpdatingDueDate}
-              updateTaskDropboxUrl={updateTaskDropboxUrl}
-              isUpdatingDropboxUrl={isUpdatingDropboxUrl}
-            />
+            <TaskDetailsMain task={task} />
 
             <TaskTimeEntries timeEntries={timeEntries} />
           </div>
