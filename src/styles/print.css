@@ -1,0 +1,33 @@
+
+@media print {
+  @page {
+    margin: 1in;
+    size: A4;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border-none {
+    border: none !important;
+  }
+
+  /* Hide navigation and buttons when printing */
+  nav,
+  .no-print,
+  button:not(.print-button) {
+    display: none !important;
+  }
+
+  /* Ensure the invoice content takes full width */
+  .invoice-content {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
