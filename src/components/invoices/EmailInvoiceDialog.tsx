@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
+import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EmailInvoiceDialogProps {
