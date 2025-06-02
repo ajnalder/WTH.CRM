@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending invoice email to ${to} for invoice ${invoiceNumber}`);
 
     const emailResponse = await resend.emails.send({
-      from: "What the Heck <onboarding@resend.dev>",
+      from: "Andrew <andrew@whattheheck.co.nz>",
       to: [to],
       subject: subject,
       html: `
