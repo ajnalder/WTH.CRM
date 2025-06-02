@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 import { InvoiceTable } from '@/components/invoices/InvoiceTable';
 
 const Invoices = () => {
+  const navigate = useNavigate();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { invoices, isLoading } = useInvoices();
   const { clients } = useClients();
@@ -40,7 +41,7 @@ const Invoices = () => {
           <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
           <p className="text-gray-600 mt-1">Manage your client invoices and track payments</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => navigate('/invoices/new')}>
           <Plus size={16} className="mr-2" />
           Create Invoice
         </Button>
