@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +20,13 @@ export const useTimeSlots = (selectedDate: string) => {
 
       if (error) throw error;
 
-      setTimeSlots(data || []);
+      // Cast the data to ensure proper typing for task_type
+      const typedData: TimeSlot[] = (data || []).map(slot => ({
+        ...slot,
+        task_type: slot.task_type as 'task' | 'custom' | undefined
+      }));
+
+      setTimeSlots(typedData);
     } catch (error) {
       console.error('Error loading time slots:', error);
       toast({
