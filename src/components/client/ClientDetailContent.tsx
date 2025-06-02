@@ -1,9 +1,10 @@
 
 import React from 'react';
-import ClientOverviewTab from '@/components/client/ClientOverviewTab';
-import DomainsTab from '@/components/client/DomainsTab';
-import HostingTab from '@/components/client/HostingTab';
-import ContactsTab from '@/components/client/ContactsTab';
+import ClientOverviewTab from './ClientOverviewTab';
+import DomainsTab from './DomainsTab';
+import HostingTab from './HostingTab';
+import ContactsTab from './ContactsTab';
+import InvoicesTab from './InvoicesTab';
 import { ClientDetailContextProps } from '@/types/clientDetail';
 
 interface ClientDetailContentProps extends ClientDetailContextProps {
@@ -11,124 +12,25 @@ interface ClientDetailContentProps extends ClientDetailContextProps {
 }
 
 const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) => {
-  const {
-    client,
-    domains,
-    hosting,
-    contacts,
-    domainsLoading,
-    hostingLoading,
-    contactsLoading,
-    showDomainDialog,
-    setShowDomainDialog,
-    newDomain,
-    setNewDomain,
-    addDomain,
-    deleteDomain,
-    showHostingDialog,
-    setShowHostingDialog,
-    newHosting,
-    setNewHosting,
-    addHosting,
-    deleteHosting,
-    showContactDialog,
-    setShowContactDialog,
-    newContact,
-    setNewContact,
-    addContact,
-    deleteContact,
-    updateContact
-  } = props;
+  const { client } = props;
 
-  if (!client) return null;
-
-  // Convert the Supabase client data to match the expected format for the overview tab
-  const clientForOverview = {
-    id: client.id, // Keep as string UUID
-    name: client.name,
-    email: client.email,
-    phone: client.phone || '',
-    company: client.company,
-    industry: client.industry || '',
-    status: client.status,
-    projectsCount: client.projects_count,
-    totalValue: Number(client.total_value),
-    joinedDate: client.joined_date,
-    avatar: client.avatar || client.company.substring(0, 2).toUpperCase(),
-    gradient: client.gradient || 'from-blue-400 to-blue-600',
-    domains: domains.map(d => ({
-      id: parseInt(d.id),
-      name: d.name,
-      registrar: d.registrar,
-      expiryDate: d.expiry_date,
-      status: d.status,
-      renewalCost: Number(d.renewal_cost)
-    })),
-    hosting: hosting.map(h => ({
-      id: parseInt(h.id),
-      provider: h.provider,
-      plan: h.plan,
-      serverLocation: h.platform,
-      renewalDate: h.renewal_date,
-      loginUrl: h.login_url || '',
-      notes: h.notes || '',
-      renewalCost: Number(h.renewal_cost)
-    })),
-    contacts: contacts.map(c => ({
-      id: parseInt(c.id),
-      name: c.name,
-      email: c.email,
-      phone: c.phone || '',
-      role: c.role || '',
-      isPrimary: c.is_primary
-    }))
-  };
+  if (!client) {
+    return null;
+  }
 
   switch (activeTab) {
     case 'overview':
-      return <ClientOverviewTab client={clientForOverview} />;
+      return <ClientOverviewTab client={client} />;
     case 'domains':
-      return (
-        <DomainsTab
-          domains={domains}
-          showDomainDialog={showDomainDialog}
-          setShowDomainDialog={setShowDomainDialog}
-          newDomain={newDomain}
-          setNewDomain={setNewDomain}
-          onAddDomain={addDomain}
-          onDeleteDomain={deleteDomain}
-          isLoading={domainsLoading}
-        />
-      );
+      return <DomainsTab {...props} />;
     case 'hosting':
-      return (
-        <HostingTab
-          hosting={hosting}
-          showHostingDialog={showHostingDialog}
-          setShowHostingDialog={setShowHostingDialog}
-          newHosting={newHosting}
-          setNewHosting={setNewHosting}
-          onAddHosting={addHosting}
-          onDeleteHosting={deleteHosting}
-          isLoading={hostingLoading}
-        />
-      );
+      return <HostingTab {...props} />;
     case 'contacts':
-      return (
-        <ContactsTab
-          contacts={contacts}
-          showContactDialog={showContactDialog}
-          setShowContactDialog={setShowContactDialog}
-          newContact={newContact}
-          setNewContact={setNewContact}
-          onAddContact={addContact}
-          onUpdateContact={updateContact}
-          onDeleteContact={deleteContact}
-          isLoading={contactsLoading}
-        />
-      );
+      return <ContactsTab {...props} />;
+    case 'invoices':
+      return <InvoicesTab client={client} />;
     default:
-      return <ClientOverviewTab client={clientForOverview} />;
+      return <ClientOverviewTab client={client} />;
   }
 };
 
