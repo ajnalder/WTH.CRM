@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskTableProps {
@@ -19,6 +20,7 @@ interface TaskTableProps {
 
 export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,6 +57,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     return member ? member.name : 'Unknown User';
   };
 
+  const getClientGradient = (clientName: string) => {
+    const client = clients.find(c => c.company === clientName);
+    return client?.gradient || 'from-blue-400 to-blue-600';
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -70,64 +77,68 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {tasks.map((task) => (
-          <TableRow key={task.id}>
-            <TableCell>
-              <div>
-                <div className="font-medium text-gray-900">{task.title}</div>
-                {task.description && (
-                  <div className="text-sm text-gray-600 max-w-xs truncate">
-                    {task.description}
-                  </div>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              {task.client_name && (
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold">
-                    {getClientInitials(task.client_name)}
-                  </div>
-                  <span className="text-sm text-gray-600">{task.client_name}</span>
+        {tasks.map((task) => {
+          const clientGradient = task.client_name ? getClientGradient(task.client_name) : 'from-blue-400 to-blue-600';
+          
+          return (
+            <TableRow key={task.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium text-gray-900">{task.title}</div>
+                  {task.description && (
+                    <div className="text-sm text-gray-600 max-w-xs truncate">
+                      {task.description}
+                    </div>
+                  )}
                 </div>
-              )}
-            </TableCell>
-            <TableCell className="text-gray-900">{task.project || 'No project'}</TableCell>
-            <TableCell className="text-gray-900">{getAssigneeName(task.assignee)}</TableCell>
-            <TableCell>
-              <Badge className={`${getStatusColor(task.status)}`}>
-                {task.status}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-gray-600">{formatDate(task.due_date)}</TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-2">
-                <Progress value={task.progress || 0} className="w-16 h-2" />
-                <span className="text-sm text-gray-600">{task.progress || 0}%</span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {task.tags && task.tags.length > 0 ? (
-                  <>
-                    {task.tags.slice(0, 2).map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {task.tags.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{task.tags.length - 2}
-                      </Badge>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-sm text-gray-400">No tags</span>
+              </TableCell>
+              <TableCell>
+                {task.client_name && (
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
+                      {getClientInitials(task.client_name)}
+                    </div>
+                    <span className="text-sm text-gray-600">{task.client_name}</span>
+                  </div>
                 )}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              </TableCell>
+              <TableCell className="text-gray-900">{task.project || 'No project'}</TableCell>
+              <TableCell className="text-gray-900">{getAssigneeName(task.assignee)}</TableCell>
+              <TableCell>
+                <Badge className={`${getStatusColor(task.status)}`}>
+                  {task.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-gray-600">{formatDate(task.due_date)}</TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  <Progress value={task.progress || 0} className="w-16 h-2" />
+                  <span className="text-sm text-gray-600">{task.progress || 0}%</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {task.tags && task.tags.length > 0 ? (
+                    <>
+                      {task.tags.slice(0, 2).map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {task.tags.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{task.tags.length - 2}
+                        </Badge>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">No tags</span>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

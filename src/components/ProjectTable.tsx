@@ -9,9 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useClients } from '@/hooks/useClients';
 
 interface Project {
-  id: string; // Changed from number to string to match UUID
+  id: string;
   name: string;
   client: string;
   status: string;
@@ -42,6 +43,22 @@ const getStatusColor = (status: string) => {
 };
 
 export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
+  const { clients } = useClients();
+
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getClientGradient = (clientName: string) => {
+    const client = clients.find(c => c.company === clientName);
+    return client?.gradient || 'from-blue-400 to-blue-600';
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -57,6 +74,7 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
       <TableBody>
         {projects.map((project) => {
           const daysUntilDue = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+          const clientGradient = getClientGradient(project.client);
           
           return (
             <TableRow key={project.id} className="hover:bg-gray-50">
@@ -66,7 +84,12 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-600">{project.client}</div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
+                    {getClientInitials(project.client)}
+                  </div>
+                  <span className="text-sm text-gray-600">{project.client}</span>
+                </div>
               </TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>

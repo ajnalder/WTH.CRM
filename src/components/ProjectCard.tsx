@@ -57,6 +57,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     if (gradient.includes('cyan')) return 'bg-cyan-50/80 border-cyan-200/80';
     if (gradient.includes('lime')) return 'bg-lime-50/80 border-lime-200/80';
     if (gradient.includes('rose')) return 'bg-rose-50/80 border-rose-200/80';
+    if (gradient.includes('emerald')) return 'bg-emerald-50/80 border-emerald-200/80';
+    if (gradient.includes('amber')) return 'bg-amber-50/80 border-amber-200/80';
+    if (gradient.includes('violet')) return 'bg-violet-50/80 border-violet-200/80';
+    if (gradient.includes('sky')) return 'bg-sky-50/80 border-sky-200/80';
+    if (gradient.includes('fuchsia')) return 'bg-fuchsia-50/80 border-fuchsia-200/80';
     return 'bg-blue-50/80 border-blue-200/80'; // default
   };
 
@@ -93,22 +98,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     <Link to={`/projects/${project.id}`}>
       <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>
                 {getClientInitials(project.client)}
               </div>
+              <div>
+                <div className="text-sm text-gray-600">{project.client}</div>
+              </div>
             </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <Badge variant="secondary" className={getStatusColor(project.status)}>
-                {project.status}
-              </Badge>
-            </div>
+            <Badge variant="secondary" className={getStatusColor(project.status)}>
+              {project.status}
+            </Badge>
           </div>
           <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
             {project.name}
           </CardTitle>
-          <p className="text-sm text-gray-600">{project.client}</p>
         </CardHeader>
         
         <CardContent className="space-y-4">
