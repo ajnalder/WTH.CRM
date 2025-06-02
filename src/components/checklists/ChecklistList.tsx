@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Plus, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { useChecklists } from '@/hooks/useChecklists';
 import { useClients } from '@/hooks/useClients';
+import { UpdateTemplateButton } from './UpdateTemplateButton';
 import type { ChecklistTemplate, ClientChecklistWithClient } from '@/types/checklist';
 import { format } from 'date-fns';
 
@@ -56,10 +56,15 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create New Checklist</CardTitle>
-          <CardDescription>
-            Start a new site launch checklist for a client
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Create New Checklist</CardTitle>
+              <CardDescription>
+                Start a new site launch checklist for a client
+              </CardDescription>
+            </div>
+            <UpdateTemplateButton />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-end">

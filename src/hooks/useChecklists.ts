@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -168,6 +167,39 @@ export const useChecklists = () => {
     },
   });
 
+  // Update template
+  const updateTemplate = useMutation({
+    mutationFn: async ({ name, items }: { name: string; items: any[] }) => {
+      const { data, error } = await supabase
+        .from('checklist_templates')
+        .update({
+          items,
+          updated_at: new Date().toISOString()
+        })
+        .eq('name', name)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checklist-templates'] });
+      toast({
+        title: "Template Updated",
+        description: "Checklist template has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update template. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating template:', error);
+    },
+  });
+
   return {
     templates,
     templatesLoading,
@@ -176,8 +208,10 @@ export const useChecklists = () => {
     createChecklist: createChecklist.mutate,
     updateChecklist: updateChecklist.mutate,
     deleteChecklist: deleteChecklist.mutate,
+    updateTemplate: updateTemplate.mutate,
     isCreating: createChecklist.isPending,
     isUpdating: updateChecklist.isPending,
     isDeleting: deleteChecklist.isPending,
+    isUpdatingTemplate: updateTemplate.isPending,
   };
 };
