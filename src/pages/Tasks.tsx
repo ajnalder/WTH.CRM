@@ -14,7 +14,7 @@ const Tasks = () => {
   const { teamMembers } = useTeamMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState('due_date'); // Changed default to due_date
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   if (isLoading) {
@@ -48,7 +48,11 @@ const Tasks = () => {
     return member ? member.name : 'Unknown User';
   };
 
-  let filteredTasks = tasks.filter(task => {
+  // Separate completed and active tasks
+  const activeTasks = tasks.filter(task => task.status !== 'Done');
+  const completedTasks = tasks.filter(task => task.status === 'Done');
+
+  let filteredActiveTasks = activeTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (task.project && task.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (task.assignee && getAssigneeName(task.assignee).toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -57,35 +61,48 @@ const Tasks = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Sort tasks based on selected sort criteria
-  filteredTasks = [...filteredTasks].sort((a, b) => {
-    switch (sortBy) {
-      case 'assignee':
-        const nameA = getAssigneeName(a.assignee);
-        const nameB = getAssigneeName(b.assignee);
-        return nameA.localeCompare(nameB);
-      case 'status':
-        return a.status.localeCompare(b.status);
-      case 'due_date':
-        if (!a.due_date && !b.due_date) return 0;
-        if (!a.due_date) return 1;
-        if (!b.due_date) return -1;
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-      case 'title':
-        return a.title.localeCompare(b.title);
-      case 'created_at':
-      default:
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
+  let filteredCompletedTasks = completedTasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (task.project && task.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (task.assignee && getAssigneeName(task.assignee).toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (task.client_name && task.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch;
   });
 
-  const statusOptions = ['All', 'To Do', 'In Progress', 'Review', 'Done'];
+  // Sort tasks based on selected sort criteria
+  const sortTasks = (tasksToSort: typeof tasks) => {
+    return [...tasksToSort].sort((a, b) => {
+      switch (sortBy) {
+        case 'assignee':
+          const nameA = getAssigneeName(a.assignee);
+          const nameB = getAssigneeName(b.assignee);
+          return nameA.localeCompare(nameB);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'due_date':
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'created_at':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  };
+
+  filteredActiveTasks = sortTasks(filteredActiveTasks);
+  filteredCompletedTasks = sortTasks(filteredCompletedTasks);
+
+  const statusOptions = ['All', 'To Do', 'In Progress', 'Review'];
   const sortOptions = [
+    { value: 'due_date', label: 'Due Date' },
     { value: 'created_at', label: 'Date Created' },
     { value: 'title', label: 'Title' },
     { value: 'status', label: 'Status' },
-    { value: 'assignee', label: 'Staff Member' },
-    { value: 'due_date', label: 'Due Date' }
+    { value: 'assignee', label: 'Staff Member' }
   ];
 
   const getStatusCounts = () => {
@@ -191,34 +208,57 @@ const Tasks = () => {
         </div>
       </div>
 
-      {/* Tasks Display */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      {/* Active Tasks Display */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">
-            {filteredTasks.length} Task{filteredTasks.length !== 1 ? 's' : ''}
+            Active Tasks ({filteredActiveTasks.length})
           </h2>
         </div>
 
         {viewMode === 'cards' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredTasks.map((task) => (
+            {filteredActiveTasks.map((task) => (
               <TaskCard key={task.id} task={task} />
             ))}
           </div>
         ) : (
-          <TaskTable tasks={filteredTasks} />
+          <TaskTable tasks={filteredActiveTasks} />
         )}
 
-        {filteredTasks.length === 0 && (
+        {filteredActiveTasks.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search size={48} className="mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No active tasks found</h3>
             <p className="text-gray-600">Try adjusting your search or filter criteria</p>
           </div>
         )}
       </div>
+
+      {/* Completed Tasks Section */}
+      {filteredCompletedTasks.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              Finished Tasks ({filteredCompletedTasks.length})
+            </h2>
+          </div>
+
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 opacity-75">
+              {filteredCompletedTasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </div>
+          ) : (
+            <div className="opacity-75">
+              <TaskTable tasks={filteredCompletedTasks} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
