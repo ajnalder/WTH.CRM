@@ -74,10 +74,18 @@ export const useInvoices = (clientId?: string) => {
   });
 
   const createInvoice = useMutation({
-    mutationFn: async (invoiceData: Partial<Invoice>) => {
+    mutationFn: async (invoiceData: Partial<Invoice> & { client_id: string; invoice_number: string; title: string }) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      const invoiceToCreate = {
+        ...invoiceData,
+        user_id: user.user.id,
+      };
+
       const { data, error } = await supabase
         .from('invoices')
-        .insert([invoiceData])
+        .insert(invoiceToCreate)
         .select()
         .single();
       if (error) throw error;
@@ -181,10 +189,10 @@ export const useInvoiceItems = (invoiceId: string) => {
   });
 
   const addItem = useMutation({
-    mutationFn: async (itemData: Partial<InvoiceItem>) => {
+    mutationFn: async (itemData: Omit<InvoiceItem, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('invoice_items')
-        .insert([{ ...itemData, invoice_id: invoiceId }])
+        .insert(itemData)
         .select()
         .single();
       if (error) throw error;
@@ -255,10 +263,10 @@ export const useInvoicePayments = (invoiceId: string) => {
   });
 
   const addPayment = useMutation({
-    mutationFn: async (paymentData: Partial<InvoicePayment>) => {
+    mutationFn: async (paymentData: Omit<InvoicePayment, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('invoice_payments')
-        .insert([{ ...paymentData, invoice_id: invoiceId }])
+        .insert(paymentData)
         .select()
         .single();
       if (error) throw error;

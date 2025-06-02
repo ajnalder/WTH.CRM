@@ -1,94 +1,141 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useClientMutations } from './useClientMutations';
-import { gradients } from '@/utils/clientGradients';
-import type { Client } from '@/types/clientTypes';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Client {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  company: string;
+  industry: string | null;
+  status: 'active' | 'pending' | 'inactive';
+  projects_count: number;
+  total_value: number;
+  joined_date: string;
+  avatar: string | null;
+  gradient: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateClientData {
+  company: string;
+  phone: string;
+  industry: string;
+}
 
 export const useClients = () => {
-  const { user } = useAuth();
-  const mutations = useClientMutations();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const {
-    data: clients = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['clients', user?.id],
+  const { data: clients = [], isLoading } = useQuery({
+    queryKey: ['clients'],
     queryFn: async () => {
-      if (!user) return [];
-      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching clients:', error);
-        throw error;
-      }
-
-      // Check for clients without gradients and update them with unique colors
-      const clientsWithoutGradients = data.filter(client => !client.gradient);
-      const clientsWithGradients = data.filter(client => client.gradient);
-      
-      if (clientsWithoutGradients.length > 0) {
-        console.log(`Found ${clientsWithoutGradients.length} clients without gradients, assigning unique gradients...`);
-        
-        // Get already used gradients
-        const usedGradients = clientsWithGradients.map(client => client.gradient);
-        
-        // Get available gradients (ones not already used)
-        const availableGradients = gradients.filter(gradient => !usedGradients.includes(gradient));
-        
-        // If we need more gradients than available, we'll cycle through all gradients
-        const gradientsToUse = availableGradients.length >= clientsWithoutGradients.length 
-          ? availableGradients 
-          : [...availableGradients, ...gradients];
-        
-        // Update each client with a unique gradient
-        const updatePromises = clientsWithoutGradients.map(async (client, index) => {
-          const assignedGradient = gradientsToUse[index % gradientsToUse.length];
-          const { error: updateError } = await supabase
-            .from('clients')
-            .update({ gradient: assignedGradient })
-            .eq('id', client.id);
-          
-          if (updateError) {
-            console.error(`Error updating gradient for client ${client.id}:`, updateError);
-          } else {
-            console.log(`Updated client ${client.company} with gradient: ${assignedGradient}`);
-          }
-          
-          return { ...client, gradient: assignedGradient };
-        });
-        
-        await Promise.all(updatePromises);
-        
-        // Return the updated data with gradients
-        return data.map(client => {
-          if (!client.gradient) {
-            const updatedClient = clientsWithoutGradients.find(c => c.id === client.id);
-            return updatedClient || client;
-          }
-          return client;
-        }) as Client[];
-      }
-
+      if (error) throw error;
       return data as Client[];
     },
-    enabled: !!user,
+  });
+
+  const createClient = useMutation({
+    mutationFn: async (clientData: CreateClientData) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({
+          ...clientData,
+          user_id: user.user.id,
+          name: clientData.company, // Use company as name for now
+          email: `contact@${clientData.company.toLowerCase().replace(/\s+/g, '')}.com`, // Generate a placeholder email
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast({
+        title: "Success",
+        description: "Client created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create client",
+        variant: "destructive",
+      });
+      console.error('Error creating client:', error);
+    },
+  });
+
+  const updateClient = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
+      const { data, error } = await supabase
+        .from('clients')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast({
+        title: "Success",
+        description: "Client updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update client",
+        variant: "destructive",
+      });
+      console.error('Error updating client:', error);
+    },
+  });
+
+  const deleteClient = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast({
+        title: "Success",
+        description: "Client deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete client",
+        variant: "destructive",
+      });
+      console.error('Error deleting client:', error);
+    },
   });
 
   return {
     clients,
     isLoading,
-    error,
-    ...mutations
+    createClient: createClient.mutate,
+    updateClient: updateClient.mutate,
+    deleteClient: deleteClient.mutate,
   };
 };
-
-// Re-export types for convenience
-export type { Client, CreateClientData } from '@/types/clientTypes';
