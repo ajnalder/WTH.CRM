@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -75,12 +75,10 @@ const EditContactDialog = ({
             />
           </div>
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="edit-is-primary"
               checked={editingContact.is_primary}
-              onChange={(e) => setEditingContact({...editingContact, is_primary: e.target.checked})}
-              className="rounded"
+              onCheckedChange={(checked) => setEditingContact({...editingContact, is_primary: checked === true})}
             />
             <Label htmlFor="edit-is-primary">Primary Contact</Label>
           </div>
