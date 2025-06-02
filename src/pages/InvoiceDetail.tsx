@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit, FileText, DollarSign, Calendar, User } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
+import { InvoiceEditForm } from '@/components/invoices/InvoiceEditForm';
 
 interface InvoiceDetailProps {
   editMode?: boolean;
@@ -63,6 +63,11 @@ const InvoiceDetail = ({ editMode = false }: InvoiceDetailProps) => {
     );
   }
 
+  // If in edit mode, render the edit form
+  if (editMode) {
+    return <InvoiceEditForm invoice={invoice} />;
+  }
+
   return (
     <div className="flex-1 p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -82,12 +87,10 @@ const InvoiceDetail = ({ editMode = false }: InvoiceDetailProps) => {
           <Badge className={getStatusColor(invoice.status)}>
             {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
           </Badge>
-          {!editMode && (
-            <Button onClick={() => navigate(`/invoices/${id}/edit`)}>
-              <Edit size={16} className="mr-2" />
-              Edit
-            </Button>
-          )}
+          <Button onClick={() => navigate(`/invoices/${id}/edit`)}>
+            <Edit size={16} className="mr-2" />
+            Edit
+          </Button>
         </div>
       </div>
 
