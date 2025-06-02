@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare, Building2, LogOut, ClipboardList, Receipt } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -55,10 +56,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">PM</span>
-          </div>
-          <span className="text-xl font-bold text-gray-900">ProjectFlow</span>
+          <img 
+            src="/lovable-uploads/c848f237-7df6-492e-95f2-7ce8824226b0.png" 
+            alt="What the Heck Logo" 
+            className="h-8 w-auto"
+          />
         </div>
       </SidebarHeader>
       
