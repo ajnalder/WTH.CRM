@@ -4,6 +4,7 @@ import { Building2, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
+import { useProjects } from '@/hooks/useProjects';
 
 interface ClientOverviewProps {
   clients: Client[];
@@ -38,11 +39,16 @@ const getStatusText = (status: string) => {
 
 const ClientCard = ({ client }: { client: Client }) => {
   const navigate = useNavigate();
-  const { contacts } = useContacts(client.id); // client.id is already a string
+  const { contacts } = useContacts(client.id);
+  const { projects } = useProjects(client.id);
   
   const primaryContact = contacts.find(contact => contact.is_primary);
   const displayEmail = primaryContact?.email || 'No email';
   const displayPhone = primaryContact?.phone || client.phone;
+
+  // Calculate actual project count and total value for this client
+  const actualProjectCount = projects.length;
+  const actualTotalValue = projects.reduce((sum, project) => sum + (Number(project.budget) || 0), 0);
 
   const handleClientClick = () => {
     navigate(`/clients/${client.id}`);
@@ -87,8 +93,8 @@ const ClientCard = ({ client }: { client: Client }) => {
       </div>
       
       <div className="text-right">
-        <div className="text-sm font-medium text-gray-900">{client.projects_count} Projects</div>
-        <div className="text-sm text-gray-500">${client.total_value.toLocaleString()}</div>
+        <div className="text-sm font-medium text-gray-900">{actualProjectCount} Projects</div>
+        <div className="text-sm text-gray-500">${actualTotalValue.toLocaleString()}</div>
         <div className="text-xs text-gray-400">Since {new Date(client.joined_date).toLocaleDateString()}</div>
       </div>
     </div>

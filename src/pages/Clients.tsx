@@ -4,9 +4,11 @@ import { AddClientDialog } from '@/components/AddClientDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, DollarSign, Calendar } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
+import { useProjects } from '@/hooks/useProjects';
 
 const Clients = () => {
   const { clients, isLoading, createClient } = useClients();
+  const { projects, isLoading: projectsLoading } = useProjects();
 
   const handleAddClient = (newClient: { company: string; phone: string; industry: string }) => {
     createClient(newClient);
@@ -23,8 +25,13 @@ const Clients = () => {
   }
 
   const activeClients = clients.filter(client => client.status === 'active').length;
-  const totalValue = clients.reduce((sum, client) => sum + client.total_value, 0);
-  const totalProjects = clients.reduce((sum, client) => sum + client.projects_count, 0);
+  
+  // Calculate totals from actual projects data
+  const totalProjects = projects.length;
+  const totalProjectValue = projects.reduce((sum, project) => sum + (Number(project.budget) || 0), 0);
+  
+  // Also keep the client-level total_value for comparison
+  const clientTotalValue = clients.reduce((sum, client) => sum + client.total_value, 0);
 
   return (
     <div className="flex-1 p-6 space-y-6">
@@ -67,11 +74,13 @@ const Clients = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Total Projects</span>
-                <span className="font-semibold">{totalProjects}</span>
+                <span className="font-semibold">{projectsLoading ? 'Loading...' : totalProjects}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total Value</span>
-                <span className="font-semibold">${totalValue.toLocaleString()}</span>
+                <span className="text-gray-600">Project Value</span>
+                <span className="font-semibold">
+                  {projectsLoading ? 'Loading...' : `$${totalProjectValue.toLocaleString()}`}
+                </span>
               </div>
             </CardContent>
           </Card>

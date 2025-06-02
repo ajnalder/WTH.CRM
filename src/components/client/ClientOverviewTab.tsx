@@ -4,16 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Client } from '@/types/client';
 import { useContacts } from '@/hooks/useContacts';
+import { useProjects } from '@/hooks/useProjects';
 
 interface ClientOverviewTabProps {
   client: Client;
 }
 
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
-  const { contacts, isLoading } = useContacts(client.id); // Remove .toString() since client.id is already a string
+  const { contacts, isLoading } = useContacts(client.id);
+  const { projects } = useProjects(client.id);
   
   // Use the contacts directly from the hook (Supabase format with is_primary)
   const primaryContact = contacts?.find(contact => contact.is_primary);
+
+  // Calculate actual totals from projects
+  const actualProjectCount = projects.length;
+  const actualTotalValue = projects.reduce((sum, project) => sum + (Number(project.budget) || 0), 0);
 
   console.log('ClientOverviewTab - client.id:', client.id);
   console.log('ClientOverviewTab - contacts:', contacts);
@@ -82,11 +88,11 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <span className="text-gray-600">Projects</span>
-              <span className="font-semibold">{client.projectsCount}</span>
+              <span className="font-semibold">{actualProjectCount}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Total Value</span>
-              <span className="font-semibold">${client.totalValue.toLocaleString()}</span>
+              <span className="font-semibold">${actualTotalValue.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Domains</span>

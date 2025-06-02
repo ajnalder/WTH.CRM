@@ -10,18 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
-
-interface Project {
-  id: string;
-  name: string;
-  client: string;
-  status: string;
-  progress: number;
-  dueDate: string;
-  team: string[];
-  priority: string;
-  tasks: { completed: number; total: number };
-}
+import { Project } from '@/hooks/useProjects';
 
 interface ProjectTableProps {
   projects: Project[];
@@ -45,8 +34,10 @@ const getStatusColor = (status: string) => {
 export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
   const { clients } = useClients();
 
-  const getClientInitials = (clientName: string) => {
-    return clientName
+  const getClientInitials = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return 'UK';
+    return client.company
       .split(' ')
       .map(word => word[0])
       .join('')
@@ -54,8 +45,13 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
       .slice(0, 2);
   };
 
-  const getClientGradient = (clientName: string) => {
-    const client = clients.find(c => c.company === clientName);
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client?.company || 'Unknown Client';
+  };
+
+  const getClientGradient = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
     return client?.gradient || 'from-blue-400 to-blue-600';
   };
 
@@ -68,27 +64,34 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           <TableHead>Status</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Team</TableHead>
-          <TableHead>Tasks</TableHead>
+          <TableHead>Budget</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {projects.map((project) => {
-          const daysUntilDue = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-          const clientGradient = getClientGradient(project.client);
+          const daysUntilDue = project.due_date 
+            ? Math.ceil((new Date(project.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))
+            : null;
+          const clientGradient = getClientGradient(project.client_id);
           
           return (
             <TableRow key={project.id} className="hover:bg-gray-50">
               <TableCell>
                 <div>
                   <div className="font-medium text-gray-900">{project.name}</div>
+                  {project.description && (
+                    <div className="text-sm text-gray-600 max-w-xs truncate">
+                      {project.description}
+                    </div>
+                  )}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
-                    {getClientInitials(project.client)}
+                    {getClientInitials(project.client_id)}
                   </div>
-                  <span className="text-sm text-gray-600">{project.client}</span>
+                  <span className="text-sm text-gray-600">{getClientName(project.client_id)}</span>
                 </div>
               </TableCell>
               <TableCell>
@@ -99,35 +102,40 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
               <TableCell>
                 <div className="flex items-center space-x-1 text-sm text-gray-600">
                   <Calendar size={14} />
-                  <span>{daysUntilDue > 0 ? `${daysUntilDue} days` : 'Overdue'}</span>
+                  <span>
+                    {daysUntilDue !== null 
+                      ? (daysUntilDue > 0 ? `${daysUntilDue} days` : 'Overdue')
+                      : 'No due date'
+                    }
+                  </span>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
                   <div className="flex -space-x-2">
-                    {project.team.slice(0, 3).map((member, index) => (
+                    {project.team_members?.slice(0, 3).map((member, index) => (
                       <div
                         key={index}
-                        className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                        className={`w-6 h-6 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white`}
                       >
-                        {member}
+                        {member.avatar}
                       </div>
                     ))}
-                    {project.team.length > 3 && (
+                    {project.team_members && project.team_members.length > 3 && (
                       <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
-                        +{project.team.length - 3}
+                        +{project.team_members.length - 3}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <Users size={14} />
-                    <span>{project.team.length}</span>
+                    <span>{project.team_members?.length || 0}</span>
                   </div>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="text-sm text-gray-600">
-                  {project.tasks.completed}/{project.tasks.total}
+                  {project.budget ? `$${Number(project.budget).toLocaleString()}` : 'No budget'}
                 </div>
               </TableCell>
             </TableRow>
