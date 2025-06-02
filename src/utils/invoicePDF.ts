@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Invoice, InvoiceItem } from '@/hooks/useInvoices';
 import { Client } from '@/hooks/useClients';
@@ -13,9 +12,9 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
   
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const marginLeft = 15;
-  const marginRight = 15;
-  const marginTop = 15;
+  const marginLeft = 10;
+  const marginRight = 10;
+  const marginTop = 10;
   
   // Add logo with proper aspect ratio
   try {
@@ -24,9 +23,10 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
     
     await new Promise((resolve, reject) => {
       logoImg.onload = () => {
-        // Calculate logo dimensions maintaining aspect ratio
-        const logoWidth = 50;
-        const logoHeight = 20; // Maintain aspect ratio from original 40x16
+        // Calculate logo dimensions maintaining proper aspect ratio
+        // Original logo appears to be roughly 2.5:1 ratio (width:height)
+        const logoWidth = 60;
+        const logoHeight = 24; // Maintain 2.5:1 aspect ratio
         pdf.addImage(logoImg, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
         resolve(null);
       };
