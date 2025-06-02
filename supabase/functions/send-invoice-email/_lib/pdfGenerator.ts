@@ -44,18 +44,11 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   pdf.setFont('helvetica', 'normal');
   pdf.text('125-651-445', rightAlign, marginTop + 60, { align: 'right' });
   
-  // Due Date
+  // Invoice Date - moved up under GST Number
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Due Date', rightAlign, marginTop + 76, { align: 'right' });
+  pdf.text('Invoice Date', rightAlign, marginTop + 76, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
-  const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
-  pdf.text(dueDate, rightAlign, marginTop + 84, { align: 'right' });
-  
-  // Invoice Date - moved down further to prevent overlap
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Invoice Date', rightAlign, marginTop + 100, { align: 'right' });
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 108, { align: 'right' });
+  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 84, { align: 'right' });
   
   // Client info (Bill To)
   let yPos = marginTop + 65;
@@ -93,13 +86,13 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     yPos += 10;
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    // Handle long descriptions with proper text wrapping - increased width to prevent overlap
+    // Handle long descriptions with proper text wrapping
     const descriptionLines = pdf.splitTextToSize(invoice.description, pageWidth - marginLeft - marginRight - 10);
     pdf.text(descriptionLines, marginLeft, yPos);
     yPos += descriptionLines.length * 6;
   }
   
-  // Items table header - moved down more and adjusted positioning
+  // Items table header
   yPos += 30;
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
@@ -113,12 +106,12 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   pdf.setLineWidth(0.5);
   pdf.line(marginLeft, yPos, pageWidth - marginRight, yPos);
   
-  // Items - adjusted column positioning to match header exactly
+  // Items
   pdf.setFont('helvetica', 'normal');
   items.forEach((item) => {
     yPos += 12;
     
-    // Handle long descriptions with text wrapping - use smaller width to prevent overlap with Amount column
+    // Handle long descriptions with text wrapping
     const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 160);
     pdf.text(descriptionLines, marginLeft, yPos);
     
@@ -162,6 +155,14 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   
   yPos += 8;
   pdf.text('06-0556-0955531-00', marginLeft, yPos);
+
+  // Due Date - moved down to payment section
+  yPos += 16;
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Due Date:', marginLeft, yPos);
+  pdf.setFont('helvetica', 'normal');
+  const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
+  pdf.text(dueDate, marginLeft + 25, yPos);
 
   // Footer
   yPos = pageHeight - 30;
