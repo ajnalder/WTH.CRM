@@ -34,10 +34,10 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalInvoiced.toLocaleString()}</div>
@@ -47,10 +47,10 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">${totalOutstanding.toLocaleString()}</div>
@@ -60,10 +60,10 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paid Invoices</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{paidInvoices}</div>
@@ -74,7 +74,7 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Invoice History</CardTitle>
         </CardHeader>

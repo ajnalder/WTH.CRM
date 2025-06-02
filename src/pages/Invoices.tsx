@@ -18,7 +18,7 @@ const Invoices = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -36,23 +36,26 @@ const Invoices = () => {
   ).length;
 
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
           <p className="text-gray-600 mt-1">Manage your client invoices and track payments</p>
         </div>
-        <Button onClick={() => navigate('/invoices/new')}>
+        <Button 
+          onClick={() => navigate('/invoices/new')}
+          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
+        >
           <Plus size={16} className="mr-2" />
           Create Invoice
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalInvoiced.toLocaleString()}</div>
@@ -62,10 +65,10 @@ const Invoices = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">${totalOutstanding.toLocaleString()}</div>
@@ -75,10 +78,10 @@ const Invoices = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paid Invoices</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{paidInvoices}</div>
@@ -88,10 +91,10 @@ const Invoices = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{pendingInvoices}</div>
@@ -102,7 +105,7 @@ const Invoices = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>All Invoices</CardTitle>
         </CardHeader>

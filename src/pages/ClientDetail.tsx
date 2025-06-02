@@ -22,7 +22,7 @@ const ClientDetail = () => {
 
   if (!id) {
     return (
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
         <div className="text-center py-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid client ID</h1>
           <p className="text-gray-600">Please select a valid client.</p>
@@ -32,7 +32,7 @@ const ClientDetail = () => {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
       <ClientDetailProvider clientId={id}>
         {(contextProps) => {
           const { client, clientsLoading } = contextProps;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,11 +26,15 @@ const NewInvoice = () => {
   };
 
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/invoices')}>
-            <ArrowLeft size={16} className="mr-2" />
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/invoices')}
+            className="hover:bg-white/80 transition-colors"
+          >
+            <ArrowLeft size={16} className="mr-2 text-blue-600" />
             Back to Invoices
           </Button>
           <div>
@@ -40,7 +45,7 @@ const NewInvoice = () => {
       </div>
 
       <div className="max-w-4xl">
-        <Card>
+        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Invoice Information</CardTitle>
           </CardHeader>
@@ -59,12 +64,14 @@ const NewInvoice = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => navigate('/invoices')}
+                  className="hover:bg-white/80 transition-colors"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || !isFormValid}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
                 >
                   <Save size={16} className="mr-2" />
                   {isSubmitting ? 'Creating...' : 'Create Invoice'}

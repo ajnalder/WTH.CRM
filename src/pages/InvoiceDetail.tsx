@@ -30,12 +30,16 @@ const InvoiceDetail = ({ editMode = false }: InvoiceDetailProps) => {
 
   // If in edit mode, render the edit form
   if (editMode) {
-    return <InvoiceEditForm invoice={invoice} />;
+    return (
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+        <InvoiceEditForm invoice={invoice} />
+      </div>
+    );
   }
 
   // Otherwise, render the invoice preview
   return (
-    <div className="flex-1">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <InvoiceDetailHeader />
       <InvoicePreview invoice={invoice} client={client} />
     </div>

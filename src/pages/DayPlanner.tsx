@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { DayPlannerHeader } from '@/components/day-planner/DayPlannerHeader';
@@ -48,7 +47,7 @@ const DayPlanner = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
         <div className="mb-6">
           <Skeleton className="h-12 w-full" />
         </div>
@@ -65,7 +64,7 @@ const DayPlanner = () => {
   }
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       <DayPlannerHeader
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
