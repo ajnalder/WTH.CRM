@@ -2,9 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Client } from '@/types/client';
+import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
 import { useProjects } from '@/hooks/useProjects';
+import { useDomains } from '@/hooks/useDomains';
 
 interface ClientOverviewTabProps {
   client: Client;
@@ -13,6 +14,7 @@ interface ClientOverviewTabProps {
 const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
   const { contacts, isLoading } = useContacts(client.id);
   const { projects } = useProjects(client.id);
+  const { domains } = useDomains(client.id);
   
   // Use the contacts directly from the hook (Supabase format with is_primary)
   const primaryContact = contacts?.find(contact => contact.is_primary);
@@ -96,7 +98,7 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Domains</span>
-              <span className="font-semibold">{client.domains.length}</span>
+              <span className="font-semibold">{domains?.length || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Contacts</span>
