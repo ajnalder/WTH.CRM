@@ -49,10 +49,11 @@ export const updateTaskDurationWithShifting = (
   const currentStartTime = currentTask.startTime;
   const oldDuration = currentTask.duration;
   
+  // Create a deep copy of the array to avoid mutations
+  const updatedTasks = scheduledTasks.map(task => ({ ...task }));
+  
   // Update the task duration first
-  const updatedTask = { ...currentTask, duration: newDuration };
-  const updatedTasks = [...scheduledTasks];
-  updatedTasks[taskIndex] = updatedTask;
+  updatedTasks[taskIndex] = { ...currentTask, duration: newDuration };
   
   // Find the time slot index for this task
   const taskTimeIndex = timeSlots.indexOf(currentStartTime);
@@ -143,12 +144,15 @@ export const updateTaskDurationWithShifting = (
           potentialNewStartIndex >= 0 && 
           potentialNewStartIndex < timeSlots.length) {
         
+        // Create a copy of tasks without this task for conflict checking
+        const tasksForConflictCheck = updatedTasks.filter(t => t.taskId !== taskToMove.taskId);
+        
         // Verify the slot is actually available
         const wouldBeAvailable = isTimeSlotAvailable(
           timeSlots[potentialNewStartIndex], 
           taskToMove.duration, 
           timeSlots, 
-          updatedTasks.filter(t => t.taskId !== taskToMove.taskId)
+          tasksForConflictCheck
         );
         
         if (wouldBeAvailable) {
