@@ -2,8 +2,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -15,23 +13,12 @@ import {
 } from '@/components/ui/dialog';
 import {
   Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
-import { TeamMemberSelector } from '@/components/TeamMemberSelector';
+import { NewTaskFormTrigger } from '@/components/forms/NewTaskFormTrigger';
+import { NewTaskFormFields } from '@/components/forms/NewTaskFormFields';
+import { NewTaskTeamMemberSection } from '@/components/forms/NewTaskTeamMemberSection';
 
 interface TaskFormData {
   title: string;
@@ -150,22 +137,13 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     }
   };
 
-  const triggerButton = triggerVariant === 'outline' ? (
-    <Button variant="outline">
-      <Plus className="w-4 h-4 mr-2" />
-      {triggerText}
-    </Button>
-  ) : (
-    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-      <Plus size={20} className="mr-2" />
-      {triggerText}
-    </Button>
-  );
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {triggerButton}
+        <NewTaskFormTrigger 
+          triggerText={triggerText}
+          triggerVariant={triggerVariant}
+        />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -176,130 +154,17 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+            <NewTaskFormFields
               control={form.control}
-              name="title"
-              rules={{ required: "Task title is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Task Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Design user dashboard mockups" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              projects={projects}
+              isLoadingProjects={isLoadingProjects}
+              prefilledProject={prefilledProject}
             />
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detailed description of the task..."
-                      className="min-h-[80px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="project"
-              rules={{ required: "Project is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={!!prefilledProject}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingProjects ? (
-                        <SelectItem value="" disabled>Loading projects...</SelectItem>
-                      ) : projects.length === 0 ? (
-                        <SelectItem value="" disabled>No projects available</SelectItem>
-                      ) : (
-                        projects.map((project) => (
-                          <SelectItem key={project.id} value={project.name}>
-                            {project.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div>
-              <label className="text-sm font-medium">Assign Team Members</label>
-              <div className="mt-2">
-                <TeamMemberSelector
-                  selectedMembers={selectedTeamMembers}
-                  onMemberToggle={handleTeamMemberToggle}
-                  onRemoveMember={handleRemoveTeamMember}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Frontend, React"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="dropboxUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dropbox URL (optional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://dropbox.com/..."
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <NewTaskTeamMemberSection
+              selectedTeamMembers={selectedTeamMembers}
+              onMemberToggle={handleTeamMemberToggle}
+              onRemoveMember={handleRemoveTeamMember}
             />
             
             <DialogFooter>
