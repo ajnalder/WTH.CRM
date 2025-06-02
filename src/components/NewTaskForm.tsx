@@ -44,9 +44,17 @@ interface TaskFormData {
 
 interface NewTaskFormProps {
   onTaskCreated?: () => void;
+  prefilledProject?: string;
+  triggerText?: string;
+  triggerVariant?: 'default' | 'outline';
 }
 
-export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
+export const NewTaskForm: React.FC<NewTaskFormProps> = ({ 
+  onTaskCreated, 
+  prefilledProject, 
+  triggerText = "New Task",
+  triggerVariant = "default"
+}) => {
   const [open, setOpen] = React.useState(false);
   const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
   const { createTask, isCreating } = useTasks();
@@ -55,12 +63,19 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     defaultValues: {
       title: '',
       description: '',
-      project: '',
+      project: prefilledProject || '',
       dueDate: '',
       tags: '',
       dropboxUrl: '',
     },
   });
+
+  // Update form when prefilledProject changes
+  React.useEffect(() => {
+    if (prefilledProject) {
+      form.setValue('project', prefilledProject);
+    }
+  }, [prefilledProject, form]);
 
   const handleTeamMemberToggle = (memberId: string) => {
     setSelectedTeamMembers(prev => 
@@ -96,7 +111,14 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     });
     
     setOpen(false);
-    form.reset();
+    form.reset({
+      title: '',
+      description: '',
+      project: prefilledProject || '',
+      dueDate: '',
+      tags: '',
+      dropboxUrl: '',
+    });
     setSelectedTeamMembers([]);
     
     if (onTaskCreated) {
@@ -104,13 +126,22 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     }
   };
 
+  const triggerButton = triggerVariant === 'outline' ? (
+    <Button variant="outline">
+      <Plus className="w-4 h-4 mr-2" />
+      {triggerText}
+    </Button>
+  ) : (
+    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+      <Plus size={20} className="mr-2" />
+      {triggerText}
+    </Button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-          <Plus size={20} className="mr-2" />
-          New Task
-        </Button>
+        {triggerButton}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -161,7 +192,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Project</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!!prefilledProject}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a project" />

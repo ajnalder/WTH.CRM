@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { ProjectTimeline } from '@/components/project/ProjectTimeline';
 import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
 import { ProjectTasksList } from '@/components/project/ProjectTasksList';
-import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
+import { NewTaskForm } from '@/components/NewTaskForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
@@ -18,7 +19,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, isLoading, error, updateProject } = useProjects();
-  const { createTask, isCreating, tasks } = useTasks();
+  const { tasks } = useTasks();
   
   if (isLoading) {
     return (
@@ -77,21 +78,6 @@ const ProjectDetail = () => {
     ? calculateProjectDuration(transformedProject.startDate, transformedProject.dueDate, transformedProject.isRetainer) 
     : 0;
 
-  const handleCreateSingleTask = () => {
-    console.log('Creating single task from project:', transformedProject);
-    
-    createTask({
-      title: transformedProject.name,
-      description: transformedProject.description || null,
-      assignee: null,
-      due_date: transformedProject.dueDate || null,
-      tags: null,
-      project: transformedProject.name,
-      status: 'To Do',
-      progress: transformedProject.progress || 0,
-    });
-  };
-  
   const handleDueDateUpdate = (dueDate: string | null) => {
     updateProject({
       projectId: transformedProject.id,
@@ -117,18 +103,16 @@ const ProjectDetail = () => {
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             
             <div className="flex gap-3">
-              <Button 
-                onClick={handleCreateSingleTask}
-                disabled={isCreating}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isCreating ? 'Creating...' : 'Add task'}
-              </Button>
+              <NewTaskForm 
+                prefilledProject={transformedProject.name}
+                triggerText="Add task"
+                triggerVariant="default"
+              />
               
-              <AddTaskToProjectDialog 
-                projectId={transformedProject.id} 
-                projectName={transformedProject.name}
+              <NewTaskForm 
+                prefilledProject={transformedProject.name}
                 triggerText="Add multiple tasks"
+                triggerVariant="outline"
               />
             </div>
             
