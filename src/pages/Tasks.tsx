@@ -19,7 +19,7 @@ const Tasks = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -29,7 +29,7 @@ const Tasks = () => {
 
   if (error) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Tasks</h1>
           <p className="text-gray-600 mb-4">There was an error loading the tasks.</p>
@@ -118,7 +118,7 @@ const Tasks = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
@@ -127,30 +127,30 @@ const Tasks = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border-0 p-4">
           <div className="text-2xl font-bold text-gray-900">{statusCounts.total}</div>
           <div className="text-sm text-gray-600">Total Tasks</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border-0 p-4">
           <div className="text-2xl font-bold text-blue-600">{statusCounts.todo}</div>
           <div className="text-sm text-gray-600">To Do</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border-0 p-4">
           <div className="text-2xl font-bold text-orange-600">{statusCounts.inProgress}</div>
           <div className="text-sm text-gray-600">In Progress</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border-0 p-4">
           <div className="text-2xl font-bold text-purple-600">{statusCounts.review}</div>
           <div className="text-sm text-gray-600">Review</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border-0 p-4">
           <div className="text-2xl font-bold text-green-600">{statusCounts.done}</div>
           <div className="text-sm text-gray-600">Done</div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 mb-6">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
             <div className="relative flex-1 max-w-md">
@@ -209,7 +209,7 @@ const Tasks = () => {
       </div>
 
       {/* Active Tasks Display */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">
             Active Tasks ({filteredActiveTasks.length})
@@ -239,7 +239,7 @@ const Tasks = () => {
 
       {/* Completed Tasks Section */}
       {filteredCompletedTasks.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">
               Finished Tasks ({filteredCompletedTasks.length})

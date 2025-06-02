@@ -30,7 +30,7 @@ const Team = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -42,7 +42,7 @@ const Team = () => {
   const onlineMembers = teamMembers.filter(member => member.status === 'online').length;
 
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Team</h1>
@@ -53,10 +53,10 @@ const Team = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users size={20} />
+                <Users size={20} className="text-blue-600" />
                 Team Members
               </CardTitle>
             </CardHeader>
@@ -67,7 +67,7 @@ const Team = () => {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Team Stats</CardTitle>
             </CardHeader>
@@ -87,17 +87,17 @@ const Team = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Mail size={16} />
+              <Button variant="outline" className="w-full justify-start gap-2 hover:bg-white/80">
+                <Mail size={16} className="text-blue-600" />
                 Send Team Email
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Phone size={16} />
+              <Button variant="outline" className="w-full justify-start gap-2 hover:bg-white/80">
+                <Phone size={16} className="text-green-600" />
                 Schedule Team Call
               </Button>
             </CardContent>

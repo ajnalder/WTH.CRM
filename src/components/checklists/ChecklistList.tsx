@@ -1,75 +1,81 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Plus, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Eye, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useChecklists } from '@/hooks/useChecklists';
 import { useClients } from '@/hooks/useClients';
-import { UpdateTemplateButton } from './UpdateTemplateButton';
 import type { ChecklistTemplate, ClientChecklistWithClient } from '@/types/checklist';
-import { format } from 'date-fns';
 
 interface ChecklistListProps {
   onViewChecklist: (checklist: ClientChecklistWithClient, template: ChecklistTemplate) => void;
 }
 
 export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist }) => {
-  const { templates, templatesLoading, clientChecklists, checklistsLoading, createChecklist, deleteChecklist } = useChecklists();
+  const { clientChecklists, checklistTemplates, createClientChecklist, isLoading } = useChecklists();
   const { clients } = useClients();
-  const [selectedClient, setSelectedClient] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [selectedClient, setSelectedClient] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
-  const handleCreateChecklist = () => {
+  const handleCreateChecklist = async () => {
     if (!selectedClient || !selectedTemplate) return;
     
-    const template = templates.find(t => t.id === selectedTemplate);
-    if (!template) return;
-
-    createChecklist({
-      clientId: selectedClient,
-      templateId: selectedTemplate,
-      templateName: template.name
+    await createClientChecklist({
+      client_id: selectedClient,
+      template_id: selectedTemplate
     });
-
+    
+    // Reset selections
     setSelectedClient('');
     setSelectedTemplate('');
   };
 
-  const getProgress = (checklist: ClientChecklistWithClient) => {
-    const template = templates.find(t => t.id === checklist.template_id);
-    if (!template) return 0;
-    return (checklist.completed_items.length / template.items.length) * 100;
+  const getCompletionStats = (checklist: ClientChecklistWithClient) => {
+    const completedItems = checklist.completed_items || [];
+    const template = checklistTemplates.find(t => t.id === checklist.template_id);
+    const totalItems = template?.items?.length || 0;
+    const completed = completedItems.length;
+    const percentage = totalItems > 0 ? Math.round((completed / totalItems) * 100) : 0;
+    
+    return { completed, total: totalItems, percentage };
   };
 
-  const getTemplate = (templateId: string) => {
-    return templates.find(t => t.id === templateId);
+  const getStatusIcon = (percentage: number) => {
+    if (percentage === 100) return <CheckCircle className="text-green-600" size={20} />;
+    if (percentage > 0) return <Clock className="text-orange-600" size={20} />;
+    return <AlertCircle className="text-gray-400" size={20} />;
   };
 
-  if (templatesLoading || checklistsLoading) {
-    return <div>Loading...</div>;
+  const getStatusBadge = (percentage: number) => {
+    if (percentage === 100) return <Badge className="bg-green-100 text-green-800">Complete</Badge>;
+    if (percentage > 0) return <Badge className="bg-orange-100 text-orange-800">In Progress</Badge>;
+    return <Badge variant="secondary">Not Started</Badge>;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Create New Checklist */}
+      <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Create New Checklist</CardTitle>
-              <CardDescription>
-                Start a new site launch checklist for a client
-              </CardDescription>
-            </div>
-            <UpdateTemplateButton />
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="text-blue-600" size={20} />
+            Create New Checklist
+          </CardTitle>
+          <p className="text-gray-600 text-sm">Start a new site launch checklist for a client</p>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Client</label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Client</label>
               <Select value={selectedClient} onValueChange={setSelectedClient}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a client" />
@@ -83,14 +89,15 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Template</label>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Template</label>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates.map((template) => (
+                  {checklistTemplates.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
                     </SelectItem>
@@ -98,103 +105,83 @@ export const ChecklistList: React.FC<ChecklistListProps> = ({ onViewChecklist })
                 </SelectContent>
               </Select>
             </div>
+
             <Button 
               onClick={handleCreateChecklist}
               disabled={!selectedClient || !selectedTemplate}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus size={16} className="mr-2" />
               Create Checklist
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Existing Checklists */}
+      <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>Client Checklists</CardTitle>
-          <CardDescription>
-            Manage site launch checklists for your clients
-          </CardDescription>
+          <CardTitle>Existing Checklists</CardTitle>
+          <p className="text-gray-600 text-sm">Manage and view site launch checklists</p>
         </CardHeader>
         <CardContent>
           {clientChecklists.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No checklists created yet. Create your first checklist above.
+            <div className="text-center py-8">
+              <AlertCircle className="text-gray-400 mx-auto mb-4" size={48} />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No checklists yet</h3>
+              <p className="text-gray-600">Create your first checklist to get started</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Template</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientChecklists.map((checklist) => {
-                  const progress = getProgress(checklist);
-                  const template = getTemplate(checklist.template_id);
-                  
-                  return (
-                    <TableRow key={checklist.id}>
-                      <TableCell className="font-medium">
-                        {checklist.client.company}
-                      </TableCell>
-                      <TableCell>{checklist.template_name}</TableCell>
-                      <TableCell>
-                        <Badge variant={checklist.status === 'completed' ? 'default' : 'secondary'}>
-                          {checklist.status === 'completed' ? (
-                            <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Completed
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-3 w-3 mr-1" />
-                              In Progress
-                            </>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Progress value={progress} className="w-20" />
-                          <span className="text-sm text-muted-foreground">
-                            {Math.round(progress)}%
-                          </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {clientChecklists.map((checklist) => {
+                const template = checklistTemplates.find(t => t.id === checklist.template_id);
+                const stats = getCompletionStats(checklist);
+                
+                return (
+                  <Card key={checklist.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{checklist.client.company}</h3>
+                          <p className="text-sm text-gray-600">{template?.name}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(checklist.created_at), 'MMM dd, yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => template && onViewChecklist(checklist, template)}
-                            disabled={!template}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            {checklist.status === 'completed' ? 'View' : 'Continue'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteChecklist(checklist.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        {getStatusIcon(stats.percentage)}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Progress</span>
+                          <span className="font-medium">{stats.completed}/{stats.total} items</span>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${stats.percentage}%` }}
+                          />
+                        </div>
+                        <div className="text-center text-sm font-medium text-gray-700">
+                          {stats.percentage}% Complete
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        {getStatusBadge(stats.percentage)}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewChecklist(checklist, template!)}
+                          className="hover:bg-blue-50"
+                        >
+                          <Eye size={16} className="mr-2 text-blue-600" />
+                          View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
