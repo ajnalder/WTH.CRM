@@ -1,12 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, DollarSign } from 'lucide-react';
+import { FileText, DollarSign } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { Client } from '@/hooks/useClients';
-import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 import { InvoiceTable } from '@/components/invoices/InvoiceTable';
 
 interface InvoicesTabProps {
@@ -14,7 +11,6 @@ interface InvoicesTabProps {
 }
 
 const InvoicesTab = ({ client }: InvoicesTabProps) => {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { invoices, isLoading } = useInvoices(client.id);
 
   if (isLoading) {
@@ -31,33 +27,10 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
     .reduce((sum, invoice) => sum + invoice.balance_due, 0);
   const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
 
-  // Convert the Client type to match the expected format for CreateInvoiceDialog
-  const clientsForDialog = [{
-    id: client.id,
-    user_id: client.user_id,
-    name: client.name,
-    email: client.email,
-    phone: client.phone,
-    company: client.company,
-    industry: client.industry,
-    status: client.status,
-    projects_count: client.projects_count,
-    total_value: client.total_value,
-    joined_date: client.joined_date,
-    avatar: client.avatar,
-    gradient: client.gradient,
-    created_at: client.created_at,
-    updated_at: client.updated_at
-  }];
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Client Invoices</h3>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus size={16} className="mr-2" />
-          Create Invoice
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -109,12 +82,6 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
           <InvoiceTable invoices={invoices} />
         </CardContent>
       </Card>
-
-      <CreateInvoiceDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        clients={clientsForDialog}
-      />
     </div>
   );
 };
