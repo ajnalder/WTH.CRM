@@ -5,11 +5,20 @@ import ClientDetailHeader from '@/components/client/ClientDetailHeader';
 import ClientDetailTabs from '@/components/client/ClientDetailTabs';
 import ClientDetailProvider from '@/components/client/ClientDetailProvider';
 import ClientDetailContent from '@/components/client/ClientDetailContent';
+import { useClients } from '@/hooks/useClients';
 
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const { deleteClient } = useClients();
+
+  const handleDeleteClient = () => {
+    if (id) {
+      deleteClient(id);
+      navigate('/clients');
+    }
+  };
 
   if (!id) {
     return (
@@ -60,6 +69,7 @@ const ClientDetail = () => {
                 clientIndustry={client.industry}
                 clientAvatar={client.avatar}
                 clientGradient={client.gradient}
+                onDeleteClient={handleDeleteClient}
               />
               <ClientDetailTabs
                 activeTab={activeTab}
