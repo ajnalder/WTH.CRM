@@ -24,7 +24,6 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const finalDurationRef = useRef(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const scrollPositionRef = useRef(0);
 
   const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
     const slotHeight = 69; // Each 15-minute slot height
@@ -38,9 +37,6 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Store current scroll position
-    scrollPositionRef.current = window.scrollY;
     
     // Clear any pending updates
     if (updateTimeoutRef.current) {
@@ -98,28 +94,27 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       // Only update if duration actually changed
       if (finalDurationRef.current !== scheduledTask.duration) {
-        // Use a longer delay to prevent flash and scroll jump
+        // Capture scroll position right before the update
+        const scrollBeforeUpdate = window.scrollY;
+        
         updateTimeoutRef.current = setTimeout(() => {
-          // Preserve scroll position before update
-          const currentScrollY = window.scrollY;
-          
           updateTaskDuration(scheduledTask.task_id, finalDurationRef.current);
           
-          // Restore scroll position after update
+          // Restore scroll position immediately after the update
           requestAnimationFrame(() => {
-            window.scrollTo(0, currentScrollY);
+            requestAnimationFrame(() => {
+              window.scrollTo(0, scrollBeforeUpdate);
+            });
           });
           
           updateTimeoutRef.current = null;
-        }, 300);
+        }, 100);
       }
       
-      // Set resizing to false with delay but restore scroll immediately
+      // Set resizing to false with minimal delay
       setTimeout(() => {
         setIsResizing(false);
-        // Ensure scroll position is maintained
-        window.scrollTo(0, scrollPositionRef.current);
-      }, 350);
+      }, 150);
       
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
