@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface ResizeHandleProps {
@@ -18,44 +18,50 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   onTempDurationChange
 }) => {
   const startYRef = useRef(0);
-  const initialDurationRef = useRef(0);
-  const [tempDuration, setTempDuration] = useState(scheduledTask.duration);
+  const startHeightRef = useRef(0);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
+    const slotHeight = 69; // Each 15-minute slot
+    const slotsChanged = Math.round(pixelDelta / slotHeight);
+    const newDuration = startDuration + (slotsChanged * 15);
+    
+    // Clamp between 15 minutes and 8 hours
+    return Math.max(15, Math.min(newDuration, 480));
+  }, []);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Only handle if this is specifically the resize handle
-    if (!e.currentTarget.classList.contains('resize-handle')) {
-      return;
-    }
-    
     setIsResizing(true);
     startYRef.current = e.clientY;
-    initialDurationRef.current = scheduledTask.duration;
-    setTempDuration(scheduledTask.duration);
+    
+    // Find the card element to directly manipulate its height
+    const handle = e.currentTarget as HTMLElement;
+    cardRef.current = handle.closest('[data-task-card]') as HTMLDivElement;
+    
+    if (cardRef.current) {
+      startHeightRef.current = cardRef.current.offsetHeight;
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       
       const deltaY = e.clientY - startYRef.current;
-      const slotHeight = 69; // Each 15-minute slot is 69px
+      const snappedDuration = snapToSlot(deltaY, scheduledTask.duration);
       
-      // Calculate how many 15-minute increments we've moved
-      const incrementsMoved = Math.round(deltaY / slotHeight);
+      // Calculate new height
+      const slots = Math.ceil(snappedDuration / 15);
+      const newHeight = Math.max(60, slots * 69 - 8);
       
-      // Calculate new duration based on 15-minute increments
-      const newDuration = initialDurationRef.current + (incrementsMoved * 15);
+      // Directly update the card height for immediate feedback
+      if (cardRef.current) {
+        cardRef.current.style.height = `${newHeight}px`;
+      }
       
-      // Clamp between 15 minutes and 8 hours (480 minutes)
-      const clampedDuration = Math.max(15, Math.min(newDuration, 480));
-      
-      // Ensure it's always a multiple of 15 minutes
-      const snappedDuration = Math.round(clampedDuration / 15) * 15;
-      
-      // Update immediately for visual feedback
-      setTempDuration(snappedDuration);
+      // Update the duration display
       onTempDurationChange(snappedDuration);
     };
 
@@ -65,9 +71,20 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       setIsResizing(false);
       
+      const deltaY = e.clientY - startYRef.current;
+      const finalDuration = snapToSlot(deltaY, scheduledTask.duration);
+      
+      // Reset the direct style manipulation
+      if (cardRef.current) {
+        cardRef.current.style.height = '';
+      }
+      
       // Only update database if duration actually changed
-      if (tempDuration !== scheduledTask.duration) {
-        updateTaskDuration(scheduledTask.task_id, tempDuration);
+      if (finalDuration !== scheduledTask.duration) {
+        updateTaskDuration(scheduledTask.task_id, finalDuration);
+      } else {
+        // Reset to original duration if no change
+        onTempDurationChange(scheduledTask.duration);
       }
       
       document.removeEventListener('mousemove', handleMouseMove);
@@ -78,10 +95,9 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Reset temp duration when scheduled task changes (from external updates)
+  // Reset when not resizing
   React.useEffect(() => {
     if (!isResizing) {
-      setTempDuration(scheduledTask.duration);
       onTempDurationChange(scheduledTask.duration);
     }
   }, [scheduledTask.duration, isResizing, onTempDurationChange]);
@@ -98,7 +114,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gray-600 rounded-t pointer-events-none"></div>
       {isResizing && (
         <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30">
-          {tempDuration}min
+          {Math.round(((cardRef.current?.offsetHeight || 0) + 8) / 69) * 15}min
         </div>
       )}
     </div>

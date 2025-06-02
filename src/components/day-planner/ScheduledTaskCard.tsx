@@ -74,16 +74,14 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 
   const calculateHeight = (duration: number) => {
     const slots = Math.ceil(duration / 15);
-    // Each time slot is 60px + 8px padding + 1px border = 69px total
-    // Subtract 8px for the bottom margin to prevent overlap
-    return `${slots * 69 - 8}px`;
+    return `${Math.max(60, slots * 69 - 8)}px`;
   };
 
   const handleTempDurationChange = (duration: number) => {
     setDisplayDuration(duration);
   };
 
-  // Reset display duration when scheduled task changes (from external updates)
+  // Reset display duration when scheduled task changes
   React.useEffect(() => {
     if (!isResizing) {
       setDisplayDuration(scheduledTask.duration);
@@ -100,16 +98,16 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
+          data-task-card
           className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle(client, scheduledTask)} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
-          } ${isResizing ? 'select-none' : ''}`}
+          } ${isResizing ? 'select-none transition-none' : ''}`}
           style={{ 
-            height: calculateHeight(displayDuration),
+            height: isResizing ? undefined : calculateHeight(displayDuration),
             minHeight: '60px',
             top: '4px',
             left: '4px',
             right: '4px',
-            // Let react-beautiful-dnd handle all transforms during drag
             ...provided.draggableProps.style
           }}
           onMouseEnter={() => !isResizing && setShowControls(true)}
