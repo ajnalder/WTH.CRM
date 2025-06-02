@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, FileText } from 'lucide-react';
+import { Eye, Edit, FileText, Check } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Invoice } from '@/hooks/useInvoices';
+import { Invoice, useInvoices } from '@/hooks/useInvoices';
 import { useNavigate } from 'react-router-dom';
 
 interface InvoiceTableProps {
@@ -37,6 +37,17 @@ const getStatusColor = (status: string) => {
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
   const navigate = useNavigate();
+  const { updateInvoice } = useInvoices();
+
+  const handleMarkAsPaid = (invoiceId: string) => {
+    updateInvoice({
+      id: invoiceId,
+      updates: {
+        status: 'paid',
+        paid_date: new Date().toISOString().split('T')[0]
+      }
+    });
+  };
 
   return (
     <Table>
@@ -100,6 +111,17 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                 >
                   <Edit size={14} />
                 </Button>
+                {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleMarkAsPaid(invoice.id)}
+                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    title="Mark as Paid"
+                  >
+                    <Check size={14} />
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>
