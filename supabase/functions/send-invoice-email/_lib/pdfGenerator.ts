@@ -15,10 +15,32 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   const marginRight = 10;
   const marginTop = 10;
 
-  // Add company name as text since we can't easily load external images in Deno
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('What the Heck', marginLeft, marginTop + 15);
+  // Add logo with proper aspect ratio - using base64 encoded logo
+  try {
+    // Using a direct fetch approach that works in Deno environment
+    const logoUrl = 'https://fluxvodjqhfdkzwlmnhb.supabase.co/storage/v1/object/public/project-files/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png';
+    
+    const logoResponse = await fetch(logoUrl);
+    if (logoResponse.ok) {
+      const logoBlob = await logoResponse.blob();
+      const logoArrayBuffer = await logoBlob.arrayBuffer();
+      const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
+      
+      // Calculate logo dimensions maintaining proper aspect ratio
+      // Original logo is 500px x 82px which is approximately 6.1:1 ratio
+      const logoWidth = 60;
+      const logoHeight = 9.8; // Maintain 6.1:1 aspect ratio (60/6.1 ≈ 9.8)
+      pdf.addImage(`data:image/png;base64,${logoBase64}`, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
+    } else {
+      throw new Error('Logo fetch failed');
+    }
+  } catch (error) {
+    console.warn('Could not load logo for PDF, using text fallback:', error);
+    // Add text fallback if logo fails to load
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('What the Heck', marginLeft, marginTop + 15);
+  }
 
   // Header with invoice title
   pdf.setFontSize(24);
@@ -44,7 +66,7 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   pdf.setFont('helvetica', 'normal');
   pdf.text('125-651-445', rightAlign, marginTop + 60, { align: 'right' });
   
-  // Invoice Date - moved up under GST Number
+  // Invoice Date - positioned under GST Number
   pdf.setFont('helvetica', 'bold');
   pdf.text('Invoice Date', rightAlign, marginTop + 76, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
@@ -97,8 +119,8 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
   pdf.text('Description', marginLeft, yPos);
-  pdf.text('Qty', pageWidth - 95, yPos, { align: 'center' });
-  pdf.text('Rate', pageWidth - 65, yPos, { align: 'center' });
+  pdf.text('Qty', pageWidth - 110, yPos, { align: 'center' });
+  pdf.text('Rate', pageWidth - 75, yPos, { align: 'center' });
   pdf.text('Amount', pageWidth - marginRight, yPos, { align: 'right' });
   
   // Underline for table header
@@ -112,11 +134,11 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     yPos += 12;
     
     // Handle long descriptions with text wrapping
-    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 160);
+    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 150);
     pdf.text(descriptionLines, marginLeft, yPos);
     
-    pdf.text(item.quantity.toString(), pageWidth - 95, yPos, { align: 'center' });
-    pdf.text(`$${item.rate.toLocaleString()}`, pageWidth - 65, yPos, { align: 'center' });
+    pdf.text(item.quantity.toString(), pageWidth - 110, yPos, { align: 'center' });
+    pdf.text(`$${item.rate.toLocaleString()}`, pageWidth - 75, yPos, { align: 'center' });
     pdf.text(`$${item.amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
     
     if (descriptionLines.length > 1) {
