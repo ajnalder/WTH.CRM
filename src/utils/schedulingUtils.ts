@@ -68,33 +68,7 @@ export const updateTaskDurationWithShifting = (
     // Task is getting longer - need to shift conflicting tasks down
     const slotsExpanded = newSlotsNeeded - oldSlotsNeeded;
     
-    // Find all tasks that start at or after the old end time, sorted by start time
-    const tasksToShift = updatedTasks
-      .filter(task => {
-        if (task.taskId === taskId) return false;
-        const taskStartIndex = timeSlots.indexOf(task.startTime);
-        return taskStartIndex >= oldEndIndex;
-      })
-      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
-    
-    // Shift each task down by the number of slots expanded
-    tasksToShift.forEach(taskToShift => {
-      const currentStartIndex = timeSlots.indexOf(taskToShift.startTime);
-      const newStartIndex = currentStartIndex + slotsExpanded;
-      
-      // Make sure we don't go beyond the available time slots
-      if (newStartIndex < timeSlots.length) {
-        const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
-        if (taskToShiftIndex !== -1) {
-          updatedTasks[taskToShiftIndex] = {
-            ...updatedTasks[taskToShiftIndex],
-            startTime: timeSlots[newStartIndex]
-          };
-        }
-      }
-    });
-    
-    // Also shift any tasks that are now conflicting with the expanded task
+    // Find all tasks that would conflict with the expanded task
     const conflictingTasks = updatedTasks
       .filter(task => {
         if (task.taskId === taskId) return false;
@@ -104,8 +78,10 @@ export const updateTaskDurationWithShifting = (
         
         // Check if this task overlaps with the expanded area
         return (taskStartIndex < newEndIndex && taskEndIndex > oldEndIndex);
-      });
+      })
+      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
     
+    // Shift conflicting tasks down
     conflictingTasks.forEach(conflictingTask => {
       const conflictingTaskIndex = updatedTasks.findIndex(t => t.taskId === conflictingTask.taskId);
       if (conflictingTaskIndex !== -1) {
@@ -119,8 +95,36 @@ export const updateTaskDurationWithShifting = (
       }
     });
     
+    // Also shift any subsequent tasks that need to move
+    const tasksToShift = updatedTasks
+      .filter(task => {
+        if (task.taskId === taskId) return false;
+        if (conflictingTasks.some(ct => ct.taskId === task.taskId)) return false;
+        const taskStartIndex = timeSlots.indexOf(task.startTime);
+        return taskStartIndex >= oldEndIndex;
+      })
+      .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
+    
+    tasksToShift.forEach(taskToShift => {
+      const currentStartIndex = timeSlots.indexOf(taskToShift.startTime);
+      const newStartIndex = currentStartIndex + slotsExpanded;
+      
+      if (newStartIndex < timeSlots.length) {
+        const taskToShiftIndex = updatedTasks.findIndex(t => t.taskId === taskToShift.taskId);
+        if (taskToShiftIndex !== -1) {
+          updatedTasks[taskToShiftIndex] = {
+            ...updatedTasks[taskToShiftIndex],
+            startTime: timeSlots[newStartIndex]
+          };
+        }
+      }
+    });
+    
   } else if (newDuration < oldDuration) {
     // Task is getting shorter - move subsequent tasks up to fill the gap
+    const slotsFreed = oldSlotsNeeded - newSlotsNeeded;
+    
+    // Find all tasks that start at or after the old end time
     const tasksToMoveUp = updatedTasks
       .filter(task => {
         if (task.taskId === taskId) return false;
@@ -129,19 +133,32 @@ export const updateTaskDurationWithShifting = (
       })
       .sort((a, b) => timeSlots.indexOf(a.startTime) - timeSlots.indexOf(b.startTime));
     
-    // Move each subsequent task up to fill the gap
-    const slotsFreed = oldSlotsNeeded - newSlotsNeeded;
+    // Move each subsequent task up to fill the gap, but only if there's no conflict
     tasksToMoveUp.forEach(taskToMove => {
       const currentStartIndex = timeSlots.indexOf(taskToMove.startTime);
-      const newStartIndex = Math.max(newEndIndex, currentStartIndex - slotsFreed);
+      const potentialNewStartIndex = Math.max(newEndIndex, currentStartIndex - slotsFreed);
       
-      if (newStartIndex !== currentStartIndex && newStartIndex < timeSlots.length) {
-        const taskToMoveIndex = updatedTasks.findIndex(t => t.taskId === taskToMove.taskId);
-        if (taskToMoveIndex !== -1) {
-          updatedTasks[taskToMoveIndex] = {
-            ...updatedTasks[taskToMoveIndex],
-            startTime: timeSlots[newStartIndex]
-          };
+      // Check if this new position would be available
+      if (potentialNewStartIndex !== currentStartIndex && 
+          potentialNewStartIndex >= 0 && 
+          potentialNewStartIndex < timeSlots.length) {
+        
+        // Verify the slot is actually available
+        const wouldBeAvailable = isTimeSlotAvailable(
+          timeSlots[potentialNewStartIndex], 
+          taskToMove.duration, 
+          timeSlots, 
+          updatedTasks.filter(t => t.taskId !== taskToMove.taskId)
+        );
+        
+        if (wouldBeAvailable) {
+          const taskToMoveIndex = updatedTasks.findIndex(t => t.taskId === taskToMove.taskId);
+          if (taskToMoveIndex !== -1) {
+            updatedTasks[taskToMoveIndex] = {
+              ...updatedTasks[taskToMoveIndex],
+              startTime: timeSlots[potentialNewStartIndex]
+            };
+          }
         }
       }
     });
