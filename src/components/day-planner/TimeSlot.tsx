@@ -40,12 +40,12 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`flex-1 ml-4 h-[60px] border-2 rounded-lg transition-all duration-200 relative ${
+            className={`flex-1 ml-4 h-[60px] border-2 rounded-lg transition-all duration-300 relative ${
               snapshot.isDraggingOver
-                ? 'border-blue-400 bg-blue-50 border-solid shadow-md'
+                ? 'border-blue-400 bg-blue-50 border-solid shadow-lg scale-102 ring-2 ring-blue-200'
                 : isOccupied
                 ? 'border-transparent bg-transparent'
-                : 'border-gray-200 border-dashed hover:border-gray-300'
+                : 'border-gray-200 border-dashed hover:border-gray-300 hover:bg-gray-25'
             }`}
           >
             {scheduledTask && isFirstSlot ? (
@@ -65,7 +65,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
               )
             )}
             {snapshot.isDraggingOver && !isOccupied && (
-              <div className="flex items-center justify-center h-full text-blue-600 text-sm font-medium">
+              <div className="flex items-center justify-center h-full text-blue-600 text-sm font-medium animate-pulse">
                 Drop here
               </div>
             )}

@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import type { ScheduledTask } from '@/types/dayPlanner';
 
 interface ResizeHandleProps {
@@ -18,11 +18,12 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   onTempDurationChange
 }) => {
   const startYRef = useRef(0);
-  const startHeightRef = useRef(0);
+  const startDurationRef = useRef(0);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
 
   const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
-    const slotHeight = 69; // Each 15-minute slot
+    const slotHeight = 69; // Each 15-minute slot height
     const slotsChanged = Math.round(pixelDelta / slotHeight);
     const newDuration = startDuration + (slotsChanged * 15);
     
@@ -30,27 +31,27 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     return Math.max(15, Math.min(newDuration, 480));
   }, []);
 
-  const handleResizeStart = (e: React.MouseEvent) => {
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    isDraggingRef.current = true;
     setIsResizing(true);
     startYRef.current = e.clientY;
+    startDurationRef.current = scheduledTask.duration;
     
-    // Find the card element to directly manipulate its height
+    // Find the card element
     const handle = e.currentTarget as HTMLElement;
     cardRef.current = handle.closest('[data-task-card]') as HTMLDivElement;
-    
-    if (cardRef.current) {
-      startHeightRef.current = cardRef.current.offsetHeight;
-    }
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      
       e.preventDefault();
       e.stopPropagation();
       
       const deltaY = e.clientY - startYRef.current;
-      const snappedDuration = snapToSlot(deltaY, scheduledTask.duration);
+      const snappedDuration = snapToSlot(deltaY, startDurationRef.current);
       
       // Calculate new height
       const slots = Math.ceil(snappedDuration / 15);
@@ -59,27 +60,32 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       // Directly update the card height for immediate feedback
       if (cardRef.current) {
         cardRef.current.style.height = `${newHeight}px`;
+        cardRef.current.style.transition = 'none'; // Disable transitions during drag
       }
       
-      // Update the duration display
+      // Update the duration display without triggering re-renders
       onTempDurationChange(snappedDuration);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      
       e.preventDefault();
       e.stopPropagation();
       
+      isDraggingRef.current = false;
       setIsResizing(false);
       
       const deltaY = e.clientY - startYRef.current;
-      const finalDuration = snapToSlot(deltaY, scheduledTask.duration);
+      const finalDuration = snapToSlot(deltaY, startDurationRef.current);
       
-      // Reset the direct style manipulation
+      // Reset the direct style manipulation and re-enable transitions
       if (cardRef.current) {
         cardRef.current.style.height = '';
+        cardRef.current.style.transition = '';
       }
       
-      // Only update database if duration actually changed
+      // Only update if duration actually changed
       if (finalDuration !== scheduledTask.duration) {
         updateTaskDuration(scheduledTask.task_id, finalDuration);
       } else {
@@ -87,17 +93,18 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
         onTempDurationChange(scheduledTask.duration);
       }
       
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      document.removeEventListener('mouseup', handleMouseUp, { capture: true });
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
+    // Use capture: true to ensure we get the events even if other elements interfere
+    document.addEventListener('mousemove', handleMouseMove, { capture: true });
+    document.addEventListener('mouseup', handleMouseUp, { capture: true });
+  }, [scheduledTask.duration, scheduledTask.task_id, setIsResizing, onTempDurationChange, snapToSlot, updateTaskDuration]);
 
-  // Reset when not resizing
+  // Reset when not resizing - but prevent unnecessary re-renders
   React.useEffect(() => {
-    if (!isResizing) {
+    if (!isResizing && !isDraggingRef.current) {
       onTempDurationChange(scheduledTask.duration);
     }
   }, [scheduledTask.duration, isResizing, onTempDurationChange]);
@@ -113,7 +120,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     >
       <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gray-600 rounded-t pointer-events-none"></div>
       {isResizing && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30">
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30 pointer-events-none">
           {Math.round(((cardRef.current?.offsetHeight || 0) + 8) / 69) * 15}min
         </div>
       )}

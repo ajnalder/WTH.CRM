@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { TaskCardContent } from './TaskCardContent';
 import { ResizeHandle } from './ResizeHandle';
@@ -26,6 +26,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [displayDuration, setDisplayDuration] = useState(scheduledTask.duration);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const getCustomColor = (color: string) => {
     switch (color) {
@@ -77,16 +78,25 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     return `${Math.max(60, slots * 69 - 8)}px`;
   };
 
-  const handleTempDurationChange = (duration: number) => {
+  const handleTempDurationChange = React.useCallback((duration: number) => {
     setDisplayDuration(duration);
-  };
+  }, []);
 
-  // Reset display duration when scheduled task changes
+  // Reset display duration when scheduled task changes - but prevent during resize
   React.useEffect(() => {
     if (!isResizing) {
       setDisplayDuration(scheduledTask.duration);
     }
   }, [scheduledTask.duration, isResizing]);
+
+  // Memoize the style object to prevent unnecessary re-renders
+  const cardStyle = React.useMemo(() => ({
+    height: isResizing ? undefined : calculateHeight(displayDuration),
+    minHeight: '60px',
+    top: '4px',
+    left: '4px',
+    right: '4px',
+  }), [displayDuration, isResizing]);
 
   return (
     <Draggable 
@@ -96,18 +106,17 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     >
       {(provided, snapshot) => (
         <div
-          ref={provided.innerRef}
+          ref={(el) => {
+            provided.innerRef(el);
+            cardRef.current = el;
+          }}
           {...provided.draggableProps}
           data-task-card
           className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle(client, scheduledTask)} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
           } ${isResizing ? 'select-none transition-none' : ''}`}
           style={{ 
-            height: isResizing ? undefined : calculateHeight(displayDuration),
-            minHeight: '60px',
-            top: '4px',
-            left: '4px',
-            right: '4px',
+            ...cardStyle,
             ...provided.draggableProps.style
           }}
           onMouseEnter={() => !isResizing && setShowControls(true)}
