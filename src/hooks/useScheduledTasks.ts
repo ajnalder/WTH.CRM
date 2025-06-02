@@ -97,16 +97,20 @@ export const useScheduledTasks = (selectedDate: string) => {
   const updateScheduledTasks = async (newTasks: ScheduledTask[]) => {
     setScheduledTasks(newTasks);
     
-    // Remove all existing tasks for this date and re-add the new ones
     try {
-      await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Delete all existing tasks for this date first
+      const { error: deleteError } = await supabase
         .from('scheduled_tasks')
         .delete()
-        .eq('scheduled_date', selectedDate);
+        .eq('scheduled_date', selectedDate)
+        .eq('user_id', user?.id);
 
+      if (deleteError) throw deleteError;
+
+      // Then insert the new tasks if any exist
       if (newTasks.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        
         const tasksToInsert = newTasks.map(task => ({
           id: task.id,
           task_id: task.taskId,
@@ -119,11 +123,11 @@ export const useScheduledTasks = (selectedDate: string) => {
           user_id: user?.id
         }));
 
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('scheduled_tasks')
           .insert(tasksToInsert);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
     } catch (error) {
       console.error('Error updating scheduled tasks:', error);
