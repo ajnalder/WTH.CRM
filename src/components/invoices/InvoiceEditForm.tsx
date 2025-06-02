@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Save, ArrowLeft } from 'lucide-react';
@@ -43,7 +41,6 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
     client_id: invoice.client_id,
     invoice_number: invoice.invoice_number,
     title: invoice.title,
-    description: invoice.description || '',
     status: invoice.status,
     issued_date: invoice.issued_date || '',
     due_date: invoice.due_date || '',
@@ -139,16 +136,6 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    rows={3}
                   />
                 </div>
 
