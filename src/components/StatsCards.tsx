@@ -68,7 +68,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
       {stats.map((stat, index) => (
         <div
           key={index}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+          className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
         >
           <div className="flex items-center justify-between">
             <div>
