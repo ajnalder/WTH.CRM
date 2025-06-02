@@ -46,6 +46,8 @@ export const useScheduledTasks = (selectedDate: string) => {
   // Save a scheduled task to the database
   const saveScheduledTask = async (task: ScheduledTask) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from('scheduled_tasks')
         .upsert({
@@ -57,7 +59,7 @@ export const useScheduledTasks = (selectedDate: string) => {
           type: task.type,
           title: task.title,
           color: task.color,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (error) throw error;
@@ -103,6 +105,8 @@ export const useScheduledTasks = (selectedDate: string) => {
         .eq('scheduled_date', selectedDate);
 
       if (newTasks.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser();
+        
         const tasksToInsert = newTasks.map(task => ({
           id: task.id,
           task_id: task.taskId,
@@ -112,7 +116,7 @@ export const useScheduledTasks = (selectedDate: string) => {
           type: task.type,
           title: task.title,
           color: task.color,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         }));
 
         const { error } = await supabase
