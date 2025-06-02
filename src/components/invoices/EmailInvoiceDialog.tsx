@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmailInvoiceDialogProps {
   invoice: Invoice;
@@ -80,19 +81,37 @@ What the Heck Team`);
     setSending(true);
     
     try {
-      // Simulate email sending - in a real app, this would call an API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Sending invoice email via Supabase Edge Function...');
       
-      toast({
-        title: "Success",
-        description: `Invoice emailed to ${email}`,
+      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
+        body: {
+          to: email.trim(),
+          subject: subject,
+          message: message,
+          invoiceNumber: invoice.invoice_number,
+          clientName: client?.company || client?.name || 'Customer'
+        }
       });
-      
-      setOpen(false);
-    } catch (error) {
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: `Invoice emailed successfully to ${email}`,
+        });
+        
+        setOpen(false);
+      } else {
+        throw new Error(data.error || 'Failed to send email');
+      }
+    } catch (error: any) {
+      console.error('Error sending email:', error);
       toast({
         title: "Error",
-        description: "Failed to send email",
+        description: error.message || "Failed to send email. Please try again.",
         variant: "destructive",
       });
     } finally {
