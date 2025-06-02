@@ -23,7 +23,9 @@ const TaskDetails = () => {
     isLoading: taskLoading, 
     error: taskError, 
     updateTaskDetails, 
-    isUpdatingDetails
+    isUpdatingDetails,
+    updateTaskStatus,
+    isUpdatingStatus
   } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
@@ -76,6 +78,10 @@ const TaskDetails = () => {
     updateTaskDetails(data);
   };
 
+  const handleStatusUpdate = (status: string) => {
+    updateTaskStatus(status);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -90,7 +96,11 @@ const TaskDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            <TaskDetailsMain task={task} />
+            <TaskDetailsMain 
+              task={task} 
+              onStatusUpdate={handleStatusUpdate}
+              isUpdatingStatus={isUpdatingStatus}
+            />
 
             <TaskTimeEntries timeEntries={timeEntries} />
           </div>

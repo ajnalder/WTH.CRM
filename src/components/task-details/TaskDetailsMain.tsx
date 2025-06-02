@@ -5,24 +5,21 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ExternalLink } from 'lucide-react';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { TaskStatusDropdown } from './TaskStatusDropdown';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskDetailsMainProps {
   task: TaskWithClient;
+  onStatusUpdate?: (status: string) => void;
+  isUpdatingStatus?: boolean;
 }
 
-export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ task }) => {
+export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ 
+  task, 
+  onStatusUpdate,
+  isUpdatingStatus = false 
+}) => {
   const { teamMembers } = useTeamMembers();
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'To Do': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'In Progress': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Review': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'Done': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   const formatDisplayDate = (dateString: string | null) => {
     if (!dateString) return 'No due date';
@@ -60,10 +57,20 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ task }) => {
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-2">Status</h3>
-            <Badge className={`text-xs ${getStatusColor(task.status)}`}>
-              {task.status}
-            </Badge>
+            {onStatusUpdate ? (
+              <TaskStatusDropdown
+                currentStatus={task.status}
+                onStatusUpdate={onStatusUpdate}
+                isUpdating={isUpdatingStatus}
+              />
+            ) : (
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Status</h3>
+                <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                  {task.status}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 
@@ -103,4 +110,14 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({ task }) => {
       </CardContent>
     </Card>
   );
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'To Do': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'In Progress': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'Review': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Done': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  }
 };
