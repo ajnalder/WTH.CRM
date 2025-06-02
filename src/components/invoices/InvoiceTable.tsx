@@ -11,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Invoice } from '@/types/invoiceTypes';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useNavigate } from 'react-router-dom';
@@ -51,99 +57,108 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Invoice #</TableHead>
-          <TableHead>Client</TableHead>
-          <TableHead>Title</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Due Date</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invoices.map((invoice) => (
-          <TableRow key={invoice.id}>
-            <TableCell className="font-medium">
-              <div className="flex items-center gap-2">
-                {invoice.invoice_number}
-                {invoice.last_emailed_at && (
-                  <Mail size={14} className="text-blue-500" title={`Last emailed: ${new Date(invoice.last_emailed_at).toLocaleString()}`} />
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              {(invoice as any).clients?.company || 'Unknown Client'}
-            </TableCell>
-            <TableCell>
-              <div>
-                <div className="font-medium">{invoice.title}</div>
-                {invoice.description && (
-                  <div className="text-sm text-gray-600">{invoice.description}</div>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div>
-                <div className="font-medium">${invoice.total_amount.toLocaleString()}</div>
-                <div className="text-xs text-gray-500">
-                  Inc. GST: ${invoice.subtotal_incl_gst.toLocaleString()}
+    <TooltipProvider>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice #</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Due Date</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice.id}>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  {invoice.invoice_number}
+                  {invoice.last_emailed_at && (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Mail size={14} className="text-blue-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Last emailed: {new Date(invoice.last_emailed_at).toLocaleString()}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <Badge className={getStatusColor(invoice.status)}>
-                {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'No due date'}
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/invoices/${invoice.id}`)}
-                >
-                  <Eye size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
-                >
-                  <Edit size={14} />
-                </Button>
-                {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+              </TableCell>
+              <TableCell>
+                {(invoice as any).clients?.company || 'Unknown Client'}
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{invoice.title}</div>
+                  {invoice.description && (
+                    <div className="text-sm text-gray-600">{invoice.description}</div>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">${invoice.total_amount.toLocaleString()}</div>
+                  <div className="text-xs text-gray-500">
+                    Inc. GST: ${invoice.subtotal_incl_gst.toLocaleString()}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(invoice.status)}>
+                  {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'No due date'}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleMarkAsPaid(invoice.id)}
-                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                    title="Mark as Paid"
+                    onClick={() => navigate(`/invoices/${invoice.id}`)}
                   >
-                    <Check size={14} />
+                    <Eye size={14} />
                   </Button>
-                )}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-        {invoices.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={7} className="text-center py-8">
-              <div className="text-gray-500">
-                <FileText size={48} className="mx-auto mb-4 text-gray-300" />
-                <p>No invoices found</p>
-                <p className="text-sm">Create your first invoice to get started</p>
-              </div>
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
+                  >
+                    <Edit size={14} />
+                  </Button>
+                  {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMarkAsPaid(invoice.id)}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      title="Mark as Paid"
+                    >
+                      <Check size={14} />
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {invoices.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8">
+                <div className="text-gray-500">
+                  <FileText size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>No invoices found</p>
+                  <p className="text-sm">Create your first invoice to get started</p>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TooltipProvider>
   );
 };
