@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { TaskCardContent } from './TaskCardContent';
@@ -61,14 +60,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     }
   };
 
-  const calculateHeight = (duration: number) => {
-    const slots = Math.ceil(duration / 15);
-    // Each time slot is 60px + 8px padding + 1px border = 69px total
-    // Subtract 8px for the bottom margin to prevent overlap
-    return `${slots * 69 - 8}px`;
-  };
-
-  const getCardStyle = () => {
+  const getCardStyle = (client: Client | undefined, scheduledTask: ScheduledTask) => {
     if (scheduledTask.task_type === 'custom') {
       return getCustomColor(scheduledTask.color || 'blue');
     }
@@ -78,6 +70,13 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     }
     
     return 'bg-white border-gray-200';
+  };
+
+  const calculateHeight = (duration: number) => {
+    const slots = Math.ceil(duration / 15);
+    // Each time slot is 60px + 8px padding + 1px border = 69px total
+    // Subtract 8px for the bottom margin to prevent overlap
+    return `${slots * 69 - 8}px`;
   };
 
   const handleTempDurationChange = (duration: number) => {
@@ -101,7 +100,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle()} ${
+          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle(client, scheduledTask)} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
           } ${isResizing ? 'select-none' : ''}`}
           style={{ 

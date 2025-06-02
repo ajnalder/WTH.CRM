@@ -42,26 +42,21 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       const deltaY = e.clientY - startYRef.current;
       const slotHeight = 69; // Each 15-minute slot is 69px
       
-      // Calculate how many slots we've moved
-      const slotsChanged = deltaY / slotHeight;
+      // Calculate how many 15-minute increments we've moved
+      const incrementsMoved = Math.round(deltaY / slotHeight);
       
-      // Always snap to 15-minute increments (round to nearest slot)
-      const snappedSlots = Math.round(slotsChanged);
+      // Calculate new duration based on 15-minute increments
+      const newDuration = initialDurationRef.current + (incrementsMoved * 15);
       
-      // Calculate new duration (each slot = 15 minutes)
-      const newDuration = initialDurationRef.current + (snappedSlots * 15);
-      
-      // Ensure minimum 15 minutes and maximum 8 hours (480 minutes)
+      // Clamp between 15 minutes and 8 hours (480 minutes)
       const clampedDuration = Math.max(15, Math.min(newDuration, 480));
       
       // Ensure it's always a multiple of 15 minutes
-      const finalDuration = Math.round(clampedDuration / 15) * 15;
+      const snappedDuration = Math.round(clampedDuration / 15) * 15;
       
-      // Only update if duration actually changed
-      if (finalDuration !== tempDuration) {
-        setTempDuration(finalDuration);
-        onTempDurationChange(finalDuration);
-      }
+      // Update immediately for visual feedback
+      setTempDuration(snappedDuration);
+      onTempDurationChange(snappedDuration);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -102,7 +97,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     >
       <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gray-600 rounded-t pointer-events-none"></div>
       {isResizing && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30">
           {tempDuration}min
         </div>
       )}
