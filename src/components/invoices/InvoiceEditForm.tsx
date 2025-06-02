@@ -47,7 +47,6 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
     status: invoice.status,
     issued_date: invoice.issued_date || '',
     due_date: invoice.due_date || '',
-    deposit_percentage: invoice.deposit_percentage,
     gst_rate: invoice.gst_rate
   });
 
@@ -194,31 +193,17 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="deposit_percentage">Deposit Percentage (%)</Label>
-                    <Input
-                      id="deposit_percentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.deposit_percentage}
-                      onChange={(e) => handleInputChange('deposit_percentage', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="gst_rate">GST Rate (%)</Label>
-                    <Input
-                      id="gst_rate"
-                      type="number"
-                      min="0"
-                      max="30"
-                      step="0.01"
-                      value={formData.gst_rate}
-                      onChange={(e) => handleInputChange('gst_rate', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gst_rate">GST Rate (%)</Label>
+                  <Input
+                    id="gst_rate"
+                    type="number"
+                    min="0"
+                    max="30"
+                    step="0.01"
+                    value={formData.gst_rate}
+                    onChange={(e) => handleInputChange('gst_rate', parseFloat(e.target.value) || 0)}
+                  />
                 </div>
               </form>
             </CardContent>
