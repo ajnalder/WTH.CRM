@@ -8,6 +8,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { validateDropboxUrl, sanitizeString } from '@/utils/validation';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskDropboxUrlEditorProps {
   currentDropboxUrl: string | null;
@@ -22,22 +24,48 @@ export const TaskDropboxUrlEditor: React.FC<TaskDropboxUrlEditorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(currentDropboxUrl || '');
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleSave = () => {
-    const trimmedValue = inputValue.trim();
+    const trimmedValue = sanitizeString(inputValue, 2048).trim();
+    
+    if (trimmedValue && !validateDropboxUrl(trimmedValue)) {
+      setValidationError('Please enter a valid Dropbox URL');
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid Dropbox URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setValidationError(null);
     onDropboxUrlUpdate(trimmedValue || null);
     setIsOpen(false);
   };
 
   const handleCancel = () => {
     setInputValue(currentDropboxUrl || '');
+    setValidationError(null);
     setIsOpen(false);
   };
 
   const handleClear = () => {
     setInputValue('');
+    setValidationError(null);
     onDropboxUrlUpdate(null);
     setIsOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError(null);
+    }
   };
 
   return (
@@ -74,10 +102,14 @@ export const TaskDropboxUrlEditor: React.FC<TaskDropboxUrlEditorProps> = ({
                 <label className="text-sm font-medium">Dropbox URL</label>
                 <Input
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={handleInputChange}
                   placeholder="https://dropbox.com/..."
-                  className="mt-1"
+                  className={`mt-1 ${validationError ? 'border-red-500' : ''}`}
+                  maxLength={2048}
                 />
+                {validationError && (
+                  <p className="text-sm text-red-600 mt-1">{validationError}</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button

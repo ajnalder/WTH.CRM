@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { validateEmail, validatePassword, sanitizeString } from '@/utils/validation';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +20,7 @@ export default function Auth() {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { errors, validateForm, clearErrors } = useFormValidation();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,13 +29,65 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
+  const getValidationRules = () => {
+    const rules: Record<string, any> = {
+      email: {
+        required: true,
+        type: 'email',
+        maxLength: 254
+      },
+      password: {
+        required: true,
+        minLength: 6,
+        maxLength: 128,
+        custom: (value: string) => {
+          if (!isLogin) {
+            const passwordValidation = validatePassword(value);
+            return passwordValidation.isValid ? null : passwordValidation.errors[0];
+          }
+          return null;
+        }
+      }
+    };
+
+    if (!isLogin) {
+      rules.fullName = {
+        required: true,
+        minLength: 2,
+        maxLength: 100,
+        type: 'text'
+      };
+    }
+
+    return rules;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const formData = {
+      email: sanitizeString(email, 254),
+      password,
+      fullName: sanitizeString(fullName, 100)
+    };
+
+    const isValid = validateForm(formData, getValidationRules());
+    
+    if (!isValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors below",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
+    clearErrors();
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(formData.email, password);
         if (error) {
           toast({
             title: "Login failed",
@@ -47,7 +102,7 @@ export default function Auth() {
           navigate('/');
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(formData.email, password, formData.fullName);
         if (error) {
           toast({
             title: "Sign up failed",
@@ -70,6 +125,14 @@ export default function Auth() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFormModeChange = () => {
+    setIsLogin(!isLogin);
+    clearErrors();
+    setEmail('');
+    setPassword('');
+    setFullName('');
   };
 
   return (
@@ -103,7 +166,12 @@ export default function Auth() {
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
                   placeholder="Enter your full name"
+                  maxLength={100}
+                  className={errors.fullName ? 'border-red-500' : ''}
                 />
+                {errors.fullName && (
+                  <p className="text-sm text-red-600">{errors.fullName[0]}</p>
+                )}
               </div>
             )}
             <div className="space-y-2">
@@ -115,7 +183,12 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
+                maxLength={254}
+                className={errors.email ? 'border-red-500' : ''}
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email[0]}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -127,7 +200,12 @@ export default function Auth() {
                 required
                 placeholder="Enter your password"
                 minLength={6}
+                maxLength={128}
+                className={errors.password ? 'border-red-500' : ''}
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password[0]}</p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
@@ -137,7 +215,7 @@ export default function Auth() {
           <div className="mt-4 text-center">
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={handleFormModeChange}
               className="text-sm text-blue-600 hover:text-blue-800 underline"
             >
               {isLogin 
