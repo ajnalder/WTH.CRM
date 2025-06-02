@@ -92,6 +92,12 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = React.memo(({
     right: '4px',
   }), [scheduledTask.duration]);
 
+  // Memoize the card class to prevent recalculation
+  const cardClassName = React.useMemo(() => 
+    `border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 ${getCardStyle(client, scheduledTask)} ${
+      isResizing ? 'select-none transition-none' : 'transition-all duration-200'
+    }`, [client, scheduledTask, isResizing]);
+
   return (
     <Draggable 
       draggableId={scheduledTask.task_id} 
@@ -106,9 +112,9 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = React.memo(({
           }}
           {...provided.draggableProps}
           data-task-card
-          className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle(client, scheduledTask)} ${
+          className={`${cardClassName} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
-          } ${isResizing ? 'select-none' : ''}`}
+          }`}
           style={{ 
             ...cardStyle,
             ...provided.draggableProps.style

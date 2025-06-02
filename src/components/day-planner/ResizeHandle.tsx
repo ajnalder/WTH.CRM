@@ -23,6 +23,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const isDraggingRef = useRef(false);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const finalDurationRef = useRef(0);
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
     const slotHeight = 69; // Each 15-minute slot height
@@ -36,6 +37,12 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Clear any pending updates
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
     
     isDraggingRef.current = true;
     setIsResizing(true);
@@ -87,16 +94,17 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       // Only update if duration actually changed
       if (finalDurationRef.current !== scheduledTask.duration) {
-        // Use requestAnimationFrame to defer the update and prevent immediate re-render
-        requestAnimationFrame(() => {
+        // Delay the update even more to reduce flash
+        updateTimeoutRef.current = setTimeout(() => {
           updateTaskDuration(scheduledTask.task_id, finalDurationRef.current);
-        });
+          updateTimeoutRef.current = null;
+        }, 150);
       }
       
-      // Set resizing to false after a brief delay to prevent flicker
+      // Set resizing to false with a longer delay to prevent flash
       setTimeout(() => {
         setIsResizing(false);
-      }, 100);
+      }, 200);
       
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
@@ -106,6 +114,15 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
   }, [scheduledTask.duration, scheduledTask.task_id, setIsResizing, snapToSlot, updateTaskDuration]);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div
