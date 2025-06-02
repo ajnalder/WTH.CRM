@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
+import { useScheduledTasks } from '@/hooks/useScheduledTasks';
 import { generateTimeSlots } from '@/utils/timeUtils';
 import { isTimeSlotAvailable, updateTaskDurationWithShifting } from '@/utils/schedulingUtils';
 import type { ScheduledTask } from '@/types/dayPlanner';
@@ -12,11 +12,18 @@ export const useDayPlanner = () => {
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [customDuration, setCustomDuration] = useState('30');
   const [customColor, setCustomColor] = useState('blue');
+  
+  const { 
+    scheduledTasks, 
+    isLoading, 
+    updateScheduledTasks, 
+    saveScheduledTask, 
+    removeScheduledTask: removeFromDatabase 
+  } = useScheduledTasks(selectedDate);
   
   const timeSlots = generateTimeSlots('09:00', '17:00', 15);
   
@@ -34,7 +41,7 @@ export const useDayPlanner = () => {
     return member ? member.name : 'Unknown User';
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = async (result: any) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
@@ -44,25 +51,20 @@ export const useDayPlanner = () => {
     // Handle dropping task into a time slot
     if (destination.droppableId.startsWith('timeslot-')) {
       const targetTimeSlot = destination.droppableId.replace('timeslot-', '');
-      // Remove 'task-' prefix if it exists, otherwise use the draggableId as is
       const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
       
       console.log('Dropping task into timeslot:', { targetTimeSlot, taskId });
       
-      // Find the task to get its duration
       const existingScheduledTask = scheduledTasks.find(st => st.taskId === taskId);
       const taskDuration = existingScheduledTask ? existingScheduledTask.duration : 60;
       
-      // Check if the target time slot is available
       if (!isTimeSlotAvailable(targetTimeSlot, taskDuration, timeSlots, scheduledTasks, taskId)) {
         console.log('Target time slot is not available');
         return;
       }
       
-      // Remove the task from its current position
       const updatedSchedule = scheduledTasks.filter(st => st.taskId !== taskId);
       
-      // Add the task to the new position
       const newScheduledTask: ScheduledTask = existingScheduledTask ? {
         ...existingScheduledTask,
         startTime: targetTimeSlot
@@ -74,15 +76,15 @@ export const useDayPlanner = () => {
         type: 'task'
       };
       
-      setScheduledTasks([...updatedSchedule, newScheduledTask]);
+      await updateScheduledTasks([...updatedSchedule, newScheduledTask]);
     }
     
     // Handle dropping task back to the pool
     if (destination.droppableId === 'task-pool') {
-      // Remove 'task-' prefix if it exists, otherwise use the draggableId as is
       const taskId = draggableId.startsWith('task-') ? draggableId.replace('task-', '') : draggableId;
       console.log('Dropping task back to pool:', taskId);
-      setScheduledTasks(scheduledTasks.filter(st => st.taskId !== taskId));
+      const updatedTasks = scheduledTasks.filter(st => st.taskId !== taskId);
+      await updateScheduledTasks(updatedTasks);
     }
   };
 
@@ -91,11 +93,12 @@ export const useDayPlanner = () => {
     return tasks.filter(task => !scheduledTaskIds.includes(task.id));
   };
 
-  const updateTaskDuration = (taskId: string, newDuration: number) => {
-    setScheduledTasks(prev => updateTaskDurationWithShifting(taskId, newDuration, prev, timeSlots));
+  const updateTaskDuration = async (taskId: string, newDuration: number) => {
+    const updatedTasks = updateTaskDurationWithShifting(taskId, newDuration, scheduledTasks, timeSlots);
+    await updateScheduledTasks(updatedTasks);
   };
 
-  const addCustomEntry = () => {
+  const addCustomEntry = async () => {
     if (!customTitle.trim()) return;
     
     const newCustomEntry: ScheduledTask = {
@@ -108,14 +111,15 @@ export const useDayPlanner = () => {
       color: customColor
     };
     
-    setScheduledTasks([...scheduledTasks, newCustomEntry]);
+    await updateScheduledTasks([...scheduledTasks, newCustomEntry]);
     setCustomTitle('');
     setCustomDuration('30');
     setIsAddingCustom(false);
   };
 
-  const removeScheduledTask = (taskId: string) => {
-    setScheduledTasks(prev => prev.filter(task => task.taskId !== taskId));
+  const removeScheduledTask = async (taskId: string) => {
+    const updatedTasks = scheduledTasks.filter(task => task.taskId !== taskId);
+    await updateScheduledTasks(updatedTasks);
   };
 
   return {
@@ -123,6 +127,7 @@ export const useDayPlanner = () => {
     selectedDate,
     setSelectedDate,
     scheduledTasks,
+    isLoading,
     isAddingCustom,
     setIsAddingCustom,
     customTitle,
