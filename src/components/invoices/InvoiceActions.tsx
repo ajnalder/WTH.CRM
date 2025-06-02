@@ -5,10 +5,18 @@ import { Download, Printer } from 'lucide-react';
 
 interface InvoiceActionsProps {
   onPrint: () => void;
-  onDownloadPDF: () => void;
+  onDownloadPDF: () => Promise<void>;
 }
 
 export const InvoiceActions: React.FC<InvoiceActionsProps> = ({ onPrint, onDownloadPDF }) => {
+  const handleDownloadPDF = async () => {
+    try {
+      await onDownloadPDF();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
   return (
     <div className="flex justify-between items-center no-print">
       <h1 className="text-2xl font-bold">Invoice Preview</h1>
@@ -17,7 +25,7 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({ onPrint, onDownl
           <Printer size={16} className="mr-2" />
           Print
         </Button>
-        <Button onClick={onDownloadPDF}>
+        <Button onClick={handleDownloadPDF}>
           <Download size={16} className="mr-2" />
           Download PDF
         </Button>

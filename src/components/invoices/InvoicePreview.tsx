@@ -23,8 +23,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    generateInvoicePDF(invoice, client, items);
+  const handleDownloadPDF = async () => {
+    await generateInvoicePDF(invoice, client, items);
   };
 
   return (
