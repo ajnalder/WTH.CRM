@@ -1,5 +1,5 @@
 
-export const generateInvoicePDF = async (invoice: any, client: any, items: any[]): Promise<Uint8Array> => {
+export const generateInvoicePDF = async (invoice: any, client: any, items: any[], companySettings?: any): Promise<Uint8Array> => {
   // Import jsPDF dynamically
   const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
   
@@ -15,31 +15,36 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   const marginRight = 10;
   const marginTop = 10;
 
-  // Add logo with proper aspect ratio - using base64 encoded logo
+  // Add logo with proper aspect ratio
   try {
-    // Using a direct fetch approach that works in Deno environment
-    const logoUrl = 'https://fluxvodjqhfdkzwlmnhb.supabase.co/storage/v1/object/public/project-files/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png';
-    
-    const logoResponse = await fetch(logoUrl);
-    if (logoResponse.ok) {
-      const logoBlob = await logoResponse.blob();
-      const logoArrayBuffer = await logoBlob.arrayBuffer();
-      const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
-      
-      // Calculate logo dimensions maintaining proper aspect ratio
-      // Original logo is 500px x 82px which is approximately 6.1:1 ratio
+    if (companySettings?.logo_base64) {
+      // Use stored logo from company settings
       const logoWidth = 60;
       const logoHeight = 9.8; // Maintain 6.1:1 aspect ratio (60/6.1 ≈ 9.8)
-      pdf.addImage(`data:image/png;base64,${logoBase64}`, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
+      pdf.addImage(companySettings.logo_base64, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
     } else {
-      throw new Error('Logo fetch failed');
+      // Fallback: try to fetch from external URL
+      const logoUrl = 'https://fluxvodjqhfdkzwlmnhb.supabase.co/storage/v1/object/public/project-files/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png';
+      
+      const logoResponse = await fetch(logoUrl);
+      if (logoResponse.ok) {
+        const logoBlob = await logoResponse.blob();
+        const logoArrayBuffer = await logoBlob.arrayBuffer();
+        const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
+        
+        const logoWidth = 60;
+        const logoHeight = 9.8;
+        pdf.addImage(`data:image/png;base64,${logoBase64}`, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
+      } else {
+        throw new Error('Logo fetch failed');
+      }
     }
   } catch (error) {
     console.warn('Could not load logo for PDF, using text fallback:', error);
     // Add text fallback if logo fails to load
     pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('What the Heck', marginLeft, marginTop + 15);
+    pdf.text(companySettings?.company_name || 'What the Heck', marginLeft, marginTop + 15);
   }
 
   // Header with invoice title
@@ -51,20 +56,20 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   const rightAlign = pageWidth - marginRight;
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('What the Heck', rightAlign, marginTop + 10, { align: 'right' });
+  pdf.text(companySettings?.company_name || 'What the Heck', rightAlign, marginTop + 10, { align: 'right' });
   
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(11);
-  pdf.text('8 King Street', rightAlign, marginTop + 20, { align: 'right' });
-  pdf.text('Te Puke 3119', rightAlign, marginTop + 28, { align: 'right' });
-  pdf.text('NEW ZEALAND', rightAlign, marginTop + 36, { align: 'right' });
+  pdf.text(companySettings?.address_line1 || '8 King Street', rightAlign, marginTop + 20, { align: 'right' });
+  pdf.text(companySettings?.address_line2 || 'Te Puke 3119', rightAlign, marginTop + 28, { align: 'right' });
+  pdf.text(companySettings?.address_line3 || 'NEW ZEALAND', rightAlign, marginTop + 36, { align: 'right' });
   
   // GST Number
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
   pdf.text('GST Number', rightAlign, marginTop + 52, { align: 'right' });
   pdf.setFont('helvetica', 'normal');
-  pdf.text('125-651-445', rightAlign, marginTop + 60, { align: 'right' });
+  pdf.text(companySettings?.gst_number || '125-651-445', rightAlign, marginTop + 60, { align: 'right' });
   
   // Invoice Date - positioned under GST Number
   pdf.setFont('helvetica', 'bold');
@@ -173,10 +178,10 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   yPos += 12;
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(11);
-  pdf.text('Direct Credit - Mackay Distribution 2018 Limited', marginLeft, yPos);
+  pdf.text(companySettings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited', marginLeft, yPos);
   
   yPos += 8;
-  pdf.text('06-0556-0955531-00', marginLeft, yPos);
+  pdf.text(companySettings?.bank_account || '06-0556-0955531-00', marginLeft, yPos);
 
   // Due Date - moved down to payment section
   yPos += 16;

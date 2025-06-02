@@ -63,6 +63,51 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          address_line3: string | null
+          bank_account: string | null
+          bank_details: string | null
+          company_name: string
+          created_at: string
+          gst_number: string | null
+          id: string
+          logo_base64: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          address_line3?: string | null
+          bank_account?: string | null
+          bank_details?: string | null
+          company_name?: string
+          created_at?: string
+          gst_number?: string | null
+          id?: string
+          logo_base64?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          address_line3?: string | null
+          bank_account?: string | null
+          bank_details?: string | null
+          company_name?: string
+          created_at?: string
+          gst_number?: string | null
+          id?: string
+          logo_base64?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           client_id: string

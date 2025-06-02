@@ -1,0 +1,156 @@
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { Upload } from 'lucide-react';
+
+export const CompanySettings: React.FC = () => {
+  const { settings, updateSettings, uploadLogo, isLoading, isUpdating } = useCompanySettings();
+  const [formData, setFormData] = useState({
+    company_name: settings?.company_name || 'What the Heck',
+    address_line1: settings?.address_line1 || '8 King Street',
+    address_line2: settings?.address_line2 || 'Te Puke 3119',
+    address_line3: settings?.address_line3 || 'NEW ZEALAND',
+    gst_number: settings?.gst_number || '125-651-445',
+    bank_details: settings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited',
+    bank_account: settings?.bank_account || '06-0556-0955531-00',
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const logoBase64 = await uploadLogo(file);
+      updateSettings({ logo_base64: logoBase64 });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+    }
+  };
+
+  const handleSave = () => {
+    updateSettings(formData);
+  };
+
+  if (isLoading) {
+    return <div>Loading company settings...</div>;
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Company Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Logo Upload */}
+          <div>
+            <Label htmlFor="logo">Company Logo</Label>
+            <div className="mt-2 flex items-center gap-4">
+              {settings?.logo_base64 && (
+                <img 
+                  src={settings.logo_base64} 
+                  alt="Company Logo" 
+                  className="h-16 w-auto border rounded"
+                />
+              )}
+              <div>
+                <input
+                  type="file"
+                  id="logo"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('logo')?.click()}
+                  disabled={isUpdating}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Logo
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Company Details */}
+          <div>
+            <Label htmlFor="company_name">Company Name</Label>
+            <Input
+              id="company_name"
+              value={formData.company_name}
+              onChange={(e) => handleInputChange('company_name', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="address_line1">Address Line 1</Label>
+            <Input
+              id="address_line1"
+              value={formData.address_line1}
+              onChange={(e) => handleInputChange('address_line1', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="address_line2">Address Line 2</Label>
+            <Input
+              id="address_line2"
+              value={formData.address_line2}
+              onChange={(e) => handleInputChange('address_line2', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="address_line3">Address Line 3</Label>
+            <Input
+              id="address_line3"
+              value={formData.address_line3}
+              onChange={(e) => handleInputChange('address_line3', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="gst_number">GST Number</Label>
+            <Input
+              id="gst_number"
+              value={formData.gst_number}
+              onChange={(e) => handleInputChange('gst_number', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="bank_details">Bank Details</Label>
+            <Input
+              id="bank_details"
+              value={formData.bank_details}
+              onChange={(e) => handleInputChange('bank_details', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="bank_account">Bank Account</Label>
+            <Input
+              id="bank_account"
+              value={formData.bank_account}
+              onChange={(e) => handleInputChange('bank_account', e.target.value)}
+            />
+          </div>
+
+          <Button onClick={handleSave} disabled={isUpdating} className="w-full">
+            {isUpdating ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

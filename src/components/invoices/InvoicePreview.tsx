@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useInvoiceItems } from '@/hooks/useInvoiceItems';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { InvoiceHeader } from './InvoiceHeader';
 import { InvoiceClientInfo } from './InvoiceClientInfo';
 import { InvoiceItemsTablePreview } from './InvoiceItemsTablePreview';
@@ -19,13 +20,14 @@ interface InvoicePreviewProps {
 
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client }) => {
   const { items } = useInvoiceItems(invoice.id);
+  const { settings: companySettings } = useCompanySettings();
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPDF = async () => {
-    await generateInvoicePDF(invoice, client, items);
+    await generateInvoicePDF(invoice, client, items, companySettings);
   };
 
   return (
@@ -39,7 +41,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
 
       <Card className="print:shadow-none print:border-none invoice-content">
         <CardContent className="p-8">
-          <InvoiceHeader invoice={invoice} />
+          <InvoiceHeader invoice={invoice} companySettings={companySettings} />
           <InvoiceClientInfo client={client} />
 
           {/* Project Description */}
