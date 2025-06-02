@@ -19,6 +19,7 @@ export interface Invoice {
   due_date?: string;
   issued_date?: string;
   paid_date?: string;
+  last_emailed_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, FileText, Check } from 'lucide-react';
+import { Eye, Edit, FileText, Check, Mail } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -67,7 +67,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
         {invoices.map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell className="font-medium">
-              {invoice.invoice_number}
+              <div className="flex items-center gap-2">
+                {invoice.invoice_number}
+                {invoice.last_emailed_at && (
+                  <Mail size={14} className="text-blue-500" title={`Last emailed: ${new Date(invoice.last_emailed_at).toLocaleString()}`} />
+                )}
+              </div>
             </TableCell>
             <TableCell>
               {(invoice as any).clients?.company || 'Unknown Client'}

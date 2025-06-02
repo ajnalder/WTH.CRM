@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -18,6 +17,7 @@ import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
 import { useInvoiceItems } from '@/hooks/useInvoiceItems';
+import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EmailInvoiceDialogProps {
@@ -29,6 +29,7 @@ export const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({ invoice,
   const [open, setOpen] = useState(false);
   const { contacts } = useContacts(client?.id || '');
   const { items } = useInvoiceItems(invoice.id);
+  const { updateInvoice } = useInvoices();
   const { toast } = useToast();
 
   // Get primary contact or first contact, fallback to client email
@@ -105,6 +106,15 @@ What the Heck Team`);
       }
 
       if (data.success) {
+        // Update the invoice to record when it was last emailed
+        updateInvoice({
+          id: invoice.id,
+          updates: {
+            last_emailed_at: new Date().toISOString(),
+            status: invoice.status === 'draft' ? 'sent' : invoice.status
+          }
+        });
+
         toast({
           title: "Success",
           description: `Invoice with PDF attachment emailed successfully to ${email}`,
