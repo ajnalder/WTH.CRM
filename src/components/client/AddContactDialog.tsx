@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -169,12 +170,10 @@ const AddContactDialog = ({
             )}
           </div>
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="is-primary"
               checked={newContact.is_primary}
-              onChange={(e) => setNewContact({...newContact, is_primary: e.target.checked})}
-              className="rounded"
+              onCheckedChange={(checked) => setNewContact({...newContact, is_primary: checked === true})}
             />
             <Label htmlFor="is-primary">Primary Contact</Label>
           </div>
