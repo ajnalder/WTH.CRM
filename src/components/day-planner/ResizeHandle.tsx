@@ -42,18 +42,26 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       const deltaY = e.clientY - startYRef.current;
       const slotHeight = 69; // Each 15-minute slot is 69px
       
-      // Simple calculation: how many 15-minute slots have we moved?
-      const slotsChanged = Math.round(deltaY / slotHeight);
+      // Calculate how many slots we've moved
+      const slotsChanged = deltaY / slotHeight;
+      
+      // Always snap to 15-minute increments (round to nearest slot)
+      const snappedSlots = Math.round(slotsChanged);
       
       // Calculate new duration (each slot = 15 minutes)
-      const newDuration = initialDurationRef.current + (slotsChanged * 15);
+      const newDuration = initialDurationRef.current + (snappedSlots * 15);
       
       // Ensure minimum 15 minutes and maximum 8 hours (480 minutes)
       const clampedDuration = Math.max(15, Math.min(newDuration, 480));
       
-      // Update local state for immediate visual feedback
-      setTempDuration(clampedDuration);
-      onTempDurationChange(clampedDuration);
+      // Ensure it's always a multiple of 15 minutes
+      const finalDuration = Math.round(clampedDuration / 15) * 15;
+      
+      // Only update if duration actually changed
+      if (finalDuration !== tempDuration) {
+        setTempDuration(finalDuration);
+        onTempDurationChange(finalDuration);
+      }
     };
 
     const handleMouseUp = (e: MouseEvent) => {
