@@ -19,7 +19,7 @@ const SiteLaunch = () => {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+    <>
       {selectedChecklist && selectedTemplate ? (
         <ChecklistForm
           checklist={selectedChecklist}
@@ -28,7 +28,7 @@ const SiteLaunch = () => {
           onBack={handleBackToList}
         />
       ) : (
-        <div className="p-6">
+        <div>
           <div className="mb-6 max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold text-gray-900">Site Launch</h1>
             <p className="text-gray-600 mt-2">
@@ -38,7 +38,7 @@ const SiteLaunch = () => {
           <ChecklistList onViewChecklist={handleViewChecklist} />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

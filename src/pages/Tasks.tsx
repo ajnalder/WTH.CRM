@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Filter, Plus, Calendar, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -19,21 +18,17 @@ const Tasks = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Tasks</h1>
-          <p className="text-gray-600 mb-4">There was an error loading the tasks.</p>
-        </div>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Tasks</h1>
+        <p className="text-gray-600 mb-4">There was an error loading the tasks.</p>
       </div>
     );
   }
@@ -118,7 +113,7 @@ const Tasks = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>

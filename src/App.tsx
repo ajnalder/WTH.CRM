@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserMenu } from "@/components/UserMenu";
+import { PageLayout } from "@/components/PageLayout";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -51,25 +53,27 @@ const App = () => (
                             <UserMenu />
                           </div>
                         </header>
-                        <Routes>
-                          <Route path="/" element={<Index />} />
-                          <Route path="/projects" element={<Projects />} />
-                          <Route path="/projects/:id" element={<ProjectDetail />} />
-                          <Route path="/tasks" element={<Tasks />} />
-                          <Route path="/tasks/:id" element={<TaskDetails />} />
-                          <Route path="/team" element={<Team />} />
-                          <Route path="/clients" element={<Clients />} />
-                          <Route path="/clients/:id" element={<ClientDetail />} />
-                          <Route path="/invoices" element={<Invoices />} />
-                          <Route path="/invoices/new" element={<NewInvoice />} />
-                          <Route path="/invoices/:id" element={<InvoiceDetail />} />
-                          <Route path="/invoices/:id/edit" element={<InvoiceDetail editMode />} />
-                          <Route path="/calendar" element={<Calendar />} />
-                          <Route path="/day-planner" element={<DayPlanner />} />
-                          <Route path="/site-launch" element={<SiteLaunch />} />
-                          <Route path="/settings" element={<Settings />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
+                        <PageLayout>
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/projects" element={<Projects />} />
+                            <Route path="/projects/:id" element={<ProjectDetail />} />
+                            <Route path="/tasks" element={<Tasks />} />
+                            <Route path="/tasks/:id" element={<TaskDetails />} />
+                            <Route path="/team" element={<Team />} />
+                            <Route path="/clients" element={<Clients />} />
+                            <Route path="/clients/:id" element={<ClientDetail />} />
+                            <Route path="/invoices" element={<Invoices />} />
+                            <Route path="/invoices/new" element={<NewInvoice />} />
+                            <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                            <Route path="/invoices/:id/edit" element={<InvoiceDetail editMode />} />
+                            <Route path="/calendar" element={<Calendar />} />
+                            <Route path="/day-planner" element={<DayPlanner />} />
+                            <Route path="/site-launch" element={<SiteLaunch />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </PageLayout>
                       </SidebarInset>
                     </div>
                   </SidebarProvider>
