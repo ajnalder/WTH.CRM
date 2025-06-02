@@ -25,7 +25,6 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
 }) => {
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [displayDuration, setDisplayDuration] = useState(scheduledTask.duration);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const getCustomColor = (color: string) => {
@@ -78,25 +77,19 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
     return `${Math.max(60, slots * 69 - 8)}px`;
   };
 
-  const handleTempDurationChange = React.useCallback((duration: number) => {
-    setDisplayDuration(duration);
-  }, []);
-
-  // Reset display duration when scheduled task changes - but prevent during resize
-  React.useEffect(() => {
-    if (!isResizing) {
-      setDisplayDuration(scheduledTask.duration);
-    }
-  }, [scheduledTask.duration, isResizing]);
+  // Dummy function to satisfy ResizeHandle props - we don't use this during resize
+  const handleTempDurationChange = () => {
+    // Do nothing - we handle this with direct DOM manipulation now
+  };
 
   // Memoize the style object to prevent unnecessary re-renders
   const cardStyle = React.useMemo(() => ({
-    height: isResizing ? undefined : calculateHeight(displayDuration),
+    height: calculateHeight(scheduledTask.duration),
     minHeight: '60px',
     top: '4px',
     left: '4px',
     right: '4px',
-  }), [displayDuration, isResizing]);
+  }), [scheduledTask.duration]);
 
   return (
     <Draggable 
@@ -114,7 +107,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = ({
           data-task-card
           className={`border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 transition-all duration-200 ${getCardStyle(client, scheduledTask)} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-2 scale-105' : ''
-          } ${isResizing ? 'select-none transition-none' : ''}`}
+          } ${isResizing ? 'select-none' : ''}`}
           style={{ 
             ...cardStyle,
             ...provided.draggableProps.style

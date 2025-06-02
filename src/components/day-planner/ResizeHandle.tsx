@@ -21,6 +21,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
   const startDurationRef = useRef(0);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const snapToSlot = useCallback((pixelDelta: number, startDuration: number) => {
     const slotHeight = 69; // Each 15-minute slot height
@@ -45,7 +46,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     cardRef.current = handle.closest('[data-task-card]') as HTMLDivElement;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingRef.current) return;
+      if (!isDraggingRef.current || !cardRef.current) return;
       
       e.preventDefault();
       e.stopPropagation();
@@ -58,13 +59,13 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       const newHeight = Math.max(60, slots * 69 - 8);
       
       // Directly update the card height for immediate feedback
-      if (cardRef.current) {
-        cardRef.current.style.height = `${newHeight}px`;
-        cardRef.current.style.transition = 'none'; // Disable transitions during drag
-      }
+      cardRef.current.style.height = `${newHeight}px`;
+      cardRef.current.style.transition = 'none';
       
-      // Update the duration display without triggering re-renders
-      onTempDurationChange(snappedDuration);
+      // Update tooltip without triggering React re-renders
+      if (tooltipRef.current) {
+        tooltipRef.current.textContent = `${snappedDuration}min`;
+      }
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -74,7 +75,6 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       e.stopPropagation();
       
       isDraggingRef.current = false;
-      setIsResizing(false);
       
       const deltaY = e.clientY - startYRef.current;
       const finalDuration = snapToSlot(deltaY, startDurationRef.current);
@@ -88,10 +88,12 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       // Only update if duration actually changed
       if (finalDuration !== scheduledTask.duration) {
         updateTaskDuration(scheduledTask.task_id, finalDuration);
-      } else {
-        // Reset to original duration if no change
-        onTempDurationChange(scheduledTask.duration);
       }
+      
+      // Set resizing to false after a brief delay to prevent flicker
+      setTimeout(() => {
+        setIsResizing(false);
+      }, 50);
       
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
@@ -100,14 +102,7 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     // Use capture: true to ensure we get the events even if other elements interfere
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
-  }, [scheduledTask.duration, scheduledTask.task_id, setIsResizing, onTempDurationChange, snapToSlot, updateTaskDuration]);
-
-  // Reset when not resizing - but prevent unnecessary re-renders
-  React.useEffect(() => {
-    if (!isResizing && !isDraggingRef.current) {
-      onTempDurationChange(scheduledTask.duration);
-    }
-  }, [scheduledTask.duration, isResizing, onTempDurationChange]);
+  }, [scheduledTask.duration, scheduledTask.task_id, setIsResizing, snapToSlot, updateTaskDuration]);
 
   return (
     <div
@@ -120,8 +115,11 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
     >
       <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gray-600 rounded-t pointer-events-none"></div>
       {isResizing && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30 pointer-events-none">
-          {Math.round(((cardRef.current?.offsetHeight || 0) + 8) / 69) * 15}min
+        <div 
+          ref={tooltipRef}
+          className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-30 pointer-events-none"
+        >
+          {scheduledTask.duration}min
         </div>
       )}
     </div>
