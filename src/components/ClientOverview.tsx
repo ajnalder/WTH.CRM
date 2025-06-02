@@ -47,8 +47,13 @@ const ClientCard = ({ client }: { client: Client }) => {
   const displayPhone = primaryContact?.phone || client.phone;
 
   // Calculate actual project count and total value for this client
-  const actualProjectCount = projects.length;
-  const actualTotalValue = projects.reduce((sum, project) => sum + (Number(project.budget) || 0), 0);
+  const actualProjectCount = projects?.length || 0;
+  const actualTotalValue = projects?.reduce((sum, project) => sum + (Number(project.budget) || 0), 0) || 0;
+
+  console.log('ClientCard - client:', client.company);
+  console.log('ClientCard - projects:', projects);
+  console.log('ClientCard - actualProjectCount:', actualProjectCount);
+  console.log('ClientCard - actualTotalValue:', actualTotalValue);
 
   const handleClientClick = () => {
     navigate(`/clients/${client.id}`);
@@ -93,8 +98,12 @@ const ClientCard = ({ client }: { client: Client }) => {
       </div>
       
       <div className="text-right">
-        <div className="text-sm font-medium text-gray-900">{actualProjectCount} Projects</div>
-        <div className="text-sm text-gray-500">${actualTotalValue.toLocaleString()}</div>
+        <div className="text-sm font-medium text-gray-900">
+          {actualProjectCount} Project{actualProjectCount !== 1 ? 's' : ''}
+        </div>
+        <div className="text-sm text-gray-500">
+          ${actualTotalValue.toLocaleString()}
+        </div>
         <div className="text-xs text-gray-400">Since {new Date(client.joined_date).toLocaleDateString()}</div>
       </div>
     </div>
