@@ -1,13 +1,9 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash } from 'lucide-react';
 import { useInvoiceItems } from '@/hooks/useInvoices';
+import { InvoiceItemsTable } from './InvoiceItemsTable';
+import { InvoiceTotals } from './InvoiceTotals';
 
 interface InvoiceItem {
   id?: string;
@@ -133,111 +129,15 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
         <CardTitle>Invoice Items</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-24">Qty.</TableHead>
-              <TableHead className="w-32">Price</TableHead>
-              <TableHead className="w-32">Amount</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <Textarea
-                    value={item.description}
-                    onChange={(e) => handleUpdateItem(item.id, 'description', e.target.value)}
-                    className="min-h-[60px] resize-none"
-                    placeholder="Item description"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => handleUpdateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={item.rate}
-                    onChange={(e) => handleUpdateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">${item.amount.toFixed(2)}</div>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteItem(item.id)}
-                  >
-                    <Trash size={16} />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            <TableRow>
-              <TableCell>
-                <Textarea
-                  value={newItem.description}
-                  onChange={(e) => handleNewItemChange('description', e.target.value)}
-                  className="min-h-[60px] resize-none"
-                  placeholder="Add item description..."
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  value={newItem.quantity}
-                  onChange={(e) => handleNewItemChange('quantity', parseFloat(e.target.value) || 0)}
-                  min="0"
-                  step="0.01"
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  value={newItem.rate}
-                  onChange={(e) => handleNewItemChange('rate', parseFloat(e.target.value) || 0)}
-                  min="0"
-                  step="0.01"
-                />
-              </TableCell>
-              <TableCell>
-                <div className="font-medium">${newItem.amount.toFixed(2)}</div>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleAddItem}
-                  disabled={!newItem.description.trim()}
-                >
-                  <Plus size={16} />
-                </Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-
-        <div className="flex justify-end">
-          <div className="w-64 space-y-2">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
+        <InvoiceItemsTable
+          items={items}
+          newItem={newItem}
+          onItemUpdate={handleUpdateItem}
+          onItemDelete={handleDeleteItem}
+          onNewItemChange={handleNewItemChange}
+          onAddItem={handleAddItem}
+        />
+        <InvoiceTotals subtotal={subtotal} />
       </CardContent>
     </Card>
   );
