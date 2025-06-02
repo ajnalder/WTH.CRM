@@ -73,12 +73,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('PDF generated successfully, size:', pdfBuffer.byteLength);
 
-    // Create the email template
-    const emailHtml = createEmailTemplate(message, clientName);
+    // Create the email template with company settings
+    const emailHtml = createEmailTemplate(message, clientName, companySettings);
 
     // Send email with PDF attachment
     const emailResponse = await resend.emails.send({
-      from: "What the Heck <noreply@resend.dev>",
+      from: `${companySettings?.company_name || 'What the Heck'} <noreply@resend.dev>`,
       to: [to],
       subject: subject,
       html: emailHtml,
@@ -124,3 +124,4 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
+

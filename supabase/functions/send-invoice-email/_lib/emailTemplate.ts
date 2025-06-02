@@ -1,5 +1,10 @@
 
-export const createEmailTemplate = (message: string, clientName: string): string => {
+
+export const createEmailTemplate = (message: string, clientName: string, companySettings?: any): string => {
+  const logoSection = companySettings?.logo_base64 ? 
+    `<img src="${companySettings.logo_base64}" alt="${companySettings.company_name || 'What the Heck'}" style="max-height: 60px; width: auto; margin-bottom: 15px;">` :
+    `<div class="logo">${companySettings?.company_name || 'What the Heck'}</div>`;
+
   return `
     <!DOCTYPE html>
     <html>
@@ -64,8 +69,7 @@ export const createEmailTemplate = (message: string, clientName: string): string
     <body>
       <div class="email-container">
         <div class="header">
-          <div class="logo">What the Heck</div>
-          <p>Professional Invoice Service</p>
+          ${logoSection}
         </div>
         
         <div class="message-content">
@@ -78,12 +82,14 @@ export const createEmailTemplate = (message: string, clientName: string): string
         
         <div class="footer">
           <p>Thank you for your business!</p>
-          <p><strong>What the Heck</strong><br>
-          8 King Street, Te Puke 3119<br>
-          NEW ZEALAND</p>
+          <p><strong>${companySettings?.company_name || 'What the Heck'}</strong><br>
+          ${companySettings?.address_line1 || '8 King Street'}<br>
+          ${companySettings?.address_line2 || 'Te Puke 3119'}<br>
+          ${companySettings?.address_line3 || 'NEW ZEALAND'}</p>
         </div>
       </div>
     </body>
     </html>
   `;
 };
+
