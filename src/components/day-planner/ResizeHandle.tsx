@@ -94,10 +94,10 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       
       // Only update if duration actually changed
       if (finalDurationRef.current !== scheduledTask.duration) {
-        // Capture scroll position right before the update
-        const scrollBeforeUpdate = window.scrollY;
-        
         updateTimeoutRef.current = setTimeout(() => {
+          // Capture scroll position right before the update
+          const scrollBeforeUpdate = window.scrollY;
+          
           updateTaskDuration(scheduledTask.task_id, finalDurationRef.current);
           
           // Restore scroll position immediately after the update
