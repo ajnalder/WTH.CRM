@@ -9,6 +9,7 @@ import { InvoiceClientInfo } from './InvoiceClientInfo';
 import { InvoiceItemsTablePreview } from './InvoiceItemsTablePreview';
 import { InvoiceTotalsPreview } from './InvoiceTotalsPreview';
 import { InvoiceActions } from './InvoiceActions';
+import { EmailLogs } from './EmailLogs';
 import { generateInvoicePDF } from '@/utils/invoicePDF';
 
 interface InvoicePreviewProps {
@@ -58,6 +59,11 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Logs Section */}
+      <div className="no-print">
+        <EmailLogs invoiceId={invoice.id} />
+      </div>
     </div>
   );
 };

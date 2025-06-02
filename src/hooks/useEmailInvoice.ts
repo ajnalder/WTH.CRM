@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useEmailInvoice = (
   invoice: Invoice,
@@ -14,6 +15,7 @@ export const useEmailInvoice = (
 ) => {
   const { toast } = useToast();
   const { updateInvoice } = useInvoices();
+  const queryClient = useQueryClient();
   
   const recipientEmail = primaryContact?.email || client?.email || '';
   const recipientName = primaryContact?.name || client?.name || client?.company || '';
@@ -85,6 +87,9 @@ What the Heck Team`);
           }
         });
 
+        // Invalidate email logs query to refresh the logs
+        queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });
+
         toast({
           title: "Success",
           description: `Invoice with PDF attachment emailed successfully to ${email}`,
@@ -96,6 +101,10 @@ What the Heck Team`);
       }
     } catch (error: any) {
       console.error('Error sending email:', error);
+      
+      // Invalidate email logs query even on error to show failed attempts
+      queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });
+      
       toast({
         title: "Error",
         description: error.message || "Failed to send email. Please try again.",

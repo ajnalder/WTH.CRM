@@ -151,6 +151,47 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          invoice_id: string
+          recipient_email: string
+          sent_at: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          invoice_id: string
+          recipient_email: string
+          sent_at?: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string
+          recipient_email?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hosting: {
         Row: {
           client_id: string

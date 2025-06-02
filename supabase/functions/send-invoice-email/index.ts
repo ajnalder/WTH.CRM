@@ -4,8 +4,11 @@ import { Resend } from "npm:resend@2.0.0";
 import { generateInvoicePDF } from "./_lib/pdfGenerator.ts";
 import { createEmailHTML } from "./_lib/emailTemplate.ts";
 import { EmailRequest } from "./_lib/types.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { to, subject, message, invoiceNumber, clientName, invoiceData }: EmailRequest = await req.json();
 
     console.log(`Sending invoice email with PDF to ${to} for invoice ${invoiceNumber}`);
+
+    // Create Supabase client with service role key for logging
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Generate PDF
     const pdfBuffer = await generateInvoicePDF(
@@ -49,6 +55,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email with PDF sent successfully:", emailResponse);
 
+    // Log the email in the database
+    try {
+      const { error: logError } = await supabase
+        .from('email_logs')
+        .insert({
+          invoice_id: invoiceData.invoice.id,
+          recipient_email: to,
+          subject: subject,
+          status: 'sent'
+        });
+
+      if (logError) {
+        console.error('Error logging email:', logError);
+        // Don't fail the email send if logging fails
+      }
+    } catch (logErr) {
+      console.error('Error logging email:', logErr);
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
       messageId: emailResponse.data?.id,
@@ -62,6 +87,26 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-invoice-email function:", error);
+
+    // Log the error in the database if we have invoice data
+    try {
+      const requestBody = await req.clone().json();
+      if (requestBody.invoiceData?.invoice?.id) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        await supabase
+          .from('email_logs')
+          .insert({
+            invoice_id: requestBody.invoiceData.invoice.id,
+            recipient_email: requestBody.to || 'unknown',
+            subject: requestBody.subject || 'Invoice Email',
+            status: 'failed',
+            error_message: error.message
+          });
+      }
+    } catch (logErr) {
+      console.error('Error logging failed email:', logErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: false, 
