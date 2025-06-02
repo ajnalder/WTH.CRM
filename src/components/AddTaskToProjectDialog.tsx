@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -13,24 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Plus } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  assignee: string;
-  dueDate: string;
-  tags: string;
-}
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 
 interface AddTaskToProjectDialogProps {
   projectId: string;
@@ -38,148 +23,105 @@ interface AddTaskToProjectDialogProps {
   triggerText?: string;
 }
 
-export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({ 
-  projectId, 
+export const AddTaskToProjectDialog: React.FC<AddTaskToProjectDialogProps> = ({
+  projectId,
   projectName,
-  triggerText = "Add task now"
+  triggerText = "Add Tasks"
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [tasks, setTasks] = useState<string>('');
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const { createTask, isCreating } = useTasks();
-  const form = useForm<TaskFormData>({
-    defaultValues: {
-      title: '',
-      description: '',
-      assignee: '',
-      dueDate: '',
-      tags: '',
-    },
-  });
 
-  const onSubmit = (data: TaskFormData) => {
-    const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-    
-    createTask({
-      title: data.title,
-      description: data.description || null,
-      assignee: data.assignee || null,
-      due_date: data.dueDate || null,
-      tags: tagsArray.length > 0 ? tagsArray : null,
-      project: projectName,
-      status: 'To Do',
-      progress: 0,
+  const handleTeamMemberToggle = (memberId: string) => {
+    setSelectedTeamMembers(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+  };
+
+  const handleAddTasks = () => {
+    if (!tasks.trim()) return;
+
+    const taskLines = tasks
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    taskLines.forEach((taskTitle, index) => {
+      // For now, we'll store the first selected team member as assignee
+      // Later we can enhance this to support multiple assignees or rotate through them
+      const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[index % selectedTeamMembers.length] : null;
+      
+      createTask({
+        title: taskTitle,
+        description: null,
+        assignee: assignee,
+        due_date: null,
+        tags: null,
+        project: projectName,
+        status: 'To Do',
+        progress: 0,
+        dropbox_url: null,
+      });
     });
-    
-    setOpen(false);
-    form.reset();
+
+    setTasks('');
+    setSelectedTeamMembers([]);
+    setIsOpen(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-          <Plus size={16} className="mr-1" />
+        <Button variant="outline">
+          <Plus className="w-4 h-4 mr-2" />
           {triggerText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Task to {projectName}</DialogTitle>
+          <DialogTitle>Add Tasks to {projectName}</DialogTitle>
           <DialogDescription>
-            Create a new task for this project.
+            Add multiple tasks to this project. Enter each task on a new line.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              rules={{ required: "Task title is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Task Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Design user dashboard mockups" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="tasks">Tasks</Label>
+            <Textarea
+              id="tasks"
+              placeholder="Task 1&#10;Task 2&#10;Task 3"
+              value={tasks}
+              onChange={(e) => setTasks(e.target.value)}
+              className="min-h-[120px]"
             />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detailed description of the task..."
-                      className="min-h-[80px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="assignee"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium">Assign Team Members</label>
+            <div className="mt-2">
+              <TeamMemberSelector
+                selectedMembers={selectedTeamMembers}
+                onMemberToggle={handleTeamMemberToggle}
+                onRemoveMember={handleRemoveTeamMember}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Frontend, React"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isCreating}>
-                {isCreating ? 'Creating...' : 'Create Task'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleAddTasks} disabled={isCreating || !tasks.trim()}>
+            {isCreating ? 'Adding...' : 'Add Tasks'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
