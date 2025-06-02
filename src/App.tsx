@@ -19,6 +19,8 @@ import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import Calendar from "./pages/Calendar";
 import DayPlanner from "./pages/DayPlanner";
+import Invoices from "./pages/Invoices";
+import InvoiceDetail from "./pages/InvoiceDetail";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +58,9 @@ const App = () => (
                           <Route path="/team" element={<Team />} />
                           <Route path="/clients" element={<Clients />} />
                           <Route path="/clients/:id" element={<ClientDetail />} />
+                          <Route path="/invoices" element={<Invoices />} />
+                          <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                          <Route path="/invoices/:id/edit" element={<InvoiceDetail editMode />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route path="/day-planner" element={<DayPlanner />} />
                           <Route path="*" element={<NotFound />} />
