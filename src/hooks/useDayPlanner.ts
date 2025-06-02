@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -69,7 +70,7 @@ export const useDayPlanner = () => {
         ...existingScheduledTask,
         startTime: targetTimeSlot
       } : {
-        id: `${taskId}-${targetTimeSlot}`,
+        id: crypto.randomUUID(),
         taskId,
         startTime: targetTimeSlot,
         duration: taskDuration,
@@ -102,8 +103,8 @@ export const useDayPlanner = () => {
     if (!customTitle.trim()) return;
     
     const newCustomEntry: ScheduledTask = {
-      id: `custom-${Date.now()}`,
-      taskId: `custom-${Date.now()}`,
+      id: crypto.randomUUID(),
+      taskId: crypto.randomUUID(),
       startTime: '12:00',
       duration: parseInt(customDuration),
       type: 'custom',
