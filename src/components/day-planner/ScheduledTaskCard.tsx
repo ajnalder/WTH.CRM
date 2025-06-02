@@ -95,7 +95,7 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = React.memo(({
   // Memoize the card class to prevent recalculation
   const cardClassName = React.useMemo(() => 
     `border rounded-lg shadow-sm relative group absolute inset-x-0 z-10 ${getCardStyle(client, scheduledTask)} ${
-      isResizing ? 'select-none transition-none' : 'transition-all duration-200'
+      isResizing ? 'select-none transition-none transform-none' : 'transition-all duration-200'
     }`, [client, scheduledTask, isResizing]);
 
   return (
@@ -117,7 +117,9 @@ export const ScheduledTaskCard: React.FC<ScheduledTaskCardProps> = React.memo(({
           }`}
           style={{ 
             ...cardStyle,
-            ...provided.draggableProps.style
+            ...provided.draggableProps.style,
+            // Prevent any transforms that might cause position jumps
+            ...(isResizing ? { transform: 'none !important' } : {})
           }}
           onMouseEnter={() => !isResizing && setShowControls(true)}
           onMouseLeave={() => !isResizing && setShowControls(false)}
