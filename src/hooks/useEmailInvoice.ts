@@ -79,13 +79,18 @@ What the Heck Team`);
 
       if (data.success) {
         // Update the invoice to record when it was last emailed
-        updateInvoice({
-          id: invoice.id,
-          updates: {
-            last_emailed_at: new Date().toISOString(),
-            status: invoice.status === 'draft' ? 'sent' : invoice.status
-          }
-        });
+        try {
+          await updateInvoice({
+            id: invoice.id,
+            updates: {
+              last_emailed_at: new Date().toISOString(),
+              status: invoice.status === 'draft' ? 'sent' : invoice.status
+            }
+          });
+        } catch (updateError) {
+          console.warn('Warning: Could not update invoice status, but email was sent successfully:', updateError);
+          // Don't throw here - the email was sent successfully
+        }
 
         // Invalidate email logs query to refresh the logs
         queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });

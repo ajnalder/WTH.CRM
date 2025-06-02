@@ -31,11 +31,18 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
         pdf.addImage(logoImg, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
         resolve(null);
       };
-      logoImg.onerror = reject;
+      logoImg.onerror = (error) => {
+        console.warn('Could not load logo for PDF, using text fallback:', error);
+        resolve(null);
+      };
       logoImg.src = `${window.location.origin}/lovable-uploads/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png`;
     });
   } catch (error) {
-    console.warn('Could not load logo for PDF:', error);
+    console.warn('Could not load logo for PDF, using text fallback:', error);
+    // Add text fallback if logo fails to load
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('What the Heck', marginLeft, marginTop + 15);
   }
 
   // Header with invoice title
@@ -106,7 +113,7 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
     yPos += 20;
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
-    pdf.text('Description', marginLeft, yPos);
+    pdf.text('Description:', marginLeft, yPos);
     
     yPos += 10;
     pdf.setFont('helvetica', 'normal');
@@ -136,8 +143,8 @@ export const generateInvoicePDF = async (invoice: Invoice, client: Client | unde
   items.forEach((item) => {
     yPos += 12;
     
-    // Handle long descriptions with text wrapping
-    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 120);
+    // Handle long descriptions with text wrapping - use smaller width to prevent overlap
+    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 140);
     pdf.text(descriptionLines, marginLeft, yPos);
     
     pdf.text(item.quantity.toString(), pageWidth - 80, yPos, { align: 'center' });

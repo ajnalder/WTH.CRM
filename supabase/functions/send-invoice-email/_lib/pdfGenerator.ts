@@ -15,10 +15,10 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   const marginRight = 10;
   const marginTop = 10;
 
-  // Add logo - using a simple placeholder since we can't easily load external images in Deno
+  // Add company name as text since we can't easily load external images in Deno
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('What the Heck', marginLeft, marginTop + 10);
+  pdf.text('What the Heck', marginLeft, marginTop + 15);
 
   // Header with invoice title
   pdf.setFontSize(24);
@@ -88,7 +88,7 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     yPos += 20;
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
-    pdf.text('Description', marginLeft, yPos);
+    pdf.text('Description:', marginLeft, yPos);
     
     yPos += 10;
     pdf.setFont('helvetica', 'normal');
@@ -117,7 +117,8 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   items.forEach((item) => {
     yPos += 12;
     
-    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 120);
+    // Handle long descriptions with text wrapping - use smaller width to prevent overlap
+    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 140);
     pdf.text(descriptionLines, marginLeft, yPos);
     
     pdf.text(item.quantity.toString(), pageWidth - 80, yPos, { align: 'center' });
