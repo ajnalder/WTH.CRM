@@ -46,7 +46,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
           <TableHead>Client</TableHead>
           <TableHead>Title</TableHead>
           <TableHead>Amount</TableHead>
-          <TableHead>Balance Due</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Actions</TableHead>
@@ -75,11 +74,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                 <div className="text-xs text-gray-500">
                   Inc. GST: ${invoice.subtotal_incl_gst.toLocaleString()}
                 </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="font-medium text-orange-600">
-                ${invoice.balance_due.toLocaleString()}
               </div>
             </TableCell>
             <TableCell>
@@ -112,7 +106,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
         ))}
         {invoices.length === 0 && (
           <TableRow>
-            <TableCell colSpan={8} className="text-center py-8">
+            <TableCell colSpan={7} className="text-center py-8">
               <div className="text-gray-500">
                 <FileText size={48} className="mx-auto mb-4 text-gray-300" />
                 <p>No invoices found</p>

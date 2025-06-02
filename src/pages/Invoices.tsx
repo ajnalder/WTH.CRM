@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ const Invoices = () => {
   const totalInvoiced = invoices.reduce((sum, invoice) => sum + invoice.total_amount, 0);
   const totalOutstanding = invoices
     .filter(invoice => invoice.status !== 'paid' && invoice.status !== 'cancelled')
-    .reduce((sum, invoice) => sum + invoice.balance_due, 0);
+    .reduce((sum, invoice) => sum + invoice.total_amount, 0);
   const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
   const pendingInvoices = invoices.filter(invoice => 
     invoice.status === 'sent' || invoice.status === 'overdue'

@@ -24,7 +24,7 @@ const InvoicesTab = ({ client }: InvoicesTabProps) => {
   const totalInvoiced = invoices.reduce((sum, invoice) => sum + invoice.total_amount, 0);
   const totalOutstanding = invoices
     .filter(invoice => invoice.status !== 'paid' && invoice.status !== 'cancelled')
-    .reduce((sum, invoice) => sum + invoice.balance_due, 0);
+    .reduce((sum, invoice) => sum + invoice.total_amount, 0);
   const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
 
   return (
