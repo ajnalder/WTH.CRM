@@ -32,10 +32,13 @@ export const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({ invoice,
   const primaryContact = contacts?.find(contact => contact.is_primary) || contacts?.[0];
   const recipientEmail = primaryContact?.email || client?.email || '';
   const recipientName = primaryContact?.name || client?.name || client?.company || '';
+  
+  // Extract first name from the full name
+  const firstName = recipientName.split(' ')[0];
 
   const [email, setEmail] = useState(recipientEmail);
   const [subject, setSubject] = useState(`Invoice ${invoice.invoice_number} from What the Heck`);
-  const [message, setMessage] = useState(`Hi ${recipientName},
+  const [message, setMessage] = useState(`Hi ${firstName},
 
 Please find attached your invoice ${invoice.invoice_number}.
 
@@ -50,9 +53,10 @@ What the Heck Team`);
     if (open) {
       const currentEmail = primaryContact?.email || client?.email || '';
       const currentName = primaryContact?.name || client?.name || client?.company || '';
+      const currentFirstName = currentName.split(' ')[0];
       
       setEmail(currentEmail);
-      setMessage(`Hi ${currentName},
+      setMessage(`Hi ${currentFirstName},
 
 Please find attached your invoice ${invoice.invoice_number}.
 
