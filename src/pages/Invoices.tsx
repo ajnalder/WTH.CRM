@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { ShadowBox } from '@/components/ui/shadow-box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,67 +51,55 @@ const Invoices = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
+        <ShadowBox className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium">Total Invoiced</h3>
             <FileText className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalInvoiced.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              {invoices.length} total invoices
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold">${totalInvoiced.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">
+            {invoices.length} total invoices
+          </p>
+        </ShadowBox>
 
-        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+        <ShadowBox className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium">Outstanding</h3>
             <DollarSign className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">${totalOutstanding.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              {pendingInvoices} pending invoices
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold text-orange-600">${totalOutstanding.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">
+            {pendingInvoices} pending invoices
+          </p>
+        </ShadowBox>
 
-        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paid Invoices</CardTitle>
+        <ShadowBox className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium">Paid Invoices</h3>
             <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{paidInvoices}</div>
-            <p className="text-xs text-muted-foreground">
-              Successfully completed
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold text-green-600">{paidInvoices}</div>
+          <p className="text-xs text-muted-foreground">
+            Successfully completed
+          </p>
+        </ShadowBox>
 
-        <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+        <ShadowBox className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium">Pending</h3>
             <Clock className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingInvoices}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting payment
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold text-yellow-600">{pendingInvoices}</div>
+          <p className="text-xs text-muted-foreground">
+            Awaiting payment
+          </p>
+        </ShadowBox>
       </div>
 
-      <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle>All Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <InvoiceTable invoices={invoices} />
-        </CardContent>
-      </Card>
+      <ShadowBox className="p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">All Invoices</h2>
+        <InvoiceTable invoices={invoices} />
+      </ShadowBox>
 
       <CreateInvoiceDialog
         open={showCreateDialog}

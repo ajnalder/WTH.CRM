@@ -3,6 +3,7 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskTable } from '@/components/TaskTable';
+import { ShadowBox } from '@/components/ui/shadow-box';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 interface TaskSectionProps {
@@ -21,7 +22,7 @@ export const TaskSection: React.FC<TaskSectionProps> = ({
   const containerClasses = isCompleted ? 'opacity-75' : '';
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 mb-6">
+    <ShadowBox className="p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">
           {title} ({tasks.length})
@@ -56,6 +57,6 @@ export const TaskSection: React.FC<TaskSectionProps> = ({
           </p>
         </div>
       )}
-    </div>
+    </ShadowBox>
   );
 };

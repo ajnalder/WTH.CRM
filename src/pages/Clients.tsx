@@ -1,6 +1,7 @@
 import React from 'react';
 import { ClientOverview } from '@/components/ClientOverview';
 import { AddClientDialog } from '@/components/AddClientDialog';
+import { ShadowBox } from '@/components/ui/shadow-box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, DollarSign, Calendar } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
@@ -43,25 +44,19 @@ const Clients = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 size={20} className="text-blue-600" />
-                Client Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ClientOverview clients={clients} />
-            </CardContent>
-          </Card>
+          <ShadowBox className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Building2 size={20} className="text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900">Client Overview</h2>
+            </div>
+            <ClientOverview clients={clients} />
+          </ShadowBox>
         </div>
 
         <div className="space-y-6">
-          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Client Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <ShadowBox className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Client Stats</h2>
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Total Clients</span>
                 <span className="font-semibold">{clients.length}</span>
@@ -80,14 +75,12 @@ const Clients = () => {
                   {projectsLoading ? 'Loading...' : `$${totalProjectValue.toLocaleString()}`}
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </ShadowBox>
 
-          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <ShadowBox className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="space-y-3">
               <button className="w-full flex items-center justify-start gap-2 p-2 text-left hover:bg-gray-50 rounded-lg transition-colors">
                 <Users size={16} className="text-blue-600" />
                 View All Projects
@@ -100,8 +93,8 @@ const Clients = () => {
                 <Calendar size={16} className="text-purple-600" />
                 Schedule Meeting
               </button>
-            </CardContent>
-          </Card>
+            </div>
+          </ShadowBox>
         </div>
       </div>
     </div>

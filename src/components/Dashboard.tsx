@@ -4,6 +4,7 @@ import { StatsCards } from '@/components/StatsCards';
 import { ProjectGrid } from '@/components/ProjectGrid';
 import { RecentActivity } from '@/components/RecentActivity';
 import { TeamOverview } from '@/components/TeamOverview';
+import { ShadowBox } from '@/components/ui/shadow-box';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
@@ -29,8 +30,12 @@ export const Dashboard = () => {
           <ProjectGrid />
         </div>
         <div className="space-y-6">
-          <RecentActivity tasks={tasks} />
-          <TeamOverview members={teamMembers} />
+          <ShadowBox className="p-6">
+            <RecentActivity tasks={tasks} />
+          </ShadowBox>
+          <ShadowBox className="p-6">
+            <TeamOverview members={teamMembers} />
+          </ShadowBox>
         </div>
       </div>
     </div>

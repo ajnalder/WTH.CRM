@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ProjectCard } from '@/components/ProjectCard';
+import { ShadowBox } from '@/components/ui/shadow-box';
 import { transformProject } from '@/utils/projectUtils';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -11,7 +12,7 @@ export const ProjectGrid: React.FC = () => {
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <ShadowBox className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
           <button className="text-blue-600 hover:text-blue-800 font-medium">View All</button>
@@ -19,7 +20,7 @@ export const ProjectGrid: React.FC = () => {
         <div className="text-center py-8 text-gray-500">
           <p>Loading projects...</p>
         </div>
-      </div>
+      </ShadowBox>
     );
   }
   
@@ -50,7 +51,7 @@ export const ProjectGrid: React.FC = () => {
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <ShadowBox className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
         <button className="text-blue-600 hover:text-blue-800 font-medium">View All</button>
@@ -67,6 +68,6 @@ export const ProjectGrid: React.FC = () => {
           <p>No projects found. Create your first project to get started!</p>
         </div>
       )}
-    </div>
+    </ShadowBox>
   );
 };
