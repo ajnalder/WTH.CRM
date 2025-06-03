@@ -1,17 +1,51 @@
 
 import React from 'react';
+import { TaskPlanningHeader } from '@/components/task-planning/TaskPlanningHeader';
+import { TaskPlanningControls } from '@/components/task-planning/TaskPlanningControls';
+import { TaskPlanningList } from '@/components/task-planning/TaskPlanningList';
+import { useTaskPlanning } from '@/hooks/useTaskPlanning';
 
 const DayPlanner = () => {
+  const {
+    tasks,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    sortBy,
+    setSortBy,
+    getTotalAllocatedTime,
+    getAssigneeName,
+    updateTaskOrder,
+    updateTaskAllocation,
+    markTaskComplete,
+    isUpdating,
+  } = useTaskPlanning();
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Task List</h1>
-        <p className="text-gray-600">Coming soon - a comprehensive task management interface</p>
-      </div>
-      
-      <div className="bg-white rounded-lg border p-8 text-center">
-        <p className="text-gray-500">Task list functionality will be implemented here.</p>
-      </div>
+      <TaskPlanningHeader
+        totalTasks={tasks.length}
+        totalAllocatedMinutes={getTotalAllocatedTime()}
+      />
+
+      <TaskPlanningControls
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+      />
+
+      <TaskPlanningList
+        tasks={tasks}
+        onTaskOrderChange={updateTaskOrder}
+        onTimeAllocationChange={updateTaskAllocation}
+        onMarkComplete={markTaskComplete}
+        getAssigneeName={getAssigneeName}
+        isUpdating={isUpdating}
+      />
     </div>
   );
 };
