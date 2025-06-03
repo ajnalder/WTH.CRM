@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { ProjectGrid } from '@/components/ProjectGrid';
+import { ProjectTable } from '@/components/ProjectTable';
 import { ProjectControls } from '@/components/projects/ProjectControls';
 import { useProjectsPage } from '@/hooks/useProjectsPage';
+import { transformProject } from '@/utils/projectUtils';
+import { useTasks } from '@/hooks/useTasks';
 
 const Projects = () => {
   const {
@@ -17,6 +20,8 @@ const Projects = () => {
     setViewMode,
     handleProjectCreated
   } = useProjectsPage();
+
+  const { tasks } = useTasks();
 
   if (isLoading) {
     return (
@@ -34,6 +39,28 @@ const Projects = () => {
       </div>
     );
   }
+
+  // Transform projects for display
+  const transformedProjects = projects.map(project => {
+    const projectWithClients = {
+      ...project,
+      clients: (project as any).clients || { company: 'Unknown Client', name: 'Unknown Client' }
+    };
+    
+    const transformedProject = transformProject(projectWithClients);
+    
+    // Calculate real task counts for this project
+    const projectTasks = tasks.filter(task => task.project === project.name);
+    const completedTasks = projectTasks.filter(task => task.status === 'Completed' || task.status === 'Done').length;
+    
+    return {
+      ...transformedProject,
+      tasks: {
+        completed: completedTasks,
+        total: projectTasks.length
+      }
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -55,7 +82,30 @@ const Projects = () => {
       />
 
       {/* Projects Display */}
-      <ProjectGrid />
+      {transformedProjects.length > 0 ? (
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {transformedProjects.map((project) => (
+                <div key={project.id} className="p-4 border rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">{project.name}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{project.client}</p>
+                  <p className="text-sm text-gray-500">{project.status}</p>
+                  {project.description && (
+                    <p className="text-sm text-gray-600 mt-2">{project.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ProjectTable projects={transformedProjects} />
+          )}
+        </div>
+      ) : (
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 text-center py-8 text-gray-500">
+          <p>No projects found. Create your first project to get started!</p>
+        </div>
+      )}
     </div>
   );
 };

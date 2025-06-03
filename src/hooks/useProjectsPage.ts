@@ -13,6 +13,8 @@ export const useProjectsPage = () => {
   };
 
   const filterProjects = () => {
+    if (!projects) return [];
+    
     return projects.filter(project => {
       const matchesSearch = 
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,6 +27,8 @@ export const useProjectsPage = () => {
   };
 
   const sortProjects = (projectsToSort: typeof projects) => {
+    if (!projectsToSort) return [];
+    
     return [...projectsToSort].sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -47,6 +51,11 @@ export const useProjectsPage = () => {
   };
 
   const filteredProjects = sortProjects(filterProjects());
+
+  console.log('useProjectsPage - Raw projects:', projects?.length || 0);
+  console.log('useProjectsPage - Filtered projects:', filteredProjects?.length || 0);
+  console.log('useProjectsPage - Search term:', searchTerm);
+  console.log('useProjectsPage - Sort by:', sortBy);
 
   return {
     // Data
