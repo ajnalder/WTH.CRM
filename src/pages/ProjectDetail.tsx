@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
 import { ProjectTasksList } from '@/components/project/ProjectTasksList';
 import { NewTaskForm } from '@/components/NewTaskForm';
-import { AddTaskToProjectDialog } from '@/components/AddTaskToProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
