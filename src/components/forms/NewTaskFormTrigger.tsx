@@ -12,9 +12,18 @@ export const NewTaskFormTrigger: React.FC<NewTaskFormTriggerProps> = ({
   triggerText, 
   triggerVariant 
 }) => {
+  // If no trigger text, show icon only (for hover buttons on project cards)
+  if (!triggerText || triggerText.trim() === '') {
+    return (
+      <Button variant="outline" size="icon" className="h-8 w-8">
+        <Plus className="w-4 h-4" />
+      </Button>
+    );
+  }
+
   if (triggerVariant === 'outline') {
     return (
-      <Button variant="outline">
+      <Button variant="outline" size="sm">
         <Plus className="w-4 h-4 mr-2" />
         {triggerText}
       </Button>

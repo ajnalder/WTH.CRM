@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
+import { Calendar, Users, CheckCircle2, Clock, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { getStatusColor } from '@/utils/projectUtils';
 import { useClients } from '@/hooks/useClients';
+import { NewTaskForm } from '@/components/NewTaskForm';
 
 interface TeamMember {
   id: string;
@@ -107,82 +109,100 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     }
   };
 
+  const handleAddTaskClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <Link to={`/projects/${project.id}`}>
-      <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>
-                {getClientAvatar()}
+    <div className="relative group">
+      <Link to={`/projects/${project.id}`}>
+        <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>
+                  {getClientAvatar()}
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">{project.client}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm text-gray-600">{project.client}</div>
+              <Badge variant="secondary" className={getStatusColor(project.status)}>
+                {project.status}
+              </Badge>
+            </div>
+            <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
+              {project.name}
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-1">
+                <CheckCircle2 size={16} className="text-green-500" />
+                <span className="text-gray-600">
+                  {project.tasks.completed}/{project.tasks.total} tasks
+                </span>
               </div>
             </div>
-            <Badge variant="secondary" className={getStatusColor(project.status)}>
-              {project.status}
-            </Badge>
-          </div>
-          <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
-            {project.name}
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-1">
-              <CheckCircle2 size={16} className="text-green-500" />
-              <span className="text-gray-600">
-                {project.tasks.completed}/{project.tasks.total} tasks
-              </span>
-            </div>
-          </div>
 
-          {timeRemaining && (
-            <div className={`flex items-center space-x-1 text-sm ${
-              timeRemaining.urgent ? 'text-red-600' : 'text-gray-600'
-            }`}>
-              <Clock size={16} />
-              <span className={timeRemaining.urgent ? 'font-medium' : ''}>{timeRemaining.text}</span>
-            </div>
-          )}
-
-          {displayTeam && displayTeam.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <Users size={16} className="text-gray-400" />
-              <div className="flex -space-x-1">
-                {teamMembers.length > 0 ? (
-                  // Show real team member avatars
-                  teamMembers.slice(0, 3).map((member, index) => (
-                    <div
-                      key={member.id}
-                      className={`w-6 h-6 bg-gradient-to-r ${member.gradient} rounded-full border-2 border-white flex items-center justify-center text-xs text-white font-medium`}
-                    >
-                      {member.avatar}
-                    </div>
-                  ))
-                ) : (
-                  // Fallback to legacy string-based team data
-                  project.team.slice(0, 3).map((member, index) => (
-                    <div
-                      key={index}
-                      className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
-                    >
-                      {member}
-                    </div>
-                  ))
-                )}
-                {displayTeam.length > 3 && (
-                  <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
-                    +{displayTeam.length - 3}
-                  </div>
-                )}
+            {timeRemaining && (
+              <div className={`flex items-center space-x-1 text-sm ${
+                timeRemaining.urgent ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                <Clock size={16} />
+                <span className={timeRemaining.urgent ? 'font-medium' : ''}>{timeRemaining.text}</span>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
+            )}
+
+            {displayTeam && displayTeam.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <Users size={16} className="text-gray-400" />
+                <div className="flex -space-x-1">
+                  {teamMembers.length > 0 ? (
+                    // Show real team member avatars
+                    teamMembers.slice(0, 3).map((member, index) => (
+                      <div
+                        key={member.id}
+                        className={`w-6 h-6 bg-gradient-to-r ${member.gradient} rounded-full border-2 border-white flex items-center justify-center text-xs text-white font-medium`}
+                      >
+                        {member.avatar}
+                      </div>
+                    ))
+                  ) : (
+                    // Fallback to legacy string-based team data
+                    project.team.slice(0, 3).map((member, index) => (
+                      <div
+                        key={index}
+                        className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+                      >
+                        {member}
+                      </div>
+                    ))
+                  )}
+                  {displayTeam.length > 3 && (
+                    <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs text-white font-medium">
+                      +{displayTeam.length - 3}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+      
+      {/* Add Task Button - positioned absolutely to avoid interfering with card click */}
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={handleAddTaskClick}>
+        <NewTaskForm
+          prefilledProject={project.name}
+          prefilledTitle={`Task for ${project.name}`}
+          prefilledDescription={project.description || ''}
+          triggerText=""
+          triggerVariant="outline"
+        />
+      </div>
+    </div>
   );
 };
