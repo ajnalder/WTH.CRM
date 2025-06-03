@@ -53,7 +53,7 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
   const { updateProject, isUpdating } = useProjects();
   const { 
     projectTeamMembers, 
-    addTeamMember, 
+    assignTeamMember, 
     removeTeamMember 
   } = useProjectTeamMembers(project.id);
 
@@ -74,8 +74,8 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
 
   const onSubmit = (data: EditProjectFormData) => {
     updateProject({
-      id: project.id,
-      updates: {
+      projectId: project.id,
+      projectData: {
         name: data.name,
         description: data.description,
         status: data.status,
@@ -90,27 +90,36 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
     onSuccess();
   };
 
-  const selectedMembers = projectTeamMembers.map(ptm => ptm.team_member_id);
+  const selectedMembers = projectTeamMembers.map(ptm => ptm.user_id);
 
   const handleMemberToggle = (memberId: string) => {
     if (selectedMembers.includes(memberId)) {
       const projectTeamMember = projectTeamMembers.find(
-        ptm => ptm.team_member_id === memberId
+        ptm => ptm.user_id === memberId
       );
       if (projectTeamMember) {
-        removeTeamMember(projectTeamMember.id);
+        removeTeamMember({ 
+          projectId: project.id, 
+          teamMemberId: projectTeamMember.id 
+        });
       }
     } else {
-      addTeamMember(memberId);
+      assignTeamMember({ 
+        projectId: project.id, 
+        teamMemberId: memberId 
+      });
     }
   };
 
   const handleRemoveMember = (memberId: string) => {
     const projectTeamMember = projectTeamMembers.find(
-      ptm => ptm.team_member_id === memberId
+      ptm => ptm.user_id === memberId
     );
     if (projectTeamMember) {
-      removeTeamMember(projectTeamMember.id);
+      removeTeamMember({ 
+        projectId: project.id, 
+        teamMemberId: projectTeamMember.id 
+      });
     }
   };
 

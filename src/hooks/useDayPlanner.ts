@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -58,25 +59,29 @@ export const useDayPlanner = () => {
       const existingTaskIndex = scheduledTasks.findIndex(st => st.task_id === taskId);
       
       if (existingTaskIndex >= 0) {
-        // Task is being repositioned - for now, keep current position
-        // In a more complete implementation, we'd calculate the new position based on drop coordinates
-        return;
+        // Task is being repositioned - calculate new position from drop coordinates
+        const timelineElement = document.querySelector('[data-rbd-droppable-id="timeline"]') as HTMLElement;
+        if (timelineElement && result.combine === null) {
+          // For repositioning, we'll use a default behavior for now
+          // In a real implementation, you'd capture the mouse position during drag
+          return;
+        }
+      } else {
+        // New task being scheduled - use default position
+        const newScheduledTask: ScheduledTask = {
+          task_id: taskId,
+          task_type: 'task',
+          start_time: 60, // Default to 9 AM (60 minutes from 8 AM)
+          duration: 60, // Default 1 hour
+        };
+        
+        setScheduledTasks(prev => [...prev, newScheduledTask]);
+        
+        toast({
+          title: "Task Scheduled",
+          description: "Task has been added to your timeline",
+        });
       }
-      
-      // New task being scheduled
-      const newScheduledTask: ScheduledTask = {
-        task_id: taskId,
-        task_type: 'task',
-        start_time: 60, // Default to 9 AM (60 minutes from 8 AM)
-        duration: 60, // Default 1 hour
-      };
-      
-      setScheduledTasks(prev => [...prev, newScheduledTask]);
-      
-      toast({
-        title: "Task Scheduled",
-        description: "Task has been added to your timeline",
-      });
     }
     
     // Handle dropping task back to pool

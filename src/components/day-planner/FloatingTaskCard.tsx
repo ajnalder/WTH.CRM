@@ -31,9 +31,11 @@ export const FloatingTaskCard: React.FC<FloatingTaskCardProps> = ({
   timelineHeight
 }) => {
   const [isResizing, setIsResizing] = useState(false);
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const startYRef = useRef(0);
   const startDurationRef = useRef(0);
+  const startTimeRef = useRef(0);
 
   const getCustomColor = (color: string) => {
     switch (color) {
@@ -99,12 +101,39 @@ export const FloatingTaskCard: React.FC<FloatingTaskCardProps> = ({
       const deltaMinutes = deltaY / pixelsPerMinute;
       const newDuration = Math.max(15, startDurationRef.current + deltaMinutes);
       
-      // Update duration immediately for visual feedback
       updateTaskDuration(scheduledTask.task_id, newDuration);
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleCardDragStart = (e: React.MouseEvent) => {
+    if (isResizing) return;
+    
+    setIsDraggingCard(true);
+    startYRef.current = e.clientY;
+    startTimeRef.current = scheduledTask.start_time;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingCard) return;
+      
+      const deltaY = e.clientY - startYRef.current;
+      const pixelsPerMinute = timelineHeight / 480;
+      const deltaMinutes = deltaY / pixelsPerMinute;
+      const newStartTime = Math.max(0, Math.min(480 - scheduledTask.duration, startTimeRef.current + deltaMinutes));
+      
+      updateTaskStartTime(scheduledTask.task_id, newStartTime);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingCard(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -135,7 +164,7 @@ export const FloatingTaskCard: React.FC<FloatingTaskCardProps> = ({
     <Draggable 
       draggableId={`scheduled-${scheduledTask.task_id}`} 
       index={0}
-      isDragDisabled={isResizing}
+      isDragDisabled={isResizing || isDraggingCard}
     >
       {(provided, snapshot) => (
         <div
@@ -143,17 +172,20 @@ export const FloatingTaskCard: React.FC<FloatingTaskCardProps> = ({
           {...provided.draggableProps}
           className={`absolute left-2 right-2 border rounded-lg shadow-sm group ${getCardStyle()} ${
             snapshot.isDragging ? 'shadow-lg z-50 rotate-1 scale-105' : 'z-10'
-          } ${isResizing ? 'select-none' : ''}`}
+          } ${isResizing || isDraggingCard ? 'select-none' : ''}`}
           style={{
             top: `${topPosition}px`,
             height: `${cardHeight}px`,
             minHeight: '40px',
             ...provided.draggableProps.style
           }}
-          onMouseEnter={() => !isResizing && setShowControls(true)}
-          onMouseLeave={() => !isResizing && setShowControls(false)}
+          onMouseEnter={() => !isResizing && !isDraggingCard && setShowControls(true)}
+          onMouseLeave={() => !isResizing && !isDraggingCard && setShowControls(false)}
         >
-          <div className="p-3 h-full flex flex-col">
+          <div 
+            className="p-3 h-full flex flex-col cursor-move"
+            onMouseDown={handleCardDragStart}
+          >
             <div className="flex items-start justify-between mb-1">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 {client && (
@@ -176,7 +208,10 @@ export const FloatingTaskCard: React.FC<FloatingTaskCardProps> = ({
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeScheduledTask(scheduledTask.task_id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeScheduledTask(scheduledTask.task_id);
+                  }}
                 >
                   <X size={12} />
                 </Button>
