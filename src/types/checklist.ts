@@ -10,6 +10,8 @@ export interface ChecklistTemplate {
 export interface ChecklistItem {
   id: string;
   text: string;
+  title: string;
+  description: string;
   category?: string;
 }
 
