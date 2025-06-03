@@ -44,7 +44,7 @@ const ClientCard = ({ client }: { client: Client }) => {
   
   const primaryContact = contacts.find(contact => contact.is_primary);
   const displayEmail = primaryContact?.email || 'No email';
-  const displayPhone = primaryContact?.phone || client.phone;
+  const displayPhone = primaryContact?.phone || client.phone || 'No phone';
 
   // Calculate actual project count and total value for this client
   const actualProjectCount = projects?.length || 0;

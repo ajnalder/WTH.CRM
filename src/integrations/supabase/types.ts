@@ -92,13 +92,10 @@ export type Database = {
           avatar: string | null
           company: string
           created_at: string
-          email: string
           gradient: string | null
           id: string
           industry: string | null
           joined_date: string
-          name: string
-          phone: string | null
           projects_count: number | null
           status: string
           total_value: number | null
@@ -109,13 +106,10 @@ export type Database = {
           avatar?: string | null
           company: string
           created_at?: string
-          email: string
           gradient?: string | null
           id?: string
           industry?: string | null
           joined_date?: string
-          name: string
-          phone?: string | null
           projects_count?: number | null
           status?: string
           total_value?: number | null
@@ -126,13 +120,10 @@ export type Database = {
           avatar?: string | null
           company?: string
           created_at?: string
-          email?: string
           gradient?: string | null
           id?: string
           industry?: string | null
           joined_date?: string
-          name?: string
-          phone?: string | null
           projects_count?: number | null
           status?: string
           total_value?: number | null

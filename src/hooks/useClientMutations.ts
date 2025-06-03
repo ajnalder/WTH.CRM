@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,8 +35,6 @@ export const useClientMutations = () => {
       const { data, error } = await supabase
         .from('clients')
         .insert({
-          name: '',
-          email: '',
           phone: clientData.phone,
           company: clientData.company,
           industry: clientData.industry,

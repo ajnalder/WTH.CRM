@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,10 +19,8 @@ import { Building2, Calendar, DollarSign, Users } from 'lucide-react';
 
 interface Client {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
   company: string;
+  phone: string;
   industry: string;
   status: string;
   projects_count: number;

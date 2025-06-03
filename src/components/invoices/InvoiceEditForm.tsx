@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Invoice } from '@/types/invoiceTypes';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
+import { useContacts } from '@/hooks/useContacts';
 import { InvoiceItemsManager } from './InvoiceItemsManager';
 
 interface InvoiceEditFormProps {
@@ -38,6 +38,7 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
   const navigate = useNavigate();
   const { updateInvoice } = useInvoices();
   const { clients } = useClients();
+  const { contacts } = useContacts(invoice.client_id);
   
   const [formData, setFormData] = useState({
     client_id: invoice.client_id,
@@ -50,6 +51,7 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
   });
 
   const client = clients.find(c => c.id === formData.client_id);
+  const primaryContact = contacts?.find(contact => contact.is_primary);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,17 +215,21 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
                     <label className="text-sm font-medium text-gray-600">Company</label>
                     <p className="text-gray-900">{client.company}</p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Contact</label>
-                    <p className="text-gray-900">{client.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Email</label>
-                    <p className="text-gray-900">{client.email}</p>
-                  </div>
+                  {primaryContact?.name && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Contact</label>
+                      <p className="text-gray-900">{primaryContact.name}</p>
+                    </div>
+                  )}
+                  {primaryContact?.email && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Email</label>
+                      <p className="text-gray-900">{primaryContact.email}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-medium text-gray-600">Phone</label>
-                    <p className="text-gray-900">{client.phone || 'Not provided'}</p>
+                    <p className="text-gray-900">{primaryContact?.phone || client.phone || 'Not provided'}</p>
                   </div>
                 </div>
               ) : (

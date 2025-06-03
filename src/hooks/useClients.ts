@@ -6,10 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 export interface Client {
   id: string;
   user_id: string;
-  name: string;
-  email: string;
-  phone: string | null;
   company: string;
+  phone: string | null;
   industry: string | null;
   status: 'active' | 'pending' | 'inactive';
   projects_count: number;
@@ -53,8 +51,6 @@ export const useClients = () => {
         .insert({
           ...clientData,
           user_id: user.user.id,
-          name: clientData.company, // Use company as name for now
-          email: `contact@${clientData.company.toLowerCase().replace(/\s+/g, '')}.com`, // Generate a placeholder email
         })
         .select()
         .single();
