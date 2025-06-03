@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -90,12 +91,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       return client.avatar;
     }
     // Fallback: generate from client name
-    return project.client
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    const companyName = project.client.trim();
+    const words = companyName.split(/\s+/);
+    
+    if (words.length === 1) {
+      // Single word: use first 2 letters
+      return companyName.substring(0, 2).toUpperCase();
+    } else {
+      // Multiple words: use first letter of each word (up to 2)
+      return words
+        .slice(0, 2)
+        .map(word => word[0])
+        .join('')
+        .toUpperCase();
+    }
   };
 
   return (
