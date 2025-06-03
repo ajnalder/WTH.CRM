@@ -2,6 +2,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +29,7 @@ interface TaskFormData {
   dueDate: string;
   tags: string;
   dropboxUrl: string;
+  multipleTasks?: string; // For multiple tasks mode
 }
 
 interface NewTaskFormProps {
@@ -36,6 +39,7 @@ interface NewTaskFormProps {
   prefilledDescription?: string;
   triggerText?: string;
   triggerVariant?: 'default' | 'outline';
+  multipleMode?: boolean; // New prop for multiple tasks mode
 }
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ 
@@ -44,7 +48,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   prefilledTitle = '',
   prefilledDescription = '',
   triggerText = "New Task",
-  triggerVariant = "default"
+  triggerVariant = "default",
+  multipleMode = false
 }) => {
   const [open, setOpen] = React.useState(false);
   const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
@@ -59,6 +64,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       dueDate: '',
       tags: '',
       dropboxUrl: '',
+      multipleTasks: '',
     },
   });
 
@@ -68,7 +74,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       console.log('NewTaskForm - Dialog opened, setting form values:', {
         project: prefilledProject,
         title: prefilledTitle,
-        description: prefilledDescription
+        description: prefilledDescription,
+        multipleMode
       });
       
       form.reset({
@@ -78,9 +85,10 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
         dueDate: '',
         tags: '',
         dropboxUrl: '',
+        multipleTasks: '',
       });
     }
-  }, [open, prefilledProject, prefilledTitle, prefilledDescription, form]);
+  }, [open, prefilledProject, prefilledTitle, prefilledDescription, multipleMode, form]);
 
   const handleTeamMemberToggle = (memberId: string) => {
     console.log('NewTaskForm - Team member toggle:', memberId);
@@ -105,40 +113,79 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   const onSubmit = (data: TaskFormData) => {
     console.log('NewTaskForm - Form submission started with data:', data);
     console.log('NewTaskForm - Selected team members at submission:', selectedTeamMembers);
+    console.log('NewTaskForm - Multiple mode:', multipleMode);
     
-    // Validate required fields
-    if (!data.title || data.title.trim() === '') {
-      console.error('NewTaskForm - Task title is required');
-      return;
+    if (multipleMode) {
+      // Handle multiple tasks creation
+      if (!data.multipleTasks || data.multipleTasks.trim() === '') {
+        console.error('NewTaskForm - Multiple tasks text is required');
+        return;
+      }
+      
+      if (!data.project || data.project.trim() === '') {
+        console.error('NewTaskForm - Project is required');
+        return;
+      }
+
+      const taskLines = data.multipleTasks
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      taskLines.forEach((taskTitle, index) => {
+        // For now, we'll store the first selected team member as assignee
+        // Later we can enhance this to support multiple assignees or rotate through them
+        const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[index % selectedTeamMembers.length] : null;
+        
+        const taskData = {
+          title: taskTitle,
+          description: data.description?.trim() || null,
+          assignee: assignee,
+          due_date: data.dueDate || null,
+          tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : null,
+          project: data.project.trim(),
+          status: 'To Do',
+          progress: 0,
+          dropbox_url: data.dropboxUrl?.trim() || null,
+        };
+        
+        console.log('NewTaskForm - Creating multiple task:', taskData);
+        createTask(taskData);
+      });
+    } else {
+      // Handle single task creation
+      if (!data.title || data.title.trim() === '') {
+        console.error('NewTaskForm - Task title is required');
+        return;
+      }
+      
+      if (!data.project || data.project.trim() === '') {
+        console.error('NewTaskForm - Project is required');
+        return;
+      }
+      
+      const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+      
+      // For now, we'll store the first selected team member as assignee
+      // Later we can enhance this to support multiple assignees
+      const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[0] : null;
+      console.log('NewTaskForm - Assignee being set:', assignee);
+      
+      const taskData = {
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        assignee: assignee,
+        due_date: data.dueDate || null,
+        tags: tagsArray.length > 0 ? tagsArray : null,
+        project: data.project.trim(),
+        status: 'To Do',
+        progress: 0,
+        dropbox_url: data.dropboxUrl?.trim() || null,
+      };
+      
+      console.log('NewTaskForm - Final task data being submitted:', taskData);
+      createTask(taskData);
     }
-    
-    if (!data.project || data.project.trim() === '') {
-      console.error('NewTaskForm - Project is required');
-      return;
-    }
-    
-    const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-    
-    // For now, we'll store the first selected team member as assignee
-    // Later we can enhance this to support multiple assignees
-    const assignee = selectedTeamMembers.length > 0 ? selectedTeamMembers[0] : null;
-    console.log('NewTaskForm - Assignee being set:', assignee);
-    
-    const taskData = {
-      title: data.title.trim(),
-      description: data.description?.trim() || null,
-      assignee: assignee,
-      due_date: data.dueDate || null,
-      tags: tagsArray.length > 0 ? tagsArray : null,
-      project: data.project.trim(),
-      status: 'To Do',
-      progress: 0,
-      dropbox_url: data.dropboxUrl?.trim() || null,
-    };
-    
-    console.log('NewTaskForm - Final task data being submitted:', taskData);
-    
-    createTask(taskData);
     
     // Close dialog and reset form
     setOpen(false);
@@ -149,6 +196,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       dueDate: '',
       tags: '',
       dropboxUrl: '',
+      multipleTasks: '',
     });
     setSelectedTeamMembers([]);
     
@@ -156,6 +204,11 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       onTaskCreated();
     }
   };
+
+  const dialogTitle = multipleMode ? "Add Multiple Tasks" : "Create New Task";
+  const dialogDescription = multipleMode 
+    ? "Add multiple tasks to this project. Enter each task on a new line."
+    : "Add a new task to track progress and assign to team members.";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -167,19 +220,43 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Add a new task to track progress and assign to team members.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <NewTaskFormFields
-              control={form.control}
-              projects={projects}
-              isLoadingProjects={isLoadingProjects}
-              prefilledProject={prefilledProject}
-            />
+            {multipleMode ? (
+              <>
+                {/* Project and description fields for multiple mode */}
+                <NewTaskFormFields
+                  control={form.control}
+                  projects={projects}
+                  isLoadingProjects={isLoadingProjects}
+                  prefilledProject={prefilledProject}
+                  hideFields={['title', 'dueDate', 'tags', 'dropboxUrl']} // Hide single task fields
+                />
+                
+                {/* Multiple tasks input */}
+                <div className="space-y-2">
+                  <Label htmlFor="multipleTasks">Tasks</Label>
+                  <Textarea
+                    id="multipleTasks"
+                    placeholder="Task 1&#10;Task 2&#10;Task 3"
+                    {...form.register('multipleTasks', { required: 'Please enter at least one task' })}
+                    className="min-h-[120px]"
+                  />
+                </div>
+              </>
+            ) : (
+              <NewTaskFormFields
+                control={form.control}
+                projects={projects}
+                isLoadingProjects={isLoadingProjects}
+                prefilledProject={prefilledProject}
+              />
+            )}
             
             <NewTaskTeamMemberSection
               selectedTeamMembers={selectedTeamMembers}
@@ -192,7 +269,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
                 Cancel
               </Button>
               <Button type="submit" disabled={isCreating}>
-                {isCreating ? 'Creating...' : 'Create Task'}
+                {isCreating ? 'Creating...' : multipleMode ? 'Add Tasks' : 'Create Task'}
               </Button>
             </DialogFooter>
           </form>

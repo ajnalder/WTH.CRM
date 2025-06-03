@@ -111,10 +111,12 @@ const ProjectDetail = () => {
                 triggerVariant="default"
               />
               
-              <AddTaskToProjectDialog
-                projectId={transformedProject.id}
-                projectName={transformedProject.name}
+              <NewTaskForm
+                prefilledProject={transformedProject.name}
+                prefilledDescription={transformedProject.description || ''}
                 triggerText="Add multiple tasks"
+                triggerVariant="outline"
+                multipleMode={true}
               />
             </div>
             
