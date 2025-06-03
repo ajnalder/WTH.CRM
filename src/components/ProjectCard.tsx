@@ -184,7 +184,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           </div>
 
-          {project.budget && (
+          {project.budget && project.budget > 0 && (
             <div className="pt-2 border-t border-gray-100">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Budget</span>
