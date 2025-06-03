@@ -10,7 +10,7 @@ import { ProjectTimeline } from '@/components/project/ProjectTimeline';
 import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
 import { ProjectTasksList } from '@/components/project/ProjectTasksList';
-import { NewTaskForm } from '@/components/NewTaskForm';
+import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
@@ -103,17 +103,14 @@ const ProjectDetail = () => {
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             
             <div className="flex gap-3">
-              <NewTaskForm 
+              <TaskCreateDialog 
                 prefilledProject={transformedProject.name}
-                prefilledTitle={`Task for ${transformedProject.name}`}
-                prefilledDescription={transformedProject.description || ''}
                 triggerText="Add task"
                 triggerVariant="default"
               />
               
-              <NewTaskForm
+              <TaskCreateDialog
                 prefilledProject={transformedProject.name}
-                prefilledDescription={transformedProject.description || ''}
                 triggerText="Add multiple tasks"
                 triggerVariant="outline"
                 multipleMode={true}

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { NewTaskForm } from '@/components/NewTaskForm';
+import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 
 interface TaskControlsProps {
   searchTerm: string;
@@ -90,7 +90,7 @@ export const TaskControls: React.FC<TaskControlsProps> = ({
             </button>
           </div>
           
-          <NewTaskForm onTaskCreated={onTaskCreated} />
+          <TaskCreateDialog onTaskCreated={onTaskCreated} />
         </div>
       </div>
     </div>
