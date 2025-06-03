@@ -62,12 +62,23 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     },
   });
 
-  // Update form when prefilled values change or dialog opens
+  // Update form when dialog opens with prefilled values
   React.useEffect(() => {
     if (open) {
-      form.setValue('project', prefilledProject || '');
-      form.setValue('title', prefilledTitle || '');
-      form.setValue('description', prefilledDescription || '');
+      console.log('NewTaskForm - Dialog opened, setting form values:', {
+        project: prefilledProject,
+        title: prefilledTitle,
+        description: prefilledDescription
+      });
+      
+      form.reset({
+        title: prefilledTitle || '',
+        description: prefilledDescription || '',
+        project: prefilledProject || '',
+        dueDate: '',
+        tags: '',
+        dropboxUrl: '',
+      });
     }
   }, [open, prefilledProject, prefilledTitle, prefilledDescription, form]);
 
@@ -92,8 +103,19 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   };
 
   const onSubmit = (data: TaskFormData) => {
-    console.log('NewTaskForm - Creating new task:', data);
+    console.log('NewTaskForm - Form submission started with data:', data);
     console.log('NewTaskForm - Selected team members at submission:', selectedTeamMembers);
+    
+    // Validate required fields
+    if (!data.title || data.title.trim() === '') {
+      console.error('NewTaskForm - Task title is required');
+      return;
+    }
+    
+    if (!data.project || data.project.trim() === '') {
+      console.error('NewTaskForm - Project is required');
+      return;
+    }
     
     const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     
@@ -103,21 +125,22 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     console.log('NewTaskForm - Assignee being set:', assignee);
     
     const taskData = {
-      title: data.title,
-      description: data.description || null,
+      title: data.title.trim(),
+      description: data.description?.trim() || null,
       assignee: assignee,
       due_date: data.dueDate || null,
       tags: tagsArray.length > 0 ? tagsArray : null,
-      project: data.project,
+      project: data.project.trim(),
       status: 'To Do',
       progress: 0,
-      dropbox_url: data.dropboxUrl || null,
+      dropbox_url: data.dropboxUrl?.trim() || null,
     };
     
     console.log('NewTaskForm - Final task data being submitted:', taskData);
     
     createTask(taskData);
     
+    // Close dialog and reset form
     setOpen(false);
     form.reset({
       title: '',
