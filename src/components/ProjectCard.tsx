@@ -90,20 +90,39 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
   const clientGradient = getClientGradient(project.client);
 
+  // Extract the base color from the gradient for the card background with tint
+  const getCardBackgroundClass = (gradient: string) => {
+    if (gradient.includes('blue')) return 'bg-blue-50/80 border-blue-200/80';
+    if (gradient.includes('green')) return 'bg-green-50/80 border-green-200/80';
+    if (gradient.includes('purple')) return 'bg-purple-50/80 border-purple-200/80';
+    if (gradient.includes('red')) return 'bg-red-50/80 border-red-200/80';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/80 border-yellow-200/80';
+    if (gradient.includes('pink')) return 'bg-pink-50/80 border-pink-200/80';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/80 border-indigo-200/80';
+    if (gradient.includes('teal')) return 'bg-teal-50/80 border-teal-200/80';
+    if (gradient.includes('orange')) return 'bg-orange-50/80 border-orange-200/80';
+    if (gradient.includes('cyan')) return 'bg-cyan-50/80 border-cyan-200/80';
+    if (gradient.includes('lime')) return 'bg-lime-50/80 border-lime-200/80';
+    if (gradient.includes('rose')) return 'bg-rose-50/80 border-rose-200/80';
+    if (gradient.includes('emerald')) return 'bg-emerald-50/80 border-emerald-200/80';
+    if (gradient.includes('amber')) return 'bg-amber-50/80 border-amber-200/80';
+    if (gradient.includes('violet')) return 'bg-violet-50/80 border-violet-200/80';
+    if (gradient.includes('sky')) return 'bg-sky-50/80 border-sky-200/80';
+    if (gradient.includes('fuchsia')) return 'bg-fuchsia-50/80 border-fuchsia-200/80';
+    return 'bg-blue-50/80 border-blue-200/80'; // default
+  };
+
   return (
-    <Link to={`/projects/${project.id}`} className="block">
-      <Card className="group hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-white/80 backdrop-blur-sm cursor-pointer">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2 flex-1">
-              <CardTitle className="text-lg hover:text-blue-600 transition-colors">
-                {project.name}
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
-                  {getClientInitials(project.client)}
-                </div>
-                <span className="text-sm text-gray-600">{project.client}</span>
+    <Link to={`/projects/${project.id}`}>
+      <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold`}>
+                {getClientInitials(project.client)}
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">{project.client}</div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -115,13 +134,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               </Badge>
             </div>
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
+          <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
+            {project.name}
+          </CardTitle>
           {project.description && (
             <p className="text-sm text-gray-600 line-clamp-2">{project.description}</p>
           )}
+        </CardHeader>
 
+        <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Progress</span>
