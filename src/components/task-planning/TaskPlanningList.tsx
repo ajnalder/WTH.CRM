@@ -10,6 +10,9 @@ interface TaskPlanningListProps {
   onTimeAllocationChange: (taskId: string, minutes: number) => void;
   onMarkComplete: (taskId: string) => void;
   getAssigneeName: (assigneeId: string | null) => string;
+  getClientName: (clientId: string | null) => string;
+  getClientGradient: (clientId: string | null) => string;
+  getClientInitials: (clientName: string) => string;
   isUpdating: boolean;
 }
 
@@ -19,6 +22,9 @@ export const TaskPlanningList: React.FC<TaskPlanningListProps> = ({
   onTimeAllocationChange,
   onMarkComplete,
   getAssigneeName,
+  getClientName,
+  getClientGradient,
+  getClientInitials,
   isUpdating,
 }) => {
   const handleDragEnd = (result: any) => {
@@ -70,6 +76,9 @@ export const TaskPlanningList: React.FC<TaskPlanningListProps> = ({
                       onTimeAllocationChange={onTimeAllocationChange}
                       onMarkComplete={onMarkComplete}
                       getAssigneeName={getAssigneeName}
+                      getClientName={getClientName}
+                      getClientGradient={getClientGradient}
+                      getClientInitials={getClientInitials}
                       isUpdating={isUpdating}
                     />
                   </div>
