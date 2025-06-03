@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Building2, Mail, Phone, Calendar, DollarSign, Users } from 'lucide-react';
+import { Building2, Calendar, DollarSign, Users } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -44,10 +44,8 @@ interface ClientDetailsProps {
 export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startInEditMode = false }: ClientDetailsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
     company: '',
+    phone: '',
     industry: '',
     status: '',
   });
@@ -74,10 +72,8 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
   useEffect(() => {
     if (client) {
       setFormData({
-        name: client.name,
-        email: client.email,
-        phone: client.phone,
         company: client.company,
+        phone: client.phone,
         industry: client.industry,
         status: client.status,
       });
@@ -96,13 +92,11 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (client && formData.name && formData.email && formData.company) {
+    if (client && formData.company) {
       const updatedClient = {
         ...client,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
         company: formData.company,
+        phone: formData.phone,
         industry: formData.industry,
         status: formData.status,
       };
@@ -124,10 +118,8 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
     // Reset form data to original client data
     if (client) {
       setFormData({
-        name: client.name,
-        email: client.email,
-        phone: client.phone,
         company: client.company,
+        phone: client.phone,
         industry: client.industry,
         status: client.status,
       });
@@ -195,29 +187,6 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
                 id="company"
                 value={formData.company}
                 onChange={(e) => handleInputChange('company', e.target.value)}
-                disabled={!isEditing}
-                className={!isEditing ? 'bg-gray-50' : ''}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Contact Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                disabled={!isEditing}
-                className={!isEditing ? 'bg-gray-50' : ''}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
                 disabled={!isEditing}
                 className={!isEditing ? 'bg-gray-50' : ''}
               />
