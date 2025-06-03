@@ -60,7 +60,7 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(editProjectSchema),
     defaultValues: {
-      name: project.name,
+      name: project.name || '',
       description: project.description || '',
       status: (project.status as EditProjectFormData['status']) || 'Planning',
       priority: (project.priority as EditProjectFormData['priority']) || 'Medium',

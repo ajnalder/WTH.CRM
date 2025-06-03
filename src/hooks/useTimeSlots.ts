@@ -7,9 +7,11 @@ interface TimeSlot {
   id: string;
   user_id: string;
   date: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
+  time_slot: string;
+  task_id: string | null;
+  task_type: string | null;
+  title: string | null;
+  color: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, User, GripVertical, Clock, Check, AlertCircle } from 'lucide-react';
+import { Calendar, User, GripVertical, Clock, Check, AlertCircle, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,19 @@ import type { TaskPlanningItem } from '@/hooks/useTaskPlanning';
 
 interface TaskPlanningCardProps {
   task: TaskPlanningItem;
-  index: number;
-  dragHandleProps: any;
+  index?: number;
+  dragHandleProps?: any;
   onTimeAllocationChange: (taskId: string, minutes: number) => void;
   onMarkComplete: (taskId: string) => void;
+  onSchedule?: (taskId: string) => void;
+  onUnschedule?: (taskId: string) => void;
   getAssigneeName: (assigneeId: string | null) => string;
+  getClientName: (clientId: string | null) => string;
+  getClientGradient: (clientId: string | null) => string;
+  getClientInitials: (clientName: string) => string;
   isUpdating: boolean;
+  showScheduleButton?: boolean;
+  showUnscheduleButton?: boolean;
 }
 
 export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
@@ -24,8 +31,15 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   dragHandleProps,
   onTimeAllocationChange,
   onMarkComplete,
+  onSchedule,
+  onUnschedule,
   getAssigneeName,
+  getClientName,
+  getClientGradient,
+  getClientInitials,
   isUpdating,
+  showScheduleButton = false,
+  showUnscheduleButton = false,
 }) => {
   const [timeInput, setTimeInput] = useState(Math.floor(task.allocated_minutes / 60).toString());
   const [minutesInput, setMinutesInput] = useState((task.allocated_minutes % 60).toString());
@@ -67,22 +81,44 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
     onTimeAllocationChange(task.id, totalMinutes);
   };
 
+  const clientName = getClientName(task.client_id || null);
+  const clientGradient = getClientGradient(task.client_id || null);
+  const clientInitials = getClientInitials(clientName);
+
+  // Get card background class based on client gradient
+  const getCardBackgroundClass = (gradient: string) => {
+    if (gradient.includes('blue')) return 'bg-blue-50/50 border-blue-200/50';
+    if (gradient.includes('green')) return 'bg-green-50/50 border-green-200/50';
+    if (gradient.includes('purple')) return 'bg-purple-50/50 border-purple-200/50';
+    if (gradient.includes('red')) return 'bg-red-50/50 border-red-200/50';
+    if (gradient.includes('yellow')) return 'bg-yellow-50/50 border-yellow-200/50';
+    if (gradient.includes('pink')) return 'bg-pink-50/50 border-pink-200/50';
+    if (gradient.includes('indigo')) return 'bg-indigo-50/50 border-indigo-200/50';
+    if (gradient.includes('teal')) return 'bg-teal-50/50 border-teal-200/50';
+    if (gradient.includes('orange')) return 'bg-orange-50/50 border-orange-200/50';
+    return 'bg-gray-50/50 border-gray-200/50';
+  };
+
   return (
-    <Card className={`border-l-4 ${getPriorityColor(task.priority)} hover:shadow-md transition-shadow`}>
+    <Card className={`border-l-4 ${getPriorityColor(task.priority)} ${getCardBackgroundClass(clientGradient)} hover:shadow-md transition-shadow`}>
       <div className="p-4">
         <div className="flex items-start gap-4">
           {/* Drag Handle */}
-          <div
-            {...dragHandleProps}
-            className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical size={16} />
-          </div>
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+            >
+              <GripVertical size={16} />
+            </div>
+          )}
 
           {/* Order Number */}
-          <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
-            {index}
-          </div>
+          {index !== undefined && (
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
+              {index}
+            </div>
+          )}
 
           {/* Task Content */}
           <div className="flex-1 min-w-0">
@@ -93,13 +129,33 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
                 )}
               </div>
-              <Badge className={getStatusColor(task.status)}>
-                {task.status}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusColor(task.status)}>
+                  {task.status}
+                </Badge>
+                {showUnscheduleButton && onUnschedule && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onUnschedule(task.id)}
+                    className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                  >
+                    <X size={12} />
+                  </Button>
+                )}
+              </div>
             </div>
 
-            {/* Task Details */}
+            {/* Client and Task Details */}
             <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-3">
+              {/* Client Avatar and Name */}
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-xs font-semibold`}>
+                  {clientInitials}
+                </div>
+                <span className="font-medium">{clientName}</span>
+              </div>
+
               {task.project && (
                 <div className="flex items-center gap-1">
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -148,18 +204,31 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
                 </div>
               </div>
 
-              {task.status !== 'Done' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onMarkComplete(task.id)}
-                  disabled={isUpdating}
-                  className="h-6 px-2 text-xs"
-                >
-                  <Check size={12} className="mr-1" />
-                  Complete
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {showScheduleButton && onSchedule && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onSchedule(task.id)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    Schedule
+                  </Button>
+                )}
+
+                {task.status !== 'Done' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onMarkComplete(task.id)}
+                    disabled={isUpdating}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Check size={12} className="mr-1" />
+                    Complete
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
