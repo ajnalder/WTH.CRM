@@ -126,7 +126,10 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <ProjectBasicFields control={form.control as any} />
+        <ProjectBasicFields 
+          control={form.control as any} 
+          clientName={project.client}
+        />
         <ProjectDateFields control={form.control as any} />
         <ProjectSettingsFields control={form.control as any} />
         <ProjectTeamSection
