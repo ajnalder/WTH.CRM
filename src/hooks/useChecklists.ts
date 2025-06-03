@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +36,7 @@ export const useChecklists = () => {
         .from('client_checklists')
         .select(`
           *,
-          client:clients(id, company, name)
+          client:clients(id, company)
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });

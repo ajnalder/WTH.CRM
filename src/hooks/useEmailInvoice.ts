@@ -17,8 +17,8 @@ export const useEmailInvoice = (
   const { updateInvoice } = useInvoices();
   const queryClient = useQueryClient();
   
-  const recipientEmail = primaryContact?.email || client?.email || '';
-  const recipientName = primaryContact?.name || client?.name || client?.company || '';
+  const recipientEmail = primaryContact?.email || '';
+  const recipientName = primaryContact?.name || client?.company || '';
   const firstName = recipientName.split(' ')[0];
 
   const [email, setEmail] = useState(recipientEmail);
@@ -28,8 +28,8 @@ export const useEmailInvoice = (
 
   // Update email and message when data changes
   useEffect(() => {
-    const currentEmail = primaryContact?.email || client?.email || '';
-    const currentName = primaryContact?.name || client?.name || client?.company || '';
+    const currentEmail = primaryContact?.email || '';
+    const currentName = primaryContact?.name || client?.company || '';
     const currentFirstName = currentName.split(' ')[0];
     
     setEmail(currentEmail);
@@ -64,7 +64,7 @@ What the Heck Team`);
           subject: subject,
           message: message,
           invoiceNumber: invoice.invoice_number,
-          clientName: client?.company || client?.name || 'Customer',
+          clientName: client?.company || 'Customer',
           invoiceData: {
             invoice: invoice,
             client: client,

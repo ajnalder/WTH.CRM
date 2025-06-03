@@ -1,16 +1,16 @@
 
-export interface ChecklistItem {
-  id: string;
-  title: string;
-  description: string;
-}
-
 export interface ChecklistTemplate {
   id: string;
   name: string;
   items: ChecklistItem[];
   created_at: string;
   updated_at: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  category?: string;
 }
 
 export interface ClientChecklist {
@@ -30,6 +30,5 @@ export interface ClientChecklistWithClient extends ClientChecklist {
   client: {
     id: string;
     company: string;
-    name: string;
   };
 }

@@ -98,14 +98,6 @@ export const generateInvoicePDF = async (
     yPos += 10;
     pdf.text(client.company, marginLeft, yPos);
     
-    if (client.name) {
-      yPos += 8;
-      pdf.text(client.name, marginLeft, yPos);
-    }
-    if (client.email) {
-      yPos += 8;
-      pdf.text(client.email, marginLeft, yPos);
-    }
     if (client.phone) {
       yPos += 8;
       pdf.text(client.phone, marginLeft, yPos);
