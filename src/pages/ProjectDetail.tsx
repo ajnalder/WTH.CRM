@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { ProjectTasksList } from '@/components/project/ProjectTasksList';
 import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
+import { useClients } from '@/hooks/useClients';
 import { transformProject, calculateDaysUntilDue, calculateProjectDuration } from '@/utils/projectUtils';
 
 const ProjectDetail = () => {
@@ -19,6 +21,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const { projects, isLoading, error, updateProject } = useProjects();
   const { tasks } = useTasks();
+  const { clients } = useClients();
   
   if (isLoading) {
     return (
@@ -69,6 +72,16 @@ const ProjectDetail = () => {
       total: projectTasks.length
     }
   };
+
+  // Find the client to get the client_id
+  const projectClient = clients.find(c => c.company === transformedProject.client);
+  
+  // Enhanced project data for the header with all required fields
+  const enhancedProject = {
+    ...projectWithRealTasks,
+    client_id: projectClient?.id || project.client_id,
+    is_billable: project.is_billable
+  };
   
   const daysUntilDue = transformedProject.dueDate 
     ? calculateDaysUntilDue(transformedProject.dueDate, transformedProject.isRetainer) 
@@ -87,7 +100,7 @@ const ProjectDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="p-6">
-        <ProjectHeader project={projectWithRealTasks} />
+        <ProjectHeader project={enhancedProject} />
         
         <ProjectHeaderControls project={projectWithRealTasks} />
         

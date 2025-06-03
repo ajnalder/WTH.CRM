@@ -4,6 +4,7 @@ import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EditProjectDialog } from './EditProjectDialog';
 import { getStatusColor } from '@/utils/projectUtils';
 
 interface Project {
@@ -11,6 +12,14 @@ interface Project {
   name: string;
   client: string;
   status: string;
+  description: string;
+  priority: string;
+  startDate: string;
+  dueDate: string;
+  budget: number;
+  isRetainer: boolean;
+  client_id?: string;
+  is_billable?: boolean;
 }
 
 interface ProjectHeaderProps {
@@ -19,11 +28,6 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
   const navigate = useNavigate();
-
-  const handleEdit = () => {
-    // TODO: Implement edit project functionality
-    console.log('Edit project:', project.id);
-  };
 
   const handleDelete = () => {
     // TODO: Implement delete project functionality
@@ -46,15 +50,19 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleEdit}
-                className="flex items-center space-x-1"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit</span>
-              </Button>
+              <EditProjectDialog
+                project={project}
+                trigger={
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center space-x-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span>Edit</span>
+                  </Button>
+                }
+              />
               <Button 
                 variant="outline" 
                 size="sm"
