@@ -113,6 +113,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     return 'bg-blue-50/80 border-blue-200/80'; // default
   };
 
+  // Debug logging to see what budget values we're getting
+  console.log('ProjectCard - project name:', project.name);
+  console.log('ProjectCard - budget value:', project.budget);
+  console.log('ProjectCard - budget type:', typeof project.budget);
+  console.log('ProjectCard - is retainer:', project.isRetainer);
+
+  // Check if we should show budget - more explicit condition
+  const shouldShowBudget = project.budget !== null && 
+                          project.budget !== undefined && 
+                          Number(project.budget) > 0;
+
+  console.log('ProjectCard - should show budget:', shouldShowBudget);
+
   return (
     <Link to={`/projects/${project.id}`}>
       <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
@@ -184,7 +197,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           </div>
 
-          {project.budget && project.budget > 0 && (
+          {shouldShowBudget && (
             <div className="pt-2 border-t border-gray-100">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Budget</span>
