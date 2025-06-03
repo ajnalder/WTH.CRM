@@ -67,13 +67,14 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
       title: '',
       description: '',
       project: prefilledProject || '',
-      assignee: '',
+      assignee: 'unassigned',
       dueDate: '',
       multipleTasks: ''
     }
   });
 
   const selectedProject = watch('project');
+  const selectedAssignee = watch('assignee');
 
   React.useEffect(() => {
     if (open && prefilledProject) {
@@ -103,7 +104,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
           title: taskTitle,
           description: data.description || null,
           project: data.project,
-          assignee: data.assignee || null,
+          assignee: data.assignee === 'unassigned' ? null : data.assignee,
           due_date: data.dueDate || null,
           status: 'To Do',
           progress: 0,
@@ -112,7 +113,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
         };
         
         console.log('TaskCreateDialog - Creating task:', taskData);
-        createTask(taskData);
+        await createTask(taskData);
       }
     } else {
       // Handle single task
@@ -125,7 +126,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
         title: data.title,
         description: data.description || null,
         project: data.project,
-        assignee: data.assignee || null,
+        assignee: data.assignee === 'unassigned' ? null : data.assignee,
         due_date: data.dueDate || null,
         status: 'To Do',
         progress: 0,
@@ -134,7 +135,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
       };
       
       console.log('TaskCreateDialog - Creating single task:', taskData);
-      createTask(taskData);
+      await createTask(taskData);
     }
 
     // Close dialog and reset form
@@ -220,7 +221,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder={isLoadingProjects ? "Loading projects..." : "Select a project"} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.name}>
                     {project.name}
@@ -251,14 +252,14 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="assignee">Assignee</Label>
                 <Select
-                  value={watch('assignee')}
+                  value={selectedAssignee}
                   onValueChange={(value) => setValue('assignee', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select team member (optional)" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {teamMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.name}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Users, Plus } from 'lucide-react';
 import {
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useClients } from '@/hooks/useClients';
-import { NewTaskForm } from '@/components/NewTaskForm';
+import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 
 // Use the transformed project interface that matches what we're passing
 interface TransformedProject {
@@ -152,10 +151,8 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                 </div>
               </TableCell>
               <TableCell>
-                <NewTaskForm
+                <TaskCreateDialog
                   prefilledProject={project.name}
-                  prefilledTitle={`Task for ${project.name}`}
-                  prefilledDescription={project.description || ''}
                   triggerText="Add Task"
                   triggerVariant="outline"
                 />
