@@ -74,8 +74,7 @@ export const useProjects = (clientId?: string) => {
           *,
           clients!inner(
             id,
-            company,
-            name
+            company
           ),
           project_team_members(
             user_id,
