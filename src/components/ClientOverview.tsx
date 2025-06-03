@@ -59,7 +59,7 @@ const ClientCard = ({ client }: { client: Client }) => {
     navigate(`/clients/${client.id}`);
   };
 
-  // Fix avatar display - use stored avatar or generate from company name
+  // Use the stored avatar from the database
   const avatarText = client.avatar || client.company.substring(0, 2).toUpperCase();
 
   return (
