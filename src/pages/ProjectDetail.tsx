@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -102,20 +101,11 @@ const ProjectDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             
-            <div className="flex gap-3">
-              <TaskCreateDialog 
-                prefilledProject={transformedProject.name}
-                triggerText="Add task"
-                triggerVariant="default"
-              />
-              
-              <TaskCreateDialog
-                prefilledProject={transformedProject.name}
-                triggerText="Add multiple tasks"
-                triggerVariant="outline"
-                multipleMode={true}
-              />
-            </div>
+            <TaskCreateDialog 
+              prefilledProject={transformedProject.name}
+              triggerText="Add task"
+              triggerVariant="default"
+            />
             
             <ProjectTasksList projectName={transformedProject.name} />
             
