@@ -19,16 +19,16 @@ import {
 import { Building2, Mail, Phone, Calendar, DollarSign, Users } from 'lucide-react';
 
 interface Client {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
   company: string;
   industry: string;
   status: string;
-  projectsCount: number;
-  totalValue: number;
-  joinedDate: string;
+  projects_count: number;
+  total_value: number;
+  joined_date: string;
   avatar: string;
   gradient: string;
 }
@@ -133,7 +133,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                 <div className="flex items-center">
                   <Calendar size={12} className="mr-1" />
-                  Joined {new Date(client.joinedDate).toLocaleDateString()}
+                  Joined {new Date(client.joined_date).toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -145,7 +145,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-blue-600">Projects</p>
-                  <p className="text-2xl font-bold text-blue-700">{client.projectsCount}</p>
+                  <p className="text-2xl font-bold text-blue-700">{client.projects_count || 0}</p>
                 </div>
                 <Users className="text-blue-400" size={24} />
               </div>
@@ -154,7 +154,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-green-600">Total Value</p>
-                  <p className="text-2xl font-bold text-green-700">${client.totalValue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-green-700">${(client.total_value || 0).toLocaleString()}</p>
                 </div>
                 <DollarSign className="text-green-400" size={24} />
               </div>
