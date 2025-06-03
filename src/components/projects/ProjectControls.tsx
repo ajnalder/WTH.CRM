@@ -75,7 +75,7 @@ export const ProjectControls: React.FC<ProjectControlsProps> = ({
             </button>
           </div>
           
-          <NewProjectForm onProjectCreated={onProjectCreated} />
+          <NewProjectForm />
         </div>
       </div>
     </div>
