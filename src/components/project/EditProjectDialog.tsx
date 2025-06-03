@@ -37,9 +37,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useProjects } from '@/hooks/useProjects';
+import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 
 const editProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
@@ -80,8 +82,23 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
   trigger 
 }) => {
   const [open, setOpen] = useState(false);
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const { updateProject } = useProjects();
+  const { 
+    projectTeamMembers, 
+    assignTeamMember, 
+    removeTeamMember,
+    isAssigning,
+    isRemoving 
+  } = useProjectTeamMembers(project.id);
   const { toast } = useToast();
+
+  // Initialize selected team members when dialog opens
+  React.useEffect(() => {
+    if (open && projectTeamMembers.length > 0) {
+      setSelectedTeamMembers(projectTeamMembers.map(ptm => ptm.user_id));
+    }
+  }, [open, projectTeamMembers]);
 
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(editProjectSchema),
@@ -97,6 +114,36 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
       is_billable: project.is_billable !== false,
     },
   });
+
+  const handleTeamMemberToggle = (memberId: string) => {
+    const currentlyAssigned = projectTeamMembers.some(ptm => ptm.user_id === memberId);
+    const isInSelectedList = selectedTeamMembers.includes(memberId);
+
+    if (currentlyAssigned && isInSelectedList) {
+      // Remove from project and selected list
+      removeTeamMember({ projectId: project.id, teamMemberId: memberId });
+      setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+    } else if (!currentlyAssigned && !isInSelectedList) {
+      // Add to selected list (will be assigned on form submit)
+      setSelectedTeamMembers(prev => [...prev, memberId]);
+    } else if (currentlyAssigned && !isInSelectedList) {
+      // Remove from project
+      removeTeamMember({ projectId: project.id, teamMemberId: memberId });
+    } else if (!currentlyAssigned && isInSelectedList) {
+      // Remove from selected list
+      setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+    }
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    const currentlyAssigned = projectTeamMembers.some(ptm => ptm.user_id === memberId);
+    
+    if (currentlyAssigned) {
+      removeTeamMember({ projectId: project.id, teamMemberId: memberId });
+    }
+    
+    setSelectedTeamMembers(prev => prev.filter(id => id !== memberId));
+  };
 
   const onSubmit = async (data: EditProjectFormData) => {
     try {
@@ -115,6 +162,14 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
       updateProject({
         projectId: project.id,
         projectData: updateData
+      });
+
+      // Assign new team members
+      const currentlyAssignedIds = projectTeamMembers.map(ptm => ptm.user_id);
+      const newAssignments = selectedTeamMembers.filter(id => !currentlyAssignedIds.includes(id));
+      
+      newAssignments.forEach(memberId => {
+        assignTeamMember({ projectId: project.id, teamMemberId: memberId });
       });
 
       setOpen(false);
@@ -334,6 +389,15 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
               )}
             />
 
+            <div className="space-y-4">
+              <FormLabel>Assigned Team Members</FormLabel>
+              <TeamMemberSelector
+                selectedMembers={selectedTeamMembers}
+                onMemberToggle={handleTeamMemberToggle}
+                onRemoveMember={handleRemoveTeamMember}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -386,8 +450,11 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                Update Project
+              <Button 
+                type="submit"
+                disabled={isAssigning || isRemoving}
+              >
+                {isAssigning || isRemoving ? 'Updating...' : 'Update Project'}
               </Button>
             </div>
           </form>
