@@ -38,9 +38,10 @@ interface ClientDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateClient: (client: Client) => void;
+  startInEditMode?: boolean;
 }
 
-export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: ClientDetailsProps) => {
+export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startInEditMode = false }: ClientDetailsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -81,11 +82,17 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
         status: client.status,
       });
     }
-    // Reset editing state when dialog opens/closes
-    if (!isOpen) {
+  }, [client]);
+
+  useEffect(() => {
+    // Set editing state when dialog opens if startInEditMode is true
+    if (isOpen && startInEditMode) {
+      setIsEditing(true);
+    } else if (!isOpen) {
+      // Only reset editing state when dialog closes
       setIsEditing(false);
     }
-  }, [client, isOpen]);
+  }, [isOpen, startInEditMode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

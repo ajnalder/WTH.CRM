@@ -53,6 +53,10 @@ const ClientDetailHeader = ({
     setShowEditDialog(false);
   };
 
+  const handleEditButtonClick = () => {
+    setShowEditDialog(true);
+  };
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-4">
@@ -71,7 +75,7 @@ const ClientDetailHeader = ({
       
       <div className="flex items-center space-x-2">
         {client && onUpdateClient && (
-          <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
+          <Button variant="outline" size="sm" onClick={handleEditButtonClick}>
             <Edit size={16} className="mr-2" />
             Edit Client
           </Button>
@@ -109,6 +113,7 @@ const ClientDetailHeader = ({
           isOpen={showEditDialog}
           onClose={() => setShowEditDialog(false)}
           onUpdateClient={handleEditClient}
+          startInEditMode={true}
         />
       )}
     </div>
