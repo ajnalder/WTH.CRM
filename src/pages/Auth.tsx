@@ -31,7 +31,7 @@ export default function Auth() {
     return {
       email: {
         required: true,
-        type: 'email',
+        type: 'email' as const,
         maxLength: 254
       },
       password: {
