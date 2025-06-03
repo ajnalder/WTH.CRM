@@ -81,7 +81,11 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
         status: client.status,
       });
     }
-  }, [client]);
+    // Reset editing state when dialog opens/closes
+    if (!isOpen) {
+      setIsEditing(false);
+    }
+  }, [client, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +111,21 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
   const handleClose = () => {
     setIsEditing(false);
     onClose();
+  };
+
+  const handleCancel = () => {
+    // Reset form data to original client data
+    if (client) {
+      setFormData({
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        industry: client.industry,
+        status: client.status,
+      });
+    }
+    setIsEditing(false);
   };
 
   if (!client) return null;
@@ -252,7 +271,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient }: Clien
             <div className="flex justify-end space-x-2 pt-4 border-t">
               {isEditing ? (
                 <>
-                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button type="button" variant="outline" onClick={handleCancel}>
                     Cancel
                   </Button>
                   <Button type="submit">Save Changes</Button>
