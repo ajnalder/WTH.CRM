@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { Calendar, Users, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useClients } from '@/hooks/useClients';
+import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
 
 interface TeamMember {
   id: string;
@@ -69,6 +69,7 @@ const getPriorityColor = (priority: string) => {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const { clients } = useClients();
+  const { projectTeamMembers } = useProjectTeamMembers(project.id);
 
   const getClientInitials = (clientName: string) => {
     return clientName
@@ -143,14 +144,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Progress</span>
-              <span className="font-medium">{project.progress}%</span>
-            </div>
-            <Progress value={project.progress} className="h-2" />
-          </div>
-
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center space-x-1">
               <CheckCircle size={16} />
@@ -170,23 +163,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="flex -space-x-2">
-                {project.team?.slice(0, 3).map((member, index) => (
+                {projectTeamMembers?.slice(0, 3).map((member, index) => (
                   <div
                     key={index}
-                    className={`w-6 h-6 bg-gradient-to-r ${member.gradient || 'from-blue-400 to-blue-600'} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white`}
+                    className={`w-6 h-6 bg-gradient-to-r ${member.user.gradient || 'from-blue-400 to-blue-600'} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white`}
                   >
-                    {member.avatar || member.name?.charAt(0) || 'U'}
+                    {member.user.avatar || member.user.name?.charAt(0) || 'U'}
                   </div>
                 ))}
-                {project.team && project.team.length > 3 && (
+                {projectTeamMembers && projectTeamMembers.length > 3 && (
                   <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
-                    +{project.team.length - 3}
+                    +{projectTeamMembers.length - 3}
                   </div>
                 )}
               </div>
               <div className="flex items-center space-x-1 text-sm text-gray-600">
                 <Users size={14} />
-                <span>{project.team?.length || 0}</span>
+                <span>{projectTeamMembers?.length || 0}</span>
               </div>
             </div>
           </div>
