@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ProjectGrid } from '@/components/ProjectGrid';
+import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectTable } from '@/components/ProjectTable';
 import { ProjectControls } from '@/components/projects/ProjectControls';
 import { useProjectsPage } from '@/hooks/useProjectsPage';
@@ -58,7 +58,8 @@ const Projects = () => {
       tasks: {
         completed: completedTasks,
         total: projectTasks.length
-      }
+      },
+      team_members: (project as any).team_members || []
     };
   });
 
@@ -87,14 +88,7 @@ const Projects = () => {
           {viewMode === 'cards' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {transformedProjects.map((project) => (
-                <div key={project.id} className="p-4 border rounded-lg">
-                  <h3 className="font-semibold text-lg mb-2">{project.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{project.client}</p>
-                  <p className="text-sm text-gray-500">{project.status}</p>
-                  {project.description && (
-                    <p className="text-sm text-gray-600 mt-2">{project.description}</p>
-                  )}
-                </div>
+                <ProjectCard key={project.id} project={project} />
               ))}
             </div>
           ) : (
