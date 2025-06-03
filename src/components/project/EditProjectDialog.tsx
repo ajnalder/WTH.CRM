@@ -36,7 +36,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -45,7 +44,6 @@ import { cn } from '@/lib/utils';
 const editProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
-  client_id: z.string().min(1, 'Client is required'),
   status: z.enum(['Planning', 'In Progress', 'Review', 'Completed']),
   priority: z.enum(['Low', 'Medium', 'High']),
   start_date: z.date().optional(),
@@ -82,19 +80,14 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
   trigger 
 }) => {
   const [open, setOpen] = useState(false);
-  const { clients } = useClients();
   const { updateProject } = useProjects();
   const { toast } = useToast();
-
-  // Find the client_id from the client name
-  const projectClient = clients.find(c => c.company === project.client);
 
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(editProjectSchema),
     defaultValues: {
       name: project.name,
       description: project.description || '',
-      client_id: projectClient?.id || '',
       status: project.status as any,
       priority: project.priority as any,
       start_date: project.startDate ? new Date(project.startDate) : undefined,
@@ -110,7 +103,6 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
       const updateData = {
         name: data.name,
         description: data.description || null,
-        client_id: data.client_id,
         status: data.status,
         priority: data.priority,
         start_date: data.start_date ? format(data.start_date, 'yyyy-MM-dd') : null,
@@ -166,30 +158,13 @@ export const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="client_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Client</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.company}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex flex-col space-y-2">
+                <FormLabel>Client</FormLabel>
+                <div className="h-10 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md flex items-center text-gray-600">
+                  {project.client}
+                </div>
+                <p className="text-xs text-gray-500">Client cannot be changed for existing projects</p>
+              </div>
             </div>
 
             <FormField
