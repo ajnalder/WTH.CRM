@@ -14,12 +14,12 @@ import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
 
 const editProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
-  description: z.string(),
+  description: z.string().optional(),
   status: z.enum(['Planning', 'In Progress', 'Review', 'Completed']),
   priority: z.enum(['Low', 'Medium', 'High']),
   start_date: z.date().optional(),
   due_date: z.date().optional(),
-  budget: z.string(),
+  budget: z.string().optional(),
   is_retainer: z.boolean(),
   is_billable: z.boolean(),
 });
@@ -126,9 +126,9 @@ export const EditProjectForm: React.FC<EditProjectFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <ProjectBasicFields control={form.control} />
-        <ProjectDateFields control={form.control} />
-        <ProjectSettingsFields control={form.control} />
+        <ProjectBasicFields control={form.control as any} />
+        <ProjectDateFields control={form.control as any} />
+        <ProjectSettingsFields control={form.control as any} />
         <ProjectTeamSection
           selectedMembers={selectedMembers}
           onMemberToggle={handleMemberToggle}
