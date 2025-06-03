@@ -15,12 +15,20 @@ export const gradients = [
 ];
 
 export const getInitials = (name: string) => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const trimmedName = name.trim();
+  const words = trimmedName.split(/\s+/);
+  
+  if (words.length === 1) {
+    // Single word: use first 2 letters
+    return trimmedName.substring(0, 2).toUpperCase();
+  } else {
+    // Multiple words: use first letter of each word (up to 2)
+    return words
+      .slice(0, 2)
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+  }
 };
 
 export const getRandomGradient = () => {

@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,22 @@ export const useClientMutations = () => {
     mutationFn: async (clientData: CreateClientData) => {
       if (!user) throw new Error('User not authenticated');
 
-      const avatar = getInitials(clientData.company);
+      // Enhanced avatar generation - handle single word names
+      let avatar: string;
+      const companyName = clientData.company.trim();
+      const words = companyName.split(/\s+/);
+      
+      if (words.length === 1) {
+        // Single word: use first 2 letters
+        avatar = companyName.substring(0, 2).toUpperCase();
+      } else {
+        // Multiple words: use first letter of each word (up to 2)
+        avatar = words
+          .slice(0, 2)
+          .map(word => word[0])
+          .join('')
+          .toUpperCase();
+      }
       
       // Get existing clients to determine used gradients
       const { data: existingClients } = await supabase
