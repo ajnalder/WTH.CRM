@@ -39,7 +39,7 @@ interface ProjectCardProps {
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const { clients } = useClients();
   
-  // Find the client by name to get their gradient color
+  // Find the client by name to get their gradient color and avatar
   const client = clients.find(c => c.company === project.client);
   const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
   
@@ -85,8 +85,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const teamMembers = project.team_members || [];
   const displayTeam = teamMembers.length > 0 ? teamMembers : project.team;
 
-  const getClientInitials = (clientName: string) => {
-    return clientName
+  // Use the stored avatar from the client database, fallback to generated initials
+  const getClientAvatar = () => {
+    if (client?.avatar) {
+      return client.avatar;
+    }
+    // Fallback: generate from client name
+    return project.client
       .split(' ')
       .map(word => word[0])
       .join('')
@@ -101,7 +106,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${clientGradient} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>
-                {getClientInitials(project.client)}
+                {getClientAvatar()}
               </div>
               <div>
                 <div className="text-sm text-gray-600">{project.client}</div>
