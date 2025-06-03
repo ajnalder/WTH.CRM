@@ -50,6 +50,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
   const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
   const { createTask, isCreating } = useTasks();
   const { projects, isLoading: isLoadingProjects } = useProjects();
+  
   const form = useForm<TaskFormData>({
     defaultValues: {
       title: prefilledTitle,
@@ -61,18 +62,14 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     },
   });
 
-  // Update form when prefilled values change
+  // Update form when prefilled values change or dialog opens
   React.useEffect(() => {
-    if (prefilledProject) {
-      form.setValue('project', prefilledProject);
+    if (open) {
+      form.setValue('project', prefilledProject || '');
+      form.setValue('title', prefilledTitle || '');
+      form.setValue('description', prefilledDescription || '');
     }
-    if (prefilledTitle) {
-      form.setValue('title', prefilledTitle);
-    }
-    if (prefilledDescription) {
-      form.setValue('description', prefilledDescription);
-    }
-  }, [prefilledProject, prefilledTitle, prefilledDescription, form]);
+  }, [open, prefilledProject, prefilledTitle, prefilledDescription, form]);
 
   const handleTeamMemberToggle = (memberId: string) => {
     console.log('NewTaskForm - Team member toggle:', memberId);
@@ -123,8 +120,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({
     
     setOpen(false);
     form.reset({
-      title: prefilledTitle,
-      description: prefilledDescription,
+      title: '',
+      description: '',
       project: prefilledProject || '',
       dueDate: '',
       tags: '',

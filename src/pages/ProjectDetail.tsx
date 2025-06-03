@@ -105,7 +105,7 @@ const ProjectDetail = () => {
             <div className="flex gap-3">
               <NewTaskForm 
                 prefilledProject={transformedProject.name}
-                prefilledTitle={transformedProject.name}
+                prefilledTitle={`Task for ${transformedProject.name}`}
                 prefilledDescription={transformedProject.description || ''}
                 triggerText="Add task"
                 triggerVariant="default"
