@@ -1,17 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -31,25 +22,11 @@ interface ProjectStatsProps {
 
 export const ProjectStats: React.FC<ProjectStatsProps> = ({ 
   project, 
-  daysUntilDue, 
-  onDueDateUpdate 
+  daysUntilDue
 }) => {
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    project.dueDate ? new Date(project.dueDate) : undefined
-  );
-
   const formatBudget = (budget: number) => {
     if (!budget || budget === 0) return 'Not set';
     return `$${budget.toLocaleString()}`;
-  };
-
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (onDueDateUpdate) {
-      onDueDateUpdate(date ? date.toISOString().split('T')[0] : null);
-    }
-    setIsDatePickerOpen(false);
   };
 
   const formatDisplayDate = (dateString: string) => {
@@ -108,36 +85,6 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({
                   {formatDisplayDate(project.dueDate)}
                 </p>
               </div>
-              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                  <div className="p-3 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDateSelect(undefined)}
-                      className="w-full"
-                    >
-                      Clear due date
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
             </div>
           )}
         </CardContent>
