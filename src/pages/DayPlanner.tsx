@@ -3,7 +3,7 @@ import React from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { DayPlannerHeader } from '@/components/day-planner/DayPlannerHeader';
 import { AddCustomEntryDialog } from '@/components/day-planner/AddCustomEntryDialog';
-import { DailySchedule } from '@/components/day-planner/DailySchedule';
+import { TimelineContainer } from '@/components/day-planner/TimelineContainer';
 import { TaskPool } from '@/components/day-planner/TaskPool';
 import { useDayPlanner } from '@/hooks/useDayPlanner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,7 +12,7 @@ const DayPlanner = () => {
   const {
     selectedDate,
     setSelectedDate,
-    timeSlots: dbTimeSlots,
+    scheduledTasks,
     isLoading,
     isAddingCustom,
     setIsAddingCustom,
@@ -22,29 +22,16 @@ const DayPlanner = () => {
     setCustomDuration,
     customColor,
     setCustomColor,
-    timeSlotStrings,
     getTaskById,
     getClientByName,
     getAssigneeName,
     getUnscheduledTasks,
-    getScheduledTasks,
-    isSlotOccupied,
     handleDragEnd,
     updateTaskDuration,
+    updateTaskStartTime,
     addCustomEntry,
     removeScheduledTask
   } = useDayPlanner();
-
-  // Get the occupied slots for rendering
-  const occupiedSlots = new Set<string>();
-  dbTimeSlots.forEach(slot => {
-    if (slot.task_id) {
-      occupiedSlots.add(slot.time_slot);
-    }
-  });
-
-  // Get the scheduled tasks
-  const scheduledTasks = getScheduledTasks();
 
   if (isLoading) {
     return (
@@ -84,14 +71,13 @@ const DayPlanner = () => {
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <DailySchedule
-              timeSlots={timeSlotStrings}
+            <TimelineContainer
               scheduledTasks={scheduledTasks}
-              occupiedSlots={occupiedSlots}
               getTaskById={getTaskById}
               getClientByName={getClientByName}
               getAssigneeName={getAssigneeName}
               updateTaskDuration={updateTaskDuration}
+              updateTaskStartTime={updateTaskStartTime}
               removeScheduledTask={removeScheduledTask}
             />
           </div>
