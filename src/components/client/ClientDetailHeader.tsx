@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { ClientDetails } from '@/components/ClientDetails';
 
 interface ClientDetailHeaderProps {
   onBackClick: () => void;
@@ -21,6 +22,8 @@ interface ClientDetailHeaderProps {
   clientAvatar?: string;
   clientGradient?: string;
   onDeleteClient?: () => void;
+  client?: any;
+  onUpdateClient?: (client: any) => void;
 }
 
 const ClientDetailHeader = ({
@@ -29,15 +32,25 @@ const ClientDetailHeader = ({
   clientIndustry,
   clientAvatar,
   clientGradient,
-  onDeleteClient
+  onDeleteClient,
+  client,
+  onUpdateClient
 }: ClientDetailHeaderProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDeleteConfirm = () => {
     if (onDeleteClient) {
       onDeleteClient();
     }
     setShowDeleteDialog(false);
+  };
+
+  const handleEditClient = (updatedClient: any) => {
+    if (onUpdateClient) {
+      onUpdateClient(updatedClient);
+    }
+    setShowEditDialog(false);
   };
 
   return (
@@ -56,29 +69,47 @@ const ClientDetailHeader = ({
         </div>
       </div>
       
-      {onDeleteClient && (
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 size={16} className="mr-2" />
-              Delete Client
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Client</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete {clientCompany}? This action cannot be undone and will remove all associated data including domains, hosting, and contacts.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+      <div className="flex items-center space-x-2">
+        {client && onUpdateClient && (
+          <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
+            <Edit size={16} className="mr-2" />
+            Edit Client
+          </Button>
+        )}
+        
+        {onDeleteClient && (
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 size={16} className="mr-2" />
                 Delete Client
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Client</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete {clientCompany}? This action cannot be undone and will remove all associated data including domains, hosting, and contacts.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                  Delete Client
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+
+      {client && (
+        <ClientDetails
+          client={client}
+          isOpen={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          onUpdateClient={handleEditClient}
+        />
       )}
     </div>
   );

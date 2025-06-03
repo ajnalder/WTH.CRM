@@ -11,12 +11,18 @@ const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const { deleteClient } = useClients();
+  const { deleteClient, updateClient } = useClients();
 
   const handleDeleteClient = () => {
     if (id) {
       deleteClient(id);
       navigate('/clients');
+    }
+  };
+
+  const handleUpdateClient = (updatedClient: any) => {
+    if (id) {
+      updateClient({ id, updates: updatedClient });
     }
   };
 
@@ -70,6 +76,8 @@ const ClientDetail = () => {
                 clientAvatar={client.avatar}
                 clientGradient={client.gradient}
                 onDeleteClient={handleDeleteClient}
+                client={client}
+                onUpdateClient={handleUpdateClient}
               />
               <ClientDetailTabs
                 activeTab={activeTab}

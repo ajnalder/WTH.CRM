@@ -59,6 +59,9 @@ const ClientCard = ({ client }: { client: Client }) => {
     navigate(`/clients/${client.id}`);
   };
 
+  // Fix avatar display - use stored avatar or generate from company name
+  const avatarText = client.avatar || client.company.substring(0, 2).toUpperCase();
+
   return (
     <div 
       className="flex items-center space-x-4 p-4 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -66,7 +69,7 @@ const ClientCard = ({ client }: { client: Client }) => {
     >
       <div className="relative">
         <div className={`w-12 h-12 bg-gradient-to-r ${client.gradient || 'from-blue-400 to-blue-600'} rounded-full flex items-center justify-center text-white font-medium`}>
-          {client.avatar}
+          {avatarText}
         </div>
         <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${getStatusColor(client.status)} rounded-full border-2 border-white`}></div>
       </div>
