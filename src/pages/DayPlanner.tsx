@@ -1,13 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TaskPlanningHeader } from '@/components/task-planning/TaskPlanningHeader';
 import { TaskPlanningControls } from '@/components/task-planning/TaskPlanningControls';
 import { TaskPool } from '@/components/task-planning/TaskPool';
 import { ScheduledTasksList } from '@/components/task-planning/ScheduledTasksList';
 import { useTaskPlanning } from '@/hooks/useTaskPlanning';
+import { Button } from '@/components/ui/button';
+import { Calendar } from 'lucide-react';
 
 const DayPlanner = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
   const {
     availableTasks,
     scheduledTasks,
@@ -28,7 +32,7 @@ const DayPlanner = () => {
     updateTaskAllocation,
     markTaskComplete,
     isUpdating,
-  } = useTaskPlanning();
+  } = useTaskPlanning(selectedDate);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -51,6 +55,33 @@ const DayPlanner = () => {
     }
   };
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const goToPreviousDay = () => {
+    const previousDay = new Date(selectedDate);
+    previousDay.setDate(previousDay.getDate() - 1);
+    setSelectedDate(previousDay);
+  };
+
+  const goToNextDay = () => {
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    setSelectedDate(nextDay);
+  };
+
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+
   return (
     <div className="space-y-6">
       <TaskPlanningHeader
@@ -58,6 +89,36 @@ const DayPlanner = () => {
         totalScheduled={scheduledTasks.length}
         totalAllocatedMinutes={getTotalAllocatedTime()}
       />
+
+      {/* Date Navigation */}
+      <div className="bg-white rounded-lg border p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-600" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              {formatDate(selectedDate)}
+            </h2>
+            {!isToday && (
+              <span className="text-sm text-gray-500">
+                (Planning for future date)
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={goToPreviousDay}>
+              Previous Day
+            </Button>
+            {!isToday && (
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                Today
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={goToNextDay}>
+              Next Day
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <TaskPlanningControls
         searchTerm={searchTerm}
@@ -89,11 +150,11 @@ const DayPlanner = () => {
             />
           </div>
 
-          {/* Today's Schedule */}
+          {/* Schedule */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              Today's Schedule ({scheduledTasks.length})
+              {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
             </h2>
             <ScheduledTasksList
               tasks={scheduledTasks}

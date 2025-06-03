@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
+import { useTaskPlanningData } from './useTaskPlanningData';
 
 export interface TaskPlanningItem {
   id: string;
@@ -20,31 +21,46 @@ export interface TaskPlanningItem {
   is_scheduled: boolean;
 }
 
-export const useTaskPlanning = () => {
-  const { tasks, updateTask, isUpdating } = useTasks();
+export const useTaskPlanning = (selectedDate: Date = new Date()) => {
+  const { tasks, updateTask, isUpdating: isUpdatingTasks } = useTasks();
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
+  const { 
+    taskPlanningData, 
+    upsertTaskPlanning, 
+    deleteTaskPlanning, 
+    isUpdating: isUpdatingPlanning 
+  } = useTaskPlanningData(selectedDate);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Active');
   const [sortBy, setSortBy] = useState('order');
-  const [scheduledTaskIds, setScheduledTaskIds] = useState<string[]>([]);
 
-  // Convert tasks to planning items with default time allocations and client info
+  // Create a map of task planning data for quick lookup
+  const taskPlanningMap = useMemo(() => {
+    const map = new Map();
+    taskPlanningData.forEach(tp => {
+      map.set(tp.task_id, tp);
+    });
+    return map;
+  }, [taskPlanningData]);
+
+  // Convert tasks to planning items with database-stored allocations
   const planningTasks = useMemo(() => {
     return tasks
       .filter(task => statusFilter === 'All' || 
         (statusFilter === 'Active' && task.status !== 'Done') ||
         task.status === statusFilter)
       .map((task, index) => {
-        // Find client info through project name
         const client = clients.find(c => c.company === task.client_name);
+        const planningData = taskPlanningMap.get(task.id);
         
         return {
           ...task,
           priority: 'Medium', // Default priority since it's not in the database
-          allocated_minutes: 60, // Default 1 hour allocation
-          order_index: index,
-          is_scheduled: scheduledTaskIds.includes(task.id),
+          allocated_minutes: planningData?.allocated_minutes || 60,
+          order_index: planningData?.order_index || index,
+          is_scheduled: planningData?.is_scheduled || false,
           client_id: client?.id,
         };
       })
@@ -55,7 +71,7 @@ export const useTaskPlanning = () => {
                (task.assignee && getAssigneeName(task.assignee).toLowerCase().includes(searchLower)) ||
                (task.client_name && task.client_name.toLowerCase().includes(searchLower));
       });
-  }, [tasks, searchTerm, statusFilter, teamMembers, clients, scheduledTaskIds]);
+  }, [tasks, searchTerm, statusFilter, teamMembers, clients, taskPlanningMap]);
 
   // Split tasks into available and scheduled
   const availableTasks = useMemo(() => {
@@ -98,19 +114,48 @@ export const useTaskPlanning = () => {
   };
 
   const scheduleTask = (taskId: string) => {
-    setScheduledTaskIds(prev => [...prev, taskId]);
+    const task = planningTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const maxOrderIndex = Math.max(...scheduledTasks.map(t => t.order_index), -1);
+    
+    upsertTaskPlanning({
+      task_id: taskId,
+      scheduled_date: selectedDate.toISOString().split('T')[0],
+      allocated_minutes: task.allocated_minutes,
+      order_index: maxOrderIndex + 1,
+      is_scheduled: true,
+    });
   };
 
   const unscheduleTask = (taskId: string) => {
-    setScheduledTaskIds(prev => prev.filter(id => id !== taskId));
+    deleteTaskPlanning(taskId);
   };
 
   const updateTaskOrder = (taskId: string, newIndex: number) => {
-    console.log(`Moving task ${taskId} to position ${newIndex}`);
+    const task = planningTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    upsertTaskPlanning({
+      task_id: taskId,
+      scheduled_date: selectedDate.toISOString().split('T')[0],
+      allocated_minutes: task.allocated_minutes,
+      order_index: newIndex,
+      is_scheduled: task.is_scheduled,
+    });
   };
 
   const updateTaskAllocation = (taskId: string, minutes: number) => {
-    console.log(`Allocating ${minutes} minutes to task ${taskId}`);
+    const task = planningTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    upsertTaskPlanning({
+      task_id: taskId,
+      scheduled_date: selectedDate.toISOString().split('T')[0],
+      allocated_minutes: minutes,
+      order_index: task.order_index,
+      is_scheduled: task.is_scheduled,
+    });
   };
 
   const markTaskComplete = (taskId: string) => {
@@ -162,6 +207,6 @@ export const useTaskPlanning = () => {
     updateTaskOrder,
     updateTaskAllocation,
     markTaskComplete,
-    isUpdating,
+    isUpdating: isUpdatingTasks || isUpdatingPlanning,
   };
 };

@@ -691,6 +691,50 @@ export type Database = {
           },
         ]
       }
+      task_planning: {
+        Row: {
+          allocated_minutes: number
+          created_at: string
+          id: string
+          is_scheduled: boolean
+          order_index: number
+          scheduled_date: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allocated_minutes?: number
+          created_at?: string
+          id?: string
+          is_scheduled?: boolean
+          order_index?: number
+          scheduled_date?: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allocated_minutes?: number
+          created_at?: string
+          id?: string
+          is_scheduled?: boolean
+          order_index?: number
+          scheduled_date?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_planning_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee: string | null

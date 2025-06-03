@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, User, GripVertical, Clock, Check, AlertCircle, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -43,6 +43,13 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
 }) => {
   const [timeInput, setTimeInput] = useState(Math.floor(task.allocated_minutes / 60).toString());
   const [minutesInput, setMinutesInput] = useState((task.allocated_minutes % 60).toString());
+  const [pendingUpdate, setPendingUpdate] = useState(false);
+
+  // Update local state when task.allocated_minutes changes
+  useEffect(() => {
+    setTimeInput(Math.floor(task.allocated_minutes / 60).toString());
+    setMinutesInput((task.allocated_minutes % 60).toString());
+  }, [task.allocated_minutes]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -78,7 +85,14 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
     const hours = parseInt(timeInput) || 0;
     const minutes = parseInt(minutesInput) || 0;
     const totalMinutes = hours * 60 + minutes;
-    onTimeAllocationChange(task.id, totalMinutes);
+    
+    if (totalMinutes !== task.allocated_minutes) {
+      setPendingUpdate(true);
+      onTimeAllocationChange(task.id, totalMinutes);
+      
+      // Clear pending state after a short delay
+      setTimeout(() => setPendingUpdate(false), 1000);
+    }
   };
 
   const clientName = getClientName(task.client_id || null);
@@ -100,7 +114,9 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   };
 
   return (
-    <Card className={`border-l-4 ${getPriorityColor(task.priority)} ${getCardBackgroundClass(clientGradient)} hover:shadow-md transition-shadow`}>
+    <Card className={`border-l-4 ${getPriorityColor(task.priority)} ${getCardBackgroundClass(clientGradient)} hover:shadow-md transition-shadow ${
+      pendingUpdate ? 'ring-2 ring-blue-300' : ''
+    }`}>
       <div className="p-4">
         <div className="flex items-start gap-4">
           {/* Drag Handle */}
@@ -185,6 +201,7 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
                     value={timeInput}
                     onChange={(e) => setTimeInput(e.target.value)}
                     onBlur={handleTimeUpdate}
+                    onKeyDown={(e) => e.key === 'Enter' && handleTimeUpdate()}
                     className="w-12 h-6 text-xs text-center p-1"
                     min="0"
                     max="23"
@@ -195,12 +212,16 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
                     value={minutesInput}
                     onChange={(e) => setMinutesInput(e.target.value)}
                     onBlur={handleTimeUpdate}
+                    onKeyDown={(e) => e.key === 'Enter' && handleTimeUpdate()}
                     className="w-12 h-6 text-xs text-center p-1"
                     min="0"
                     max="59"
                     step="15"
                   />
                   <span className="text-xs text-gray-500">m</span>
+                  {pendingUpdate && (
+                    <span className="text-xs text-blue-500">Saving...</span>
+                  )}
                 </div>
               </div>
 
