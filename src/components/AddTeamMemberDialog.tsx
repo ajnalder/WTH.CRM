@@ -8,10 +8,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AddTeamMemberDialogProps {
   onAddMember?: () => void;
@@ -19,62 +18,20 @@ interface AddTeamMemberDialogProps {
 
 export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [inviteLink, setInviteLink] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Generate a simple invite link (in a real app, you'd store this in the database)
-    const baseUrl = window.location.origin;
-    const inviteUrl = `${baseUrl}/auth?email=${encodeURIComponent(email)}`;
-    setInviteLink(inviteUrl);
-
-    toast({
-      title: "Invitation created!",
-      description: "Share the invitation link with your team member so they can sign up.",
-      duration: 8000,
-    });
-
-    // Notify parent component
-    onAddMember?.();
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(inviteLink);
-    toast({
-      title: "Copied!",
-      description: "Invitation link copied to clipboard",
-    });
-  };
-
-  const handleClose = () => {
+  const handleGoToSettings = () => {
     setOpen(false);
-    setEmail('');
-    setInviteLink('');
-  };
-
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
-      // Reset form when closing
-      setEmail('');
-      setInviteLink('');
-    }
+    navigate('/settings');
+    toast({
+      title: "Redirected to Settings",
+      description: "Use the Team Management tab to create new team member accounts.",
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
           className="flex items-center gap-2"
@@ -84,68 +41,32 @@ export const AddTeamMemberDialog = ({ onAddMember }: AddTeamMemberDialogProps) =
           Add Team Member
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Invite Team Member</DialogTitle>
+          <DialogTitle>Add Team Member</DialogTitle>
         </DialogHeader>
         
-        {!inviteLink ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter team member's email"
-                required
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleClose}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">
-                Create Invitation
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Invitation Link</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={inviteLink}
-                  readOnly
-                  className="font-mono text-sm"
-                />
-                <Button
-                  type="button"
-                  onClick={copyToClipboard}
-                  variant="outline"
-                >
-                  Copy
-                </Button>
-              </div>
-              <p className="text-sm text-gray-600">
-                Share this link with your team member so they can sign up with the suggested email address.
-              </p>
-            </div>
-            
-            <div className="flex justify-end pt-4">
-              <Button onClick={handleClose}>
-                Done
-              </Button>
-            </div>
+        <div className="space-y-4 py-4">
+          <div className="text-center">
+            <Settings className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Team Management</h3>
+            <p className="text-gray-600 mb-4">
+              Team member accounts are now created through the Settings page for better security and control.
+            </p>
           </div>
-        )}
+          
+          <div className="flex justify-center space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleGoToSettings}>
+              Go to Settings
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -8,16 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { validateEmail, validatePassword, sanitizeString } from '@/utils/validation';
+import { sanitizeString } from '@/utils/validation';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { errors, validateForm, clearErrors } = useFormValidation();
@@ -30,7 +28,7 @@ export default function Auth() {
   }, [user, navigate]);
 
   const getValidationRules = () => {
-    const rules: Record<string, any> = {
+    return {
       email: {
         required: true,
         type: 'email',
@@ -39,27 +37,9 @@ export default function Auth() {
       password: {
         required: true,
         minLength: 6,
-        maxLength: 128,
-        custom: (value: string) => {
-          if (!isLogin) {
-            const passwordValidation = validatePassword(value);
-            return passwordValidation.isValid ? null : passwordValidation.errors[0];
-          }
-          return null;
-        }
+        maxLength: 128
       }
     };
-
-    if (!isLogin) {
-      rules.fullName = {
-        required: true,
-        minLength: 2,
-        maxLength: 100,
-        type: 'text'
-      };
-    }
-
-    return rules;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,8 +47,7 @@ export default function Auth() {
     
     const formData = {
       email: sanitizeString(email, 254),
-      password,
-      fullName: sanitizeString(fullName, 100)
+      password
     };
 
     const isValid = validateForm(formData, getValidationRules());
@@ -86,35 +65,19 @@ export default function Auth() {
     clearErrors();
 
     try {
-      if (isLogin) {
-        const { error } = await signIn(formData.email, password);
-        if (error) {
-          toast({
-            title: "Login failed",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Welcome back!",
-            description: "You have been successfully logged in.",
-          });
-          navigate('/');
-        }
+      const { error } = await signIn(formData.email, password);
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
-        const { error } = await signUp(formData.email, password, formData.fullName);
-        if (error) {
-          toast({
-            title: "Sign up failed",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account.",
-          });
-        }
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        });
+        navigate('/');
       }
     } catch (error) {
       toast({
@@ -127,14 +90,6 @@ export default function Auth() {
     }
   };
 
-  const handleFormModeChange = () => {
-    setIsLogin(!isLogin);
-    clearErrors();
-    setEmail('');
-    setPassword('');
-    setFullName('');
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
@@ -145,35 +100,14 @@ export default function Auth() {
             </div>
           </div>
           <CardTitle className="text-2xl text-center">
-            {isLogin ? 'Welcome back' : 'Create an account'}
+            Welcome back
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin 
-              ? 'Enter your credentials to access your projects' 
-              : 'Enter your information to get started'
-            }
+            Enter your credentials to access your projects
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                  placeholder="Enter your full name"
-                  maxLength={100}
-                  className={errors.fullName ? 'border-red-500' : ''}
-                />
-                {errors.fullName && (
-                  <p className="text-sm text-red-600">{errors.fullName[0]}</p>
-                )}
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -208,21 +142,14 @@ export default function Auth() {
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
           
           <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={handleFormModeChange}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
-            >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
-            </button>
+            <p className="text-sm text-gray-600">
+              Need access? Contact your administrator.
+            </p>
           </div>
         </CardContent>
       </Card>
