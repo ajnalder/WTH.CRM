@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getStatusColor } from '@/utils/projectUtils';
 
 interface Project {
+  id: string;
   name: string;
   client: string;
   status: string;
@@ -18,6 +19,16 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
   const navigate = useNavigate();
+
+  const handleEdit = () => {
+    // TODO: Implement edit project functionality
+    console.log('Edit project:', project.id);
+  };
+
+  const handleDelete = () => {
+    // TODO: Implement delete project functionality
+    console.log('Delete project:', project.id);
+  };
 
   return (
     <div className="mb-6">
@@ -31,11 +42,33 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
       </Button>
       
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleEdit}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDelete}
+                className="flex items-center space-x-1 text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+              </Button>
+            </div>
+          </div>
           <p className="text-lg text-gray-600">{project.client}</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 ml-4">
           <Badge className={getStatusColor(project.status)}>
             {project.status}
           </Badge>
