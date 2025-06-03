@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
