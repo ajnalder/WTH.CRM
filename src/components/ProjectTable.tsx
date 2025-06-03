@@ -1,5 +1,7 @@
+
 import React from 'react';
-import { Calendar, Users, Plus } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -8,9 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { useClients } from '@/hooks/useClients';
-import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 
 // Use the transformed project interface that matches what we're passing
 interface TransformedProject {
@@ -76,7 +76,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           <TableHead>Due Date</TableHead>
           <TableHead>Team</TableHead>
           <TableHead>Budget</TableHead>
-          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -89,14 +88,14 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           return (
             <TableRow key={project.id} className="hover:bg-gray-50">
               <TableCell>
-                <div>
+                <Link to={`/projects/${project.id}`} className="block hover:text-blue-600 transition-colors">
                   <div className="font-medium text-gray-900">{project.name}</div>
                   {project.description && (
                     <div className="text-sm text-gray-600 max-w-xs truncate">
                       {project.description}
                     </div>
                   )}
-                </div>
+                </Link>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -149,13 +148,6 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                 <div className="text-sm text-gray-600">
                   {project.budget ? `$${Number(project.budget).toLocaleString()}` : 'No budget'}
                 </div>
-              </TableCell>
-              <TableCell>
-                <TaskCreateDialog
-                  prefilledProject={project.name}
-                  triggerText="Add Task"
-                  triggerVariant="outline"
-                />
               </TableCell>
             </TableRow>
           );
