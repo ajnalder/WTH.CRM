@@ -18,17 +18,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { useClientMutations } from '@/hooks/useClientMutations';
 
-interface AddClientDialogProps {
-  onAddClient: (client: { 
-    company: string; 
-    phone: string; 
-    industry: string;
-  }) => void;
-}
-
-export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
+export const AddClientDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { createClient, isCreating } = useClientMutations();
   const [formData, setFormData] = useState({
     company: '',
     phone: '',
@@ -50,8 +44,12 @@ export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.company) {
-      onAddClient(formData);
+    if (formData.company.trim()) {
+      createClient({
+        company: formData.company.trim(),
+        phone: formData.phone.trim(),
+        industry: formData.industry || 'Other'
+      });
       setFormData({ company: '', phone: '', industry: '' });
       setIsOpen(false);
     }
@@ -115,7 +113,9 @@ export const AddClientDialog = ({ onAddClient }: AddClientDialogProps) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">Add Client</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? 'Adding...' : 'Add Client'}
+            </Button>
           </div>
         </form>
       </DialogContent>

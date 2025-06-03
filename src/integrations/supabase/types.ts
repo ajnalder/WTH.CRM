@@ -96,6 +96,7 @@ export type Database = {
           id: string
           industry: string | null
           joined_date: string
+          phone: string | null
           projects_count: number | null
           status: string
           total_value: number | null
@@ -110,6 +111,7 @@ export type Database = {
           id?: string
           industry?: string | null
           joined_date?: string
+          phone?: string | null
           projects_count?: number | null
           status?: string
           total_value?: number | null
@@ -124,6 +126,7 @@ export type Database = {
           id?: string
           industry?: string | null
           joined_date?: string
+          phone?: string | null
           projects_count?: number | null
           status?: string
           total_value?: number | null

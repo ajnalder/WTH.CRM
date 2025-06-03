@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClientOverview } from '@/components/ClientOverview';
 import { AddClientDialog } from '@/components/AddClientDialog';
@@ -6,17 +5,11 @@ import { ShadowBox } from '@/components/ui/shadow-box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, DollarSign, Calendar } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
-import { useClientMutations } from '@/hooks/useClientMutations';
 import { useProjects } from '@/hooks/useProjects';
 
 const Clients = () => {
   const { clients, isLoading } = useClients();
-  const { createClient } = useClientMutations();
   const { projects, isLoading: projectsLoading } = useProjects();
-
-  const handleAddClient = (newClient: { company: string; phone: string; industry: string }) => {
-    createClient(newClient);
-  };
 
   if (isLoading) {
     return (
@@ -42,7 +35,7 @@ const Clients = () => {
           <h1 className="text-3xl font-bold text-gray-900">Clients</h1>
           <p className="text-gray-600 mt-1">Manage your client relationships and projects</p>
         </div>
-        <AddClientDialog onAddClient={handleAddClient} />
+        <AddClientDialog />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
