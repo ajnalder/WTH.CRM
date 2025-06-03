@@ -4,6 +4,7 @@ import { StatsCards } from '@/components/StatsCards';
 import { ProjectGrid } from '@/components/ProjectGrid';
 import { RecentActivity } from '@/components/RecentActivity';
 import { TeamOverview } from '@/components/TeamOverview';
+import { NewProjectForm } from '@/components/NewProjectForm';
 import { ShadowBox } from '@/components/ui/shadow-box';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useProjects } from '@/hooks/useProjects';
@@ -18,6 +19,15 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Overview of your projects, tasks, and team performance</p>
+        </div>
+        <NewProjectForm />
+      </div>
+
       <StatsCards 
         projects={projects} 
         tasks={tasks} 

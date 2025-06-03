@@ -3,7 +3,6 @@ import React from 'react';
 import { Bell, Search, Settings } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { NewProjectForm } from './NewProjectForm';
 
 const Header = () => {
   return (
@@ -22,8 +21,6 @@ const Header = () => {
                 className="pl-10 w-64"
               />
             </div>
-            
-            <NewProjectForm />
             
             <Button variant="ghost" size="icon">
               <Bell size={20} />
