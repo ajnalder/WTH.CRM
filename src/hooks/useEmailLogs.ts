@@ -17,13 +17,20 @@ export const useEmailLogs = (invoiceId: string) => {
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['email-logs', invoiceId],
     queryFn: async () => {
+      console.log('Fetching email logs for invoice:', invoiceId);
+      
       const { data, error } = await supabase
         .from('email_logs')
         .select('*')
         .eq('invoice_id', invoiceId)
         .order('sent_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching email logs:', error);
+        throw error;
+      }
+      
+      console.log('Email logs fetched:', data?.length || 0, 'records');
       return data as EmailLog[];
     },
     enabled: !!invoiceId,

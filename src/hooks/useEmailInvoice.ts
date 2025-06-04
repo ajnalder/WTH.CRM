@@ -56,7 +56,17 @@ What the Heck Team`);
     setSending(true);
     
     try {
-      console.log('Sending invoice email with PDF via Supabase Edge Function...');
+      console.log('Starting email send process for invoice:', invoice.invoice_number);
+      
+      // Get the current session to ensure we have a valid auth token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        console.error('Authentication error:', sessionError);
+        throw new Error('Authentication required. Please log in again.');
+      }
+
+      console.log('Authentication successful, calling edge function...');
       
       const { data, error } = await supabase.functions.invoke('send-invoice-email', {
         body: {
@@ -70,14 +80,22 @@ What the Heck Team`);
             client: client,
             items: items
           }
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
+      console.log('Edge function response:', { data, error });
+
       if (error) {
+        console.error('Edge function error:', error);
         throw error;
       }
 
-      if (data.success) {
+      if (data?.success) {
+        console.log('Email sent successfully');
+        
         // Update the invoice to record when it was last emailed
         try {
           await updateInvoice({
@@ -102,7 +120,7 @@ What the Heck Team`);
         
         return true;
       } else {
-        throw new Error(data.error || 'Failed to send email');
+        throw new Error(data?.error || 'Failed to send email');
       }
     } catch (error: any) {
       console.error('Error sending email:', error);
@@ -110,9 +128,20 @@ What the Heck Team`);
       // Invalidate email logs query even on error to show failed attempts
       queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });
       
+      // Show more specific error messages
+      let errorMessage = "Failed to send email. Please try again.";
+      
+      if (error.message?.includes('Authentication')) {
+        errorMessage = "Authentication error. Please refresh the page and try again.";
+      } else if (error.message?.includes('domain')) {
+        errorMessage = "Email configuration error. Please contact support.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to send email. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
       return false;
