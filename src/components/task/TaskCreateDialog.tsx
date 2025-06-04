@@ -22,6 +22,10 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
     setOpen(false);
   };
 
+  const handleTaskCreated = () => {
+    onTaskCreated?.();
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -35,7 +39,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
           prefilledProject={prefilledProject}
           multipleMode={multipleMode}
           onClose={handleClose}
-          onTaskCreated={onTaskCreated}
+          onTaskCreated={handleTaskCreated}
         />
       </DialogContent>
     </Dialog>
