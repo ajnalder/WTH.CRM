@@ -102,10 +102,14 @@ const handler = async (req: Request): Promise<Response> => {
     // Create the email template with company settings
     const emailHtml = createEmailTemplate(message, clientName, companySettings);
 
-    // Send email with PDF attachment using a verified sender
+    // Use the user's email address as the sender
+    const senderEmail = user.email || 'andrew@whattheheck.co.nz';
+    console.log('Using sender email:', senderEmail);
+
+    // Send email with PDF attachment using the user's verified email
     console.log('Attempting to send email via Resend...');
     const emailResponse = await resend.emails.send({
-      from: `onboarding@resend.dev`, // Use Resend's testing domain
+      from: `What the Heck <${senderEmail}>`,
       to: [to],
       subject: subject,
       html: emailHtml,
