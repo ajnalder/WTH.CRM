@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -224,7 +223,10 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.name}>
-                    {project.name}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{project.name}</span>
+                      <span className="text-xs text-gray-500">{project.client_name}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ export interface Project {
   is_billable: boolean;
   created_at: string;
   updated_at: string;
+  client_name?: string; // Add client name to the interface
   team_members?: Array<{
     id: string;
     name: string;
@@ -99,7 +101,7 @@ export const useProjects = (clientId?: string) => {
         throw error;
       }
 
-      // Transform the data to flatten team members
+      // Transform the data to flatten team members and include client name
       const transformedData = data?.map((project, index) => {
         const gradients = [
           'from-blue-400 to-blue-600',
@@ -131,6 +133,7 @@ export const useProjects = (clientId?: string) => {
 
         return {
           ...project,
+          client_name: (project as any).clients?.company || 'Unknown Client',
           team_members
         };
       }) || [];
