@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTask } from '@/hooks/useTask';
@@ -10,6 +11,7 @@ import { TaskTimeTracker } from '@/components/task-details/TaskTimeTracker';
 import { TaskTimeLogger } from '@/components/task-details/TaskTimeLogger';
 import { TaskTimeEntries } from '@/components/task-details/TaskTimeEntries';
 import { TaskFiles } from '@/components/task-details/TaskFiles';
+import { TaskNotes } from '@/components/task-details/TaskNotes';
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -25,7 +27,9 @@ const TaskDetails = () => {
     updateTaskDetails, 
     isUpdatingDetails,
     updateTaskStatus,
-    isUpdatingStatus
+    isUpdatingStatus,
+    updateTaskNotes,
+    isUpdatingNotes
   } = useTask(id || '');
   const { timeEntries, totalHours, createTimeEntry, isCreating } = useTimeEntries(id || '');
 
@@ -82,6 +86,10 @@ const TaskDetails = () => {
     updateTaskStatus(status);
   };
 
+  const handleNotesUpdate = (notes: string) => {
+    updateTaskNotes(notes);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -100,6 +108,13 @@ const TaskDetails = () => {
               task={task} 
               onStatusUpdate={handleStatusUpdate}
               isUpdatingStatus={isUpdatingStatus}
+            />
+
+            <TaskNotes
+              taskId={id!}
+              initialNotes={task.notes}
+              onSave={handleNotesUpdate}
+              isSaving={isUpdatingNotes}
             />
 
             <TaskTimeEntries timeEntries={timeEntries} />

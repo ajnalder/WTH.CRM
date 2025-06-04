@@ -10,6 +10,7 @@ type TaskInsert = TablesInsert<'tasks'>;
 
 export interface TaskWithClient extends Task {
   client_name?: string;
+  notes?: string | null;
 }
 
 export const useTasks = () => {

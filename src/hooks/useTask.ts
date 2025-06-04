@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -152,6 +153,35 @@ export const useTask = (taskId: string) => {
     },
   });
 
+  const updateTaskNotes = useMutation({
+    mutationFn: async (notes: string) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ notes })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task notes:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+    },
+    onError: (error) => {
+      console.error('Update task notes error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save notes",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     task: taskQuery.data,
     isLoading: taskQuery.isLoading,
@@ -160,5 +190,7 @@ export const useTask = (taskId: string) => {
     isUpdatingDetails: updateTaskDetails.isPending,
     updateTaskStatus: updateTaskStatus.mutate,
     isUpdatingStatus: updateTaskStatus.isPending,
+    updateTaskNotes: updateTaskNotes.mutate,
+    isUpdatingNotes: updateTaskNotes.isPending,
   };
 };

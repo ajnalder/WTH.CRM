@@ -743,6 +743,7 @@ export type Database = {
           dropbox_url: string | null
           due_date: string | null
           id: string
+          notes: string | null
           progress: number | null
           project: string | null
           status: string
@@ -758,6 +759,7 @@ export type Database = {
           dropbox_url?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
           progress?: number | null
           project?: string | null
           status?: string
@@ -773,6 +775,7 @@ export type Database = {
           dropbox_url?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
           progress?: number | null
           project?: string | null
           status?: string
