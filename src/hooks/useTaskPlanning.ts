@@ -45,6 +45,34 @@ export const useTaskPlanning = (selectedDate: Date = new Date()) => {
     return map;
   }, [taskPlanningData]);
 
+  // Utility functions declared before they are used
+  const getAssigneeName = (assigneeId: string | null) => {
+    if (!assigneeId) return 'Unassigned';
+    const member = teamMembers.find(m => m.id === assigneeId);
+    return member ? member.name : 'Unknown User';
+  };
+
+  const getClientName = (clientId: string | null) => {
+    if (!clientId) return 'No Client';
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.company : 'Unknown Client';
+  };
+
+  const getClientGradient = (clientId: string | null) => {
+    if (!clientId) return 'from-gray-400 to-gray-600';
+    const client = clients.find(c => c.id === clientId);
+    return client?.gradient || 'from-blue-400 to-blue-600';
+  };
+
+  const getClientInitials = (clientName: string) => {
+    return clientName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   // Convert tasks to planning items with database-stored allocations
   const planningTasks = useMemo(() => {
     return tasks
@@ -81,33 +109,6 @@ export const useTaskPlanning = (selectedDate: Date = new Date()) => {
   const scheduledTasks = useMemo(() => {
     return planningTasks.filter(task => task.is_scheduled);
   }, [planningTasks]);
-
-  const getAssigneeName = (assigneeId: string | null) => {
-    if (!assigneeId) return 'Unassigned';
-    const member = teamMembers.find(m => m.id === assigneeId);
-    return member ? member.name : 'Unknown User';
-  };
-
-  const getClientName = (clientId: string | null) => {
-    if (!clientId) return 'No Client';
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.company : 'Unknown Client';
-  };
-
-  const getClientGradient = (clientId: string | null) => {
-    if (!clientId) return 'from-gray-400 to-gray-600';
-    const client = clients.find(c => c.id === clientId);
-    return client?.gradient || 'from-blue-400 to-blue-600';
-  };
-
-  const getClientInitials = (clientName: string) => {
-    return clientName
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const getTotalAllocatedTime = () => {
     return scheduledTasks.reduce((total, task) => total + task.allocated_minutes, 0);
