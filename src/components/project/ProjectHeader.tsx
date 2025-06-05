@@ -3,10 +3,8 @@ import React from 'react';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { EditProjectDialog } from './EditProjectDialog';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
-import { getStatusColor } from '@/utils/projectUtils';
 
 interface Project {
   id: string;
@@ -50,7 +48,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 ml-auto">
               <ProjectCompletionDialog
                 projectId={project.id}
                 projectName={project.name}
@@ -81,11 +79,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
             </div>
           </div>
           <p className="text-lg text-gray-600">{project.client}</p>
-        </div>
-        <div className="flex items-center space-x-3 ml-4">
-          <Badge className={getStatusColor(project.status)}>
-            {project.status}
-          </Badge>
         </div>
       </div>
     </div>
