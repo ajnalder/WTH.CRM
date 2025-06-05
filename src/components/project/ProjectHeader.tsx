@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EditProjectDialog } from './EditProjectDialog';
+import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { getStatusColor } from '@/utils/projectUtils';
 
 interface Project {
@@ -50,6 +51,11 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
             <div className="flex items-center space-x-2">
+              <ProjectCompletionDialog
+                projectId={project.id}
+                projectName={project.name}
+                currentStatus={project.status}
+              />
               <EditProjectDialog
                 project={project}
                 trigger={

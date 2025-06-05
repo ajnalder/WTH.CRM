@@ -46,14 +46,17 @@ const ClientCard = ({ client }: { client: Client }) => {
   const displayEmail = primaryContact?.email || 'No email';
   const displayPhone = primaryContact?.phone || client.phone || 'No phone';
 
-  // Calculate actual project count and total value for this client
-  const actualProjectCount = projects?.length || 0;
-  const actualTotalValue = projects?.reduce((sum, project) => sum + (Number(project.budget) || 0), 0) || 0;
+  // Calculate project statistics for this client
+  const activeProjects = projects?.filter(project => project.status !== 'Completed') || [];
+  const completedProjects = projects?.filter(project => project.status === 'Completed') || [];
+  const totalProjects = projects?.length || 0;
+  const totalValue = projects?.reduce((sum, project) => sum + (Number(project.budget) || 0), 0) || 0;
 
   console.log('ClientCard - client:', client.company);
   console.log('ClientCard - projects:', projects);
-  console.log('ClientCard - actualProjectCount:', actualProjectCount);
-  console.log('ClientCard - actualTotalValue:', actualTotalValue);
+  console.log('ClientCard - activeProjects:', activeProjects.length);
+  console.log('ClientCard - completedProjects:', completedProjects.length);
+  console.log('ClientCard - totalValue:', totalValue);
 
   const handleClientClick = () => {
     navigate(`/clients/${client.id}`);
@@ -102,10 +105,13 @@ const ClientCard = ({ client }: { client: Client }) => {
       
       <div className="text-right">
         <div className="text-sm font-medium text-gray-900">
-          {actualProjectCount} Project{actualProjectCount !== 1 ? 's' : ''}
+          {activeProjects.length} Active
+        </div>
+        <div className="text-xs text-gray-500">
+          {completedProjects.length} Completed
         </div>
         <div className="text-sm text-gray-500">
-          ${actualTotalValue.toLocaleString()}
+          ${totalValue.toLocaleString()}
         </div>
         <div className="text-xs text-gray-400">Since {new Date(client.joined_date).toLocaleDateString()}</div>
       </div>

@@ -6,6 +6,7 @@ import { ProjectControls } from '@/components/projects/ProjectControls';
 import { useProjectsPage } from '@/hooks/useProjectsPage';
 import { transformProject } from '@/utils/projectUtils';
 import { useTasks } from '@/hooks/useTasks';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Projects = () => {
   const {
@@ -63,6 +64,34 @@ const Projects = () => {
     };
   });
 
+  // Separate active and completed projects
+  const activeProjects = transformedProjects.filter(project => project.status !== 'Completed');
+  const completedProjects = transformedProjects.filter(project => project.status === 'Completed');
+
+  const renderProjectsSection = (projectsList: typeof transformedProjects, emptyMessage: string) => {
+    if (projectsList.length > 0) {
+      return (
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projectsList.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          ) : (
+            <ProjectTable projects={projectsList} />
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 text-center py-8 text-gray-500">
+          <p>{emptyMessage}</p>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -82,24 +111,31 @@ const Projects = () => {
         onProjectCreated={handleProjectCreated}
       />
 
-      {/* Projects Display */}
-      {transformedProjects.length > 0 ? (
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6">
-          {viewMode === 'cards' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {transformedProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          ) : (
-            <ProjectTable projects={transformedProjects} />
+      {/* Projects Tabs */}
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="active">
+            Active Projects ({activeProjects.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completed Projects ({completedProjects.length})
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="active" className="mt-6">
+          {renderProjectsSection(
+            activeProjects, 
+            "No active projects found. Create your first project to get started!"
           )}
-        </div>
-      ) : (
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border-0 p-6 text-center py-8 text-gray-500">
-          <p>No projects found. Create your first project to get started!</p>
-        </div>
-      )}
+        </TabsContent>
+        
+        <TabsContent value="completed" className="mt-6">
+          {renderProjectsSection(
+            completedProjects, 
+            "No completed projects yet. Projects marked as complete will appear here."
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
