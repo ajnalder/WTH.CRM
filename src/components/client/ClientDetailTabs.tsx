@@ -7,7 +7,7 @@ interface ClientDetailTabsProps {
 }
 
 const ClientDetailTabs = ({ activeTab, onTabChange }: ClientDetailTabsProps) => {
-  const tabs = ['overview', 'domains', 'hosting', 'contacts', 'invoices'];
+  const tabs = ['overview', 'projects', 'domains', 'hosting', 'contacts', 'invoices'];
 
   return (
     <div className="border-b border-gray-200">

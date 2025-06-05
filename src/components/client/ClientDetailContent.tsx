@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ClientOverviewTab from './ClientOverviewTab';
+import ProjectsTab from './ProjectsTab';
 import DomainsTab from './DomainsTab';
 import HostingTab from './HostingTab';
 import ContactsTab from './ContactsTab';
@@ -21,6 +22,8 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
   switch (activeTab) {
     case 'overview':
       return <ClientOverviewTab client={client} />;
+    case 'projects':
+      return <ProjectsTab client={client} />;
     case 'domains':
       return <DomainsTab {...props} onAddDomain={props.addDomain} />;
     case 'hosting':
