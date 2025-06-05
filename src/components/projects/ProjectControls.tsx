@@ -26,6 +26,7 @@ export const ProjectControls: React.FC<ProjectControlsProps> = ({
   const sortOptions = [
     { value: 'created_at', label: 'Date Created' },
     { value: 'name', label: 'Project Name' },
+    { value: 'client', label: 'Client' },
     { value: 'status', label: 'Status' },
     { value: 'due_date', label: 'Due Date' },
     { value: 'priority', label: 'Priority' }

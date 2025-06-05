@@ -33,6 +33,10 @@ export const useProjectsPage = () => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
+        case 'client':
+          const clientA = (a as any).clients?.company || 'Unknown Client';
+          const clientB = (b as any).clients?.company || 'Unknown Client';
+          return clientA.localeCompare(clientB);
         case 'status':
           return a.status.localeCompare(b.status);
         case 'due_date':
