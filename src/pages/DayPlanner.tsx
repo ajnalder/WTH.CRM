@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TaskPlanningHeader } from '@/components/task-planning/TaskPlanningHeader';
@@ -150,23 +149,25 @@ const DayPlanner = () => {
             />
           </div>
 
-          {/* Schedule */}
-          <div className="space-y-4">
+          {/* Schedule - Now Sticky */}
+          <div className="lg:sticky lg:top-6 lg:self-start space-y-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
             </h2>
-            <ScheduledTasksList
-              tasks={scheduledTasks}
-              onTimeAllocationChange={updateTaskAllocation}
-              onMarkComplete={markTaskComplete}
-              onUnscheduleTask={unscheduleTask}
-              getAssigneeName={getAssigneeName}
-              getClientName={getClientName}
-              getClientGradient={getClientGradient}
-              getClientInitials={getClientInitials}
-              isUpdating={isUpdating}
-            />
+            <div className="lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+              <ScheduledTasksList
+                tasks={scheduledTasks}
+                onTimeAllocationChange={updateTaskAllocation}
+                onMarkComplete={markTaskComplete}
+                onUnscheduleTask={unscheduleTask}
+                getAssigneeName={getAssigneeName}
+                getClientName={getClientName}
+                getClientGradient={getClientGradient}
+                getClientInitials={getClientInitials}
+                isUpdating={isUpdating}
+              />
+            </div>
           </div>
         </div>
       </DragDropContext>

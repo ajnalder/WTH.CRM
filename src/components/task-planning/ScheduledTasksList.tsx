@@ -34,7 +34,7 @@ export const ScheduledTasksList: React.FC<ScheduledTasksListProps> = ({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`bg-white rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+            className={`bg-white rounded-lg border-2 border-dashed p-8 text-center transition-colors min-h-[200px] ${
               snapshot.isDraggingOver ? 'border-green-300 bg-green-50' : 'border-gray-300'
             }`}
           >
@@ -53,7 +53,7 @@ export const ScheduledTasksList: React.FC<ScheduledTasksListProps> = ({
         <div
           {...provided.droppableProps}
           ref={provided.innerRef}
-          className={`space-y-3 p-4 rounded-lg transition-colors ${
+          className={`space-y-3 p-4 rounded-lg transition-colors min-h-[200px] ${
             snapshot.isDraggingOver ? 'bg-green-50 border-2 border-green-200' : 'bg-white border-2 border-gray-200'
           }`}
         >
