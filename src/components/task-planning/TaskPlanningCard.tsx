@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, User, GripVertical, Clock, Check, AlertCircle, X } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import type { TaskPlanningItem } from '@/hooks/useTaskPlanning';
 
 interface TaskPlanningCardProps {
@@ -41,6 +41,7 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   showScheduleButton = false,
   showUnscheduleButton = false,
 }) => {
+  const navigate = useNavigate();
   const [timeInput, setTimeInput] = useState(Math.floor(task.allocated_minutes / 60).toString());
   const [minutesInput, setMinutesInput] = useState((task.allocated_minutes % 60).toString());
   const [pendingUpdate, setPendingUpdate] = useState(false);
@@ -95,6 +96,20 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
     }
   };
 
+  const handleTaskClick = (e: React.MouseEvent) => {
+    // Only navigate if we're not clicking on interactive elements
+    if (
+      e.target instanceof HTMLElement && 
+      (e.target.tagName === 'INPUT' || 
+       e.target.tagName === 'BUTTON' || 
+       e.target.closest('button') || 
+       e.target.closest('input'))
+    ) {
+      return;
+    }
+    navigate(`/tasks/${task.id}`);
+  };
+
   const clientName = getClientName(task.client_id || null);
   const clientGradient = getClientGradient(task.client_id || null);
   const clientInitials = getClientInitials(clientName);
@@ -140,7 +155,16 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>
+                {showUnscheduleButton ? (
+                  <h3 
+                    className="font-medium text-gray-900 line-clamp-1 cursor-pointer hover:text-blue-600 transition-colors"
+                    onClick={handleTaskClick}
+                  >
+                    {task.title}
+                  </h3>
+                ) : (
+                  <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>
+                )}
                 {task.description && (
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
                 )}
