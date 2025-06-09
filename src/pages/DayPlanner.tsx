@@ -69,9 +69,17 @@ const DayPlanner = () => {
       const currentTask = scheduledTasks[currentIndex];
       const previousTask = scheduledTasks[currentIndex - 1];
       
-      // Swap the order indices
-      updateTaskOrder(taskId, previousTask.order_index);
-      updateTaskOrder(previousTask.id, currentTask.order_index);
+      // Calculate new order indices with proper spacing
+      const newCurrentOrder = previousTask.order_index;
+      const newPreviousOrder = currentTask.order_index;
+      
+      // Update with a small delay to prevent conflicts
+      setTimeout(() => {
+        updateTaskOrder(taskId, newCurrentOrder);
+      }, 50);
+      setTimeout(() => {
+        updateTaskOrder(previousTask.id, newPreviousOrder);
+      }, 100);
     }
   };
 
@@ -81,9 +89,17 @@ const DayPlanner = () => {
       const currentTask = scheduledTasks[currentIndex];
       const nextTask = scheduledTasks[currentIndex + 1];
       
-      // Swap the order indices
-      updateTaskOrder(taskId, nextTask.order_index);
-      updateTaskOrder(nextTask.id, currentTask.order_index);
+      // Calculate new order indices with proper spacing
+      const newCurrentOrder = nextTask.order_index;
+      const newNextOrder = currentTask.order_index;
+      
+      // Update with a small delay to prevent conflicts
+      setTimeout(() => {
+        updateTaskOrder(taskId, newCurrentOrder);
+      }, 50);
+      setTimeout(() => {
+        updateTaskOrder(nextTask.id, newNextOrder);
+      }, 100);
     }
   };
 
