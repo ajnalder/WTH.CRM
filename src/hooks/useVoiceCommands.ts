@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +19,8 @@ export const useVoiceCommands = () => {
   const [isSupported, setIsSupported] = useState(false);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const finalTranscriptRef = useRef('');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { openTaskDialog, openProjectDialog, openClientDialog } = useVoiceDialogs();
@@ -38,13 +39,22 @@ export const useVoiceCommands = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    recognition.continuous = false;
-    recognition.interimResults = true;
+    // Updated configuration for longer speech recognition
+    recognition.continuous = true; // Keep listening continuously
+    recognition.interimResults = true; // Show interim results
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
+      console.log('Voice recognition started');
       setIsListening(true);
       setTranscript('');
+      finalTranscriptRef.current = '';
+      
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
 
     recognition.onresult = (event) => {
@@ -53,36 +63,79 @@ export const useVoiceCommands = () => {
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
+        const transcript = result[0].transcript;
+        
         if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+          finalTranscript += transcript;
         } else {
-          interimTranscript += result[0].transcript;
+          interimTranscript += transcript;
         }
       }
 
-      setTranscript(finalTranscript || interimTranscript);
-
+      // Update the cumulative final transcript
       if (finalTranscript) {
-        processVoiceCommand(finalTranscript);
+        finalTranscriptRef.current += finalTranscript;
+        console.log('Final transcript so far:', finalTranscriptRef.current);
       }
+
+      // Show current transcript (final + interim)
+      const currentTranscript = finalTranscriptRef.current + interimTranscript;
+      setTranscript(currentTranscript);
+
+      // Reset the timeout on each speech detection
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set a new timeout to stop listening after silence
+      timeoutRef.current = setTimeout(() => {
+        console.log('Speech timeout reached, stopping recognition');
+        if (recognition && isListening) {
+          recognition.stop();
+        }
+      }, 2000); // Wait 2 seconds of silence before stopping
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
-      toast({
-        title: "Voice Error",
-        description: "There was an error with voice recognition. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Clear timeout on error
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Don't show error for 'no-speech' as it's common
+      if (event.error !== 'no-speech') {
+        toast({
+          title: "Voice Error",
+          description: `Speech recognition error: ${event.error}. Please try again.`,
+          variant: "destructive",
+        });
+      }
     };
 
     recognition.onend = () => {
+      console.log('Voice recognition ended');
       setIsListening(false);
+      
+      // Clear timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Process the final transcript if we have one
+      const finalText = finalTranscriptRef.current.trim();
+      if (finalText) {
+        console.log('Processing final transcript:', finalText);
+        processVoiceCommand(finalText);
+      } else {
+        console.log('No final transcript to process');
+      }
     };
 
     return recognition;
-  }, [checkSupport, toast]);
+  }, [checkSupport, toast, isListening]);
 
   // Process voice command through AI
   const processVoiceCommand = async (voiceText: string) => {
@@ -285,12 +338,31 @@ export const useVoiceCommands = () => {
     }
     
     if (recognitionRef.current && !isListening) {
-      recognitionRef.current.start();
+      console.log('Starting voice recognition...');
+      finalTranscriptRef.current = '';
+      
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+        toast({
+          title: "Voice Error",
+          description: "Failed to start voice recognition. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [initializeRecognition, isListening]);
+  }, [initializeRecognition, isListening, toast]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
+      console.log('Manually stopping voice recognition...');
+      
+      // Clear timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
       recognitionRef.current.stop();
     }
   }, [isListening]);
@@ -298,6 +370,13 @@ export const useVoiceCommands = () => {
   // Initialize on mount
   useEffect(() => {
     checkSupport();
+    
+    // Cleanup on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [checkSupport]);
 
   return {
