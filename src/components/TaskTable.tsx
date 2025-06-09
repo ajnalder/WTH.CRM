@@ -42,6 +42,15 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     });
   };
 
+  const isOverdue = (dateString: string | null) => {
+    if (!dateString) return false;
+    const dueDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    return dueDate < today;
+  };
+
   const getClientInitials = (clientName: string) => {
     return clientName
       .split(' ')
@@ -79,9 +88,10 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
       <TableBody>
         {tasks.map((task) => {
           const clientGradient = task.client_name ? getClientGradient(task.client_name) : 'from-blue-400 to-blue-600';
+          const overdueTask = isOverdue(task.due_date);
           
           return (
-            <TableRow key={task.id}>
+            <TableRow key={task.id} className={overdueTask ? 'bg-red-50/50' : ''}>
               <TableCell>
                 <div>
                   <div className="font-medium text-gray-900">{task.title}</div>
@@ -109,7 +119,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
                   {task.status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-gray-600">{formatDate(task.due_date)}</TableCell>
+              <TableCell className={`${overdueTask ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>
+                {overdueTask ? '⚠️ ' : ''}{formatDate(task.due_date)}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
                   <Progress value={task.progress || 0} className="w-16 h-2" />

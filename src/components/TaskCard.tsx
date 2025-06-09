@@ -36,6 +36,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     });
   };
 
+  const isOverdue = (dateString: string | null) => {
+    if (!dateString) return false;
+    const dueDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    return dueDate < today;
+  };
+
   const getClientInitials = (clientName: string) => {
     return clientName
       .split(' ')
@@ -77,9 +86,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return 'bg-blue-50/80 border-blue-200/80'; // default
   };
 
+  const overdueTask = isOverdue(task.due_date);
+  const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
+
   return (
     <Link to={`/tasks/${task.id}`}>
-      <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${getCardBackgroundClass(clientGradient)}`}>
+      <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
@@ -110,9 +122,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
               <User size={14} />
               <span>{getAssigneeName(task.assignee)}</span>
             </div>
-            <div className="flex items-center space-x-1">
+            <div className={`flex items-center space-x-1 ${overdueTask ? 'text-red-600 font-semibold' : ''}`}>
               <Calendar size={14} />
-              <span>{formatDate(task.due_date)}</span>
+              <span>{overdueTask ? '⚠️ ' : ''}{formatDate(task.due_date)}</span>
             </div>
           </div>
 
