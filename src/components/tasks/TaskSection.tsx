@@ -11,13 +11,15 @@ interface TaskSectionProps {
   tasks: TaskWithClient[];
   viewMode: 'cards' | 'table';
   isCompleted?: boolean;
+  onRefresh?: () => void;
 }
 
 export const TaskSection: React.FC<TaskSectionProps> = ({ 
   title, 
   tasks, 
   viewMode, 
-  isCompleted = false 
+  isCompleted = false,
+  onRefresh
 }) => {
   const containerClasses = isCompleted ? 'opacity-75' : '';
 
