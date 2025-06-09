@@ -45,7 +45,7 @@ export const useVoiceCommands = () => {
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
-      console.log('Voice recognition started');
+      console.log('useVoiceCommands - Voice recognition started');
       setIsListening(true);
       setTranscript('');
       finalTranscriptRef.current = '';
@@ -74,7 +74,7 @@ export const useVoiceCommands = () => {
       // Update the cumulative final transcript
       if (finalTranscript) {
         finalTranscriptRef.current += finalTranscript;
-        console.log('Final transcript so far:', finalTranscriptRef.current);
+        console.log('useVoiceCommands - Final transcript so far:', finalTranscriptRef.current);
       }
 
       // Show current transcript (final + interim)
@@ -88,7 +88,7 @@ export const useVoiceCommands = () => {
 
       // Set a new timeout to stop listening after silence
       timeoutRef.current = setTimeout(() => {
-        console.log('Speech timeout reached, stopping recognition');
+        console.log('useVoiceCommands - Speech timeout reached, stopping recognition');
         if (recognition && isListening) {
           recognition.stop();
         }
@@ -96,7 +96,7 @@ export const useVoiceCommands = () => {
     };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
+      console.error('useVoiceCommands - Speech recognition error:', event.error);
       setIsListening(false);
       
       // Clear timeout on error
@@ -115,7 +115,7 @@ export const useVoiceCommands = () => {
     };
 
     recognition.onend = () => {
-      console.log('Voice recognition ended');
+      console.log('useVoiceCommands - Voice recognition ended');
       setIsListening(false);
       
       // Clear timeout
@@ -126,10 +126,10 @@ export const useVoiceCommands = () => {
       // Process the final transcript if we have one
       const finalText = finalTranscriptRef.current.trim();
       if (finalText) {
-        console.log('Processing final transcript:', finalText);
+        console.log('useVoiceCommands - Processing final transcript:', finalText);
         processVoiceCommand(finalText);
       } else {
-        console.log('No final transcript to process');
+        console.log('useVoiceCommands - No final transcript to process');
       }
     };
 
@@ -138,26 +138,27 @@ export const useVoiceCommands = () => {
 
   // Process voice command through AI
   const processVoiceCommand = async (voiceText: string) => {
+    console.log('useVoiceCommands - Starting to process voice command:', voiceText);
     setIsProcessing(true);
     
     try {
-      console.log('Processing voice command:', voiceText);
+      console.log('useVoiceCommands - Calling Supabase function');
       
       const { data, error } = await supabase.functions.invoke('parse-voice-command', {
         body: { voiceText }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('useVoiceCommands - Supabase function error:', error);
         throw error;
       }
 
-      console.log('Voice command parsed:', data);
+      console.log('useVoiceCommands - Voice command parsed successfully:', data);
       const result: VoiceCommandResult = data;
       await handleVoiceCommandResult(result);
       
     } catch (error) {
-      console.error('Error processing voice command:', error);
+      console.error('useVoiceCommands - Error processing voice command:', error);
       toast({
         title: "Processing Error",
         description: "Failed to process voice command. Please try again.",
@@ -171,22 +172,27 @@ export const useVoiceCommands = () => {
 
   // Handle the parsed voice command result
   const handleVoiceCommandResult = async (result: VoiceCommandResult) => {
-    console.log('Handling voice command result:', result);
+    console.log('useVoiceCommands - Handling voice command result:', result);
     
     switch (result.type) {
       case 'task':
+        console.log('useVoiceCommands - Processing task command');
         await handleTaskCommand(result);
         break;
       case 'project':
+        console.log('useVoiceCommands - Processing project command');
         await handleProjectCommand(result);
         break;
       case 'client':
+        console.log('useVoiceCommands - Processing client command');
         openClientDialog(result.extractedData);
         break;
       case 'navigation':
+        console.log('useVoiceCommands - Processing navigation command');
         handleNavigation(result.extractedData.route);
         break;
       default:
+        console.log('useVoiceCommands - Unknown command type:', result.type);
         toast({
           title: "Command Not Understood",
           description: "I couldn't understand that command. Please try again.",
@@ -197,11 +203,14 @@ export const useVoiceCommands = () => {
 
   const handleTaskCommand = async (result: VoiceCommandResult) => {
     try {
-      console.log('Handling task command with data:', result.extractedData);
+      console.log('useVoiceCommands - Handling task command with data:', result.extractedData);
+      
+      // Enhanced data preparation - if no project context, create temporary state
+      let enhancedData = { ...result.extractedData };
       
       // If a client is mentioned, look up their projects
       if (result.extractedData.client) {
-        console.log('Looking up projects for client:', result.extractedData.client);
+        console.log('useVoiceCommands - Looking up projects for client:', result.extractedData.client);
         
         const { data: clients, error: clientError } = await supabase
           .from('clients')
@@ -209,13 +218,13 @@ export const useVoiceCommands = () => {
           .ilike('company', `%${result.extractedData.client}%`);
 
         if (clientError) {
-          console.error('Error fetching clients:', clientError);
+          console.error('useVoiceCommands - Error fetching clients:', clientError);
           throw clientError;
         }
 
         if (clients && clients.length > 0) {
           const client = clients[0];
-          console.log('Found client:', client);
+          console.log('useVoiceCommands - Found client:', client);
           
           // Get projects for this client
           const { data: projects, error: projectError } = await supabase
@@ -224,42 +233,48 @@ export const useVoiceCommands = () => {
             .eq('client_id', client.id);
 
           if (projectError) {
-            console.error('Error fetching projects:', projectError);
+            console.error('useVoiceCommands - Error fetching projects:', projectError);
             throw projectError;
           }
 
-          console.log('Found projects for client:', projects);
+          console.log('useVoiceCommands - Found projects for client:', projects);
 
           // Prepare enhanced data for the dialog
-          const enhancedData = {
+          enhancedData = {
             ...result.extractedData,
             clientId: client.id,
             clientName: client.company,
             availableProjects: projects || [],
             // If only one project, auto-select it
-            project: projects && projects.length === 1 ? projects[0].name : undefined
+            project: projects && projects.length === 1 ? projects[0].name : enhancedData.project
           };
-
-          console.log('Opening task dialog with enhanced data:', enhancedData);
-          openTaskDialog(enhancedData);
         } else {
-          console.log('No client found matching:', result.extractedData.client);
+          console.log('useVoiceCommands - No client found matching:', result.extractedData.client);
           toast({
             title: "Client Not Found",
-            description: `Couldn't find a client matching "${result.extractedData.client}". Please select manually.`,
-            variant: "destructive",
+            description: `Couldn't find a client matching "${result.extractedData.client}". Creating task in temporary mode.`,
           });
-          openTaskDialog(result.extractedData);
         }
-      } else {
-        console.log('No client mentioned, opening dialog with original data');
-        openTaskDialog(result.extractedData);
       }
+
+      console.log('useVoiceCommands - Opening task dialog with enhanced data:', enhancedData);
+      
+      // Always open the dialog, even if in temporary mode
+      openTaskDialog(enhancedData);
+      
+      // Show user feedback
+      toast({
+        title: "Task Dialog Opened",
+        description: enhancedData.clientName 
+          ? `Creating task for ${enhancedData.clientName}` 
+          : "Task dialog opened. Please complete the details.",
+      });
+      
     } catch (error) {
-      console.error('Error handling task command:', error);
+      console.error('useVoiceCommands - Error handling task command:', error);
       toast({
         title: "Error",
-        description: "Failed to process task command. Please try creating the task manually.",
+        description: "Failed to process task command. Opening dialog with basic data.",
         variant: "destructive",
       });
       // Still open the dialog with basic data so user can complete manually
@@ -269,11 +284,11 @@ export const useVoiceCommands = () => {
 
   const handleProjectCommand = async (result: VoiceCommandResult) => {
     try {
-      console.log('Handling project command with data:', result.extractedData);
+      console.log('useVoiceCommands - Handling project command with data:', result.extractedData);
       
       // If a client is mentioned, look up the client ID
       if (result.extractedData.client) {
-        console.log('Looking up client:', result.extractedData.client);
+        console.log('useVoiceCommands - Looking up client:', result.extractedData.client);
         
         const { data: clients, error: clientError } = await supabase
           .from('clients')
@@ -281,13 +296,13 @@ export const useVoiceCommands = () => {
           .ilike('company', `%${result.extractedData.client}%`);
 
         if (clientError) {
-          console.error('Error fetching clients:', clientError);
+          console.error('useVoiceCommands - Error fetching clients:', clientError);
           throw clientError;
         }
 
         if (clients && clients.length > 0) {
           const client = clients[0];
-          console.log('Found client:', client);
+          console.log('useVoiceCommands - Found client:', client);
           
           const enhancedData = {
             ...result.extractedData,
@@ -295,10 +310,10 @@ export const useVoiceCommands = () => {
             clientName: client.company
           };
 
-          console.log('Opening project dialog with enhanced data:', enhancedData);
+          console.log('useVoiceCommands - Opening project dialog with enhanced data:', enhancedData);
           openProjectDialog(enhancedData);
         } else {
-          console.log('No client found matching:', result.extractedData.client);
+          console.log('useVoiceCommands - No client found matching:', result.extractedData.client);
           toast({
             title: "Client Not Found",
             description: `Couldn't find a client matching "${result.extractedData.client}". Please select manually.`,
@@ -307,11 +322,11 @@ export const useVoiceCommands = () => {
           openProjectDialog(result.extractedData);
         }
       } else {
-        console.log('No client mentioned, opening dialog with original data');
+        console.log('useVoiceCommands - No client mentioned, opening dialog with original data');
         openProjectDialog(result.extractedData);
       }
     } catch (error) {
-      console.error('Error handling project command:', error);
+      console.error('useVoiceCommands - Error handling project command:', error);
       toast({
         title: "Error",
         description: "Failed to process project command. Please try creating the project manually.",

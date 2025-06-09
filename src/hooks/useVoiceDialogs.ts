@@ -1,64 +1,90 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface VoiceDialogState {
   isOpen: boolean;
   prefilledData: Record<string, any>;
 }
 
+// Singleton state to ensure all components share the same dialog state
+let globalDialogState = {
+  taskDialog: { isOpen: false, prefilledData: {} },
+  projectDialog: { isOpen: false, prefilledData: {} },
+  clientDialog: { isOpen: false, prefilledData: {} }
+};
+
+let listeners: Array<() => void> = [];
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
 export const useVoiceDialogs = () => {
-  const [taskDialog, setTaskDialog] = useState<VoiceDialogState>({
-    isOpen: false,
-    prefilledData: {}
-  });
+  const [, forceUpdate] = useState({});
 
-  const [projectDialog, setProjectDialog] = useState<VoiceDialogState>({
-    isOpen: false,
-    prefilledData: {}
-  });
+  // Force component to re-render when global state changes
+  const triggerRerender = useCallback(() => {
+    console.log('useVoiceDialogs - Force update triggered');
+    forceUpdate({});
+  }, []);
 
-  const [clientDialog, setClientDialog] = useState<VoiceDialogState>({
-    isOpen: false,
-    prefilledData: {}
-  });
+  // Register this hook instance as a listener
+  React.useEffect(() => {
+    listeners.push(triggerRerender);
+    return () => {
+      listeners = listeners.filter(listener => listener !== triggerRerender);
+    };
+  }, [triggerRerender]);
 
-  const openTaskDialog = (data: Record<string, any>) => {
-    setTaskDialog({
+  const openTaskDialog = useCallback((data: Record<string, any>) => {
+    console.log('useVoiceDialogs - Opening task dialog with data:', data);
+    globalDialogState.taskDialog = {
       isOpen: true,
       prefilledData: data
-    });
-  };
+    };
+    notifyListeners();
+  }, []);
 
-  const openProjectDialog = (data: Record<string, any>) => {
-    setProjectDialog({
+  const openProjectDialog = useCallback((data: Record<string, any>) => {
+    console.log('useVoiceDialogs - Opening project dialog with data:', data);
+    globalDialogState.projectDialog = {
       isOpen: true,
       prefilledData: data
-    });
-  };
+    };
+    notifyListeners();
+  }, []);
 
-  const openClientDialog = (data: Record<string, any>) => {
-    setClientDialog({
+  const openClientDialog = useCallback((data: Record<string, any>) => {
+    console.log('useVoiceDialogs - Opening client dialog with data:', data);
+    globalDialogState.clientDialog = {
       isOpen: true,
       prefilledData: data
-    });
-  };
+    };
+    notifyListeners();
+  }, []);
 
-  const closeTaskDialog = () => {
-    setTaskDialog({ isOpen: false, prefilledData: {} });
-  };
+  const closeTaskDialog = useCallback(() => {
+    console.log('useVoiceDialogs - Closing task dialog');
+    globalDialogState.taskDialog = { isOpen: false, prefilledData: {} };
+    notifyListeners();
+  }, []);
 
-  const closeProjectDialog = () => {
-    setProjectDialog({ isOpen: false, prefilledData: {} });
-  };
+  const closeProjectDialog = useCallback(() => {
+    console.log('useVoiceDialogs - Closing project dialog');
+    globalDialogState.projectDialog = { isOpen: false, prefilledData: {} };
+    notifyListeners();
+  }, []);
 
-  const closeClientDialog = () => {
-    setClientDialog({ isOpen: false, prefilledData: {} });
-  };
+  const closeClientDialog = useCallback(() => {
+    console.log('useVoiceDialogs - Closing client dialog');
+    globalDialogState.clientDialog = { isOpen: false, prefilledData: {} };
+    notifyListeners();
+  }, []);
 
   return {
-    taskDialog,
-    projectDialog,
-    clientDialog,
+    taskDialog: globalDialogState.taskDialog,
+    projectDialog: globalDialogState.projectDialog,
+    clientDialog: globalDialogState.clientDialog,
     openTaskDialog,
     openProjectDialog,
     openClientDialog,

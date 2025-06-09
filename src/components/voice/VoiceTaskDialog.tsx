@@ -25,6 +25,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useFieldVoiceInput } from '@/hooks/useFieldVoiceInput';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskFormData {
   title: string;
@@ -48,6 +49,8 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
   const { createTask, isCreating } = useTasks();
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const { teamMembers } = useTeamMembers();
+  const { toast } = useToast();
+  const [isTemporaryMode, setIsTemporaryMode] = useState(false);
   
   const {
     register,
@@ -67,8 +70,39 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
   });
 
   const { startFieldListening, isListening, currentField } = useFieldVoiceInput({
-    onResult: (field, text) => setValue(field as keyof TaskFormData, text)
+    onResult: (field, text) => {
+      console.log('VoiceTaskDialog - Field voice input result:', { field, text });
+      setValue(field as keyof TaskFormData, text);
+    }
   });
+
+  // Enhanced debugging logs
+  useEffect(() => {
+    console.log('VoiceTaskDialog - Props changed:', { 
+      open, 
+      prefilledDataKeys: Object.keys(prefilledData),
+      prefilledData 
+    });
+  }, [open, prefilledData]);
+
+  // Check if we should enable temporary mode
+  useEffect(() => {
+    if (open && prefilledData) {
+      const hasProjectInfo = prefilledData.availableProjects && prefilledData.availableProjects.length > 0;
+      const hasDirectProject = prefilledData.project;
+      
+      if (!hasProjectInfo && !hasDirectProject && prefilledData.title) {
+        console.log('VoiceTaskDialog - Enabling temporary mode - no project specified');
+        setIsTemporaryMode(true);
+        toast({
+          title: "Task Ready for Completion",
+          description: "I've created a temporary task. Please select a project or provide more details.",
+        });
+      } else {
+        setIsTemporaryMode(false);
+      }
+    }
+  }, [open, prefilledData, toast]);
 
   // Filter projects based on client context
   const getAvailableProjects = () => {
@@ -86,7 +120,7 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
   // Pre-fill form with voice command data
   useEffect(() => {
     if (open && prefilledData) {
-      console.log('Pre-filling form with data:', prefilledData);
+      console.log('VoiceTaskDialog - Pre-filling form with data:', prefilledData);
       
       if (prefilledData.title) setValue('title', prefilledData.title);
       if (prefilledData.description) setValue('description', prefilledData.description);
@@ -97,7 +131,26 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
   }, [open, prefilledData, setValue]);
 
   const onSubmit = async (data: TaskFormData) => {
-    console.log('Submitting task with data:', data);
+    console.log('VoiceTaskDialog - Submitting task with data:', data);
+    
+    // Validate required fields
+    if (!data.title?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Task title is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.project?.trim()) {
+      toast({
+        title: "Validation Error", 
+        description: "Please select a project for this task.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const taskData = {
       title: data.title,
@@ -112,11 +165,24 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
     };
     
     try {
+      console.log('VoiceTaskDialog - Creating task:', taskData);
       await createTask(taskData);
+      
+      toast({
+        title: "Task Created",
+        description: `Task "${data.title}" has been created successfully.`,
+      });
+      
       onOpenChange(false);
       reset();
+      setIsTemporaryMode(false);
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('VoiceTaskDialog - Error creating task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create task. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -126,7 +192,10 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
       variant="ghost"
       size="sm"
       className="ml-2 p-1 h-6 w-6"
-      onClick={() => startFieldListening(fieldName)}
+      onClick={() => {
+        console.log('VoiceTaskDialog - Starting voice input for field:', fieldName);
+        startFieldListening(fieldName);
+      }}
       disabled={isListening}
     >
       <Mic className={`h-3 w-3 ${isListening && currentField === fieldName ? 'text-red-500' : 'text-gray-400'}`} />
@@ -135,15 +204,21 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
 
   const availableProjects = getAvailableProjects();
 
+  console.log('VoiceTaskDialog - Rendering dialog, open:', open);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-white border border-gray-200 shadow-lg">
         <DialogHeader>
-          <DialogTitle>Create Task from Voice Command</DialogTitle>
+          <DialogTitle>
+            {isTemporaryMode ? "Complete Your Task" : "Create Task from Voice Command"}
+          </DialogTitle>
           <DialogDescription>
-            {prefilledData.clientName 
-              ? `Creating a task for ${prefilledData.clientName}. Complete any missing fields below or use the microphone buttons to speak the missing information.`
-              : "I've filled in what I understood from your voice command. Complete any missing fields below or use the microphone buttons to speak the missing information."
+            {isTemporaryMode 
+              ? "I've started creating your task. Please complete the missing information below or use voice commands to fill in details."
+              : prefilledData.clientName 
+                ? `Creating a task for ${prefilledData.clientName}. Complete any missing fields below or use the microphone buttons to speak the missing information.`
+                : "I've filled in what I understood from your voice command. Complete any missing fields below or use the microphone buttons to speak the missing information."
             }
           </DialogDescription>
         </DialogHeader>
@@ -186,9 +261,12 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
             )}
             <Select
               value={watch('project')}
-              onValueChange={(value) => setValue('project', value)}
+              onValueChange={(value) => {
+                console.log('VoiceTaskDialog - Project selected:', value);
+                setValue('project', value);
+              }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border border-gray-300">
                 <SelectValue placeholder={isLoadingProjects ? "Loading projects..." : "Select a project"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -213,7 +291,7 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
               value={watch('assignee')}
               onValueChange={(value) => setValue('assignee', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border border-gray-300">
                 <SelectValue placeholder="Select team member (optional)" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
