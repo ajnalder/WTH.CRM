@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar, User, Clock, Check, AlertCircle, X } from 'lucide-react';
+import { Calendar, User, Clock, Check, AlertCircle, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,8 @@ interface TaskPlanningCardProps {
   onMarkComplete: (taskId: string) => void;
   onSchedule?: (taskId: string) => void;
   onUnschedule?: (taskId: string) => void;
+  onMoveUp?: (taskId: string) => void;
+  onMoveDown?: (taskId: string) => void;
   getAssigneeName: (assigneeId: string | null) => string;
   getClientName: (clientId: string | null) => string;
   getClientGradient: (clientId: string | null) => string;
@@ -23,6 +24,9 @@ interface TaskPlanningCardProps {
   isUpdating: boolean;
   showScheduleButton?: boolean;
   showUnscheduleButton?: boolean;
+  showReorderButtons?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
@@ -32,6 +36,8 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   onMarkComplete,
   onSchedule,
   onUnschedule,
+  onMoveUp,
+  onMoveDown,
   getAssigneeName,
   getClientName,
   getClientGradient,
@@ -39,6 +45,9 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   isUpdating,
   showScheduleButton = false,
   showUnscheduleButton = false,
+  showReorderButtons = false,
+  isFirst = false,
+  isLast = false,
 }) => {
   const navigate = useNavigate();
   const [timeInput, setTimeInput] = useState(Math.floor(task.allocated_minutes / 60).toString());
@@ -133,12 +142,38 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
     }`}>
       <div className="p-4">
         <div className="flex items-start gap-4">
-          {/* Order Number */}
-          {index !== undefined && (
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
-              {index}
-            </div>
-          )}
+          {/* Order Number and Reorder Buttons */}
+          <div className="flex flex-col items-center gap-1">
+            {index !== undefined && (
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
+                {index}
+              </div>
+            )}
+            
+            {/* Reorder Buttons */}
+            {showReorderButtons && onMoveUp && onMoveDown && (
+              <div className="flex flex-col gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onMoveUp(task.id)}
+                  disabled={isFirst || isUpdating}
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-blue-500 disabled:opacity-30"
+                >
+                  <ArrowUp size={12} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onMoveDown(task.id)}
+                  disabled={isLast || isUpdating}
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-blue-500 disabled:opacity-30"
+                >
+                  <ArrowDown size={12} />
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Task Content */}
           <div className="flex-1 min-w-0">

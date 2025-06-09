@@ -31,6 +31,7 @@ const DayPlanner = () => {
     getClientInitials,
     scheduleTask,
     unscheduleTask,
+    updateTaskOrder,
     updateTaskAllocation,
     markTaskComplete,
     isUpdating,
@@ -63,8 +64,22 @@ const DayPlanner = () => {
 
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
+  const handleMoveTaskUp = (taskId: string) => {
+    const taskIndex = scheduledTasks.findIndex(t => t.id === taskId);
+    if (taskIndex > 0) {
+      updateTaskOrder(taskId, taskIndex - 1);
+    }
+  };
+
+  const handleMoveTaskDown = (taskId: string) => {
+    const taskIndex = scheduledTasks.findIndex(t => t.id === taskId);
+    if (taskIndex < scheduledTasks.length - 1) {
+      updateTaskOrder(taskId, taskIndex + 1);
+    }
+  };
+
   return (
-    <div className={isMobileDevice ? "px-3 py-2 space-y-3 overflow-x-hidden" : "space-y-6"}>
+    <div className={isMobileDevice ? "px-2 py-1 space-y-2 overflow-x-hidden" : "space-y-6"}>
       <TaskPlanningHeader
         totalAvailable={availableTasks.length}
         totalScheduled={scheduledTasks.length}
@@ -85,7 +100,7 @@ const DayPlanner = () => {
               </span>
             )}
           </div>
-          <div className={isMobileDevice ? "flex flex-wrap gap-2" : "flex items-center gap-2"}>
+          <div className={isMobileDevice ? "flex flex-wrap gap-1" : "flex items-center gap-2"}>
             <Button variant="outline" size="sm" onClick={goToPreviousDay}>
               {isMobileDevice ? "Previous" : "Previous Day"}
             </Button>
@@ -112,9 +127,9 @@ const DayPlanner = () => {
 
       {isMobileDevice ? (
         // Mobile Layout: Scheduled tasks first, then available tasks
-        <div className="space-y-4 min-w-0">
+        <div className="space-y-3 min-w-0">
           {/* Schedule Section */}
-          <div className="space-y-3 min-w-0">
+          <div className="space-y-2 min-w-0">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
@@ -124,6 +139,8 @@ const DayPlanner = () => {
               onTimeAllocationChange={updateTaskAllocation}
               onMarkComplete={markTaskComplete}
               onUnscheduleTask={unscheduleTask}
+              onMoveTaskUp={handleMoveTaskUp}
+              onMoveTaskDown={handleMoveTaskDown}
               getAssigneeName={getAssigneeName}
               getClientName={getClientName}
               getClientGradient={getClientGradient}
@@ -133,7 +150,7 @@ const DayPlanner = () => {
           </div>
 
           {/* Available Tasks Section */}
-          <div className="space-y-3 min-w-0">
+          <div className="space-y-2 min-w-0">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               Available Tasks ({availableTasks.length})
@@ -185,6 +202,8 @@ const DayPlanner = () => {
                 onTimeAllocationChange={updateTaskAllocation}
                 onMarkComplete={markTaskComplete}
                 onUnscheduleTask={unscheduleTask}
+                onMoveTaskUp={handleMoveTaskUp}
+                onMoveTaskDown={handleMoveTaskDown}
                 getAssigneeName={getAssigneeName}
                 getClientName={getClientName}
                 getClientGradient={getClientGradient}

@@ -8,6 +8,8 @@ interface ScheduledTasksListProps {
   onTimeAllocationChange: (taskId: string, minutes: number) => void;
   onMarkComplete: (taskId: string) => void;
   onUnscheduleTask: (taskId: string) => void;
+  onMoveTaskUp: (taskId: string) => void;
+  onMoveTaskDown: (taskId: string) => void;
   getAssigneeName: (assigneeId: string | null) => string;
   getClientName: (clientId: string | null) => string;
   getClientGradient: (clientId: string | null) => string;
@@ -20,6 +22,8 @@ export const ScheduledTasksList: React.FC<ScheduledTasksListProps> = ({
   onTimeAllocationChange,
   onMarkComplete,
   onUnscheduleTask,
+  onMoveTaskUp,
+  onMoveTaskDown,
   getAssigneeName,
   getClientName,
   getClientGradient,
@@ -45,12 +49,17 @@ export const ScheduledTasksList: React.FC<ScheduledTasksListProps> = ({
           onTimeAllocationChange={onTimeAllocationChange}
           onMarkComplete={onMarkComplete}
           onUnschedule={onUnscheduleTask}
+          onMoveUp={onMoveTaskUp}
+          onMoveDown={onMoveTaskDown}
           getAssigneeName={getAssigneeName}
           getClientName={getClientName}
           getClientGradient={getClientGradient}
           getClientInitials={getClientInitials}
           isUpdating={isUpdating}
           showUnscheduleButton={true}
+          showReorderButtons={true}
+          isFirst={index === 0}
+          isLast={index === tasks.length - 1}
         />
       ))}
     </div>
