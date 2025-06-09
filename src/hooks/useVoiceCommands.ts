@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useVoiceDialogs } from './useVoiceDialogs';
+import { getMobileVoiceConfig, isMobile } from '@/utils/mobileDetection';
 
 interface VoiceCommandResult {
   type: 'task' | 'project' | 'client' | 'navigation' | 'unknown';
@@ -24,6 +25,9 @@ export const useVoiceCommands = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { openTaskDialog, openProjectDialog, openClientDialog } = useVoiceDialogs();
+  
+  const config = getMobileVoiceConfig();
+  const mobile = isMobile();
 
   // Check if speech recognition is supported
   const checkSupport = useCallback(() => {
@@ -32,20 +36,20 @@ export const useVoiceCommands = () => {
     return !!SpeechRecognition;
   }, []);
 
-  // Initialize speech recognition
+  // Initialize speech recognition with mobile optimizations
   const initializeRecognition = useCallback(() => {
     if (!checkSupport()) return null;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    // Updated configuration for longer speech recognition
-    recognition.continuous = true; // Keep listening continuously
-    recognition.interimResults = true; // Show interim results
+    // Mobile-optimized configuration
+    recognition.continuous = config.continuous;
+    recognition.interimResults = config.interimResults;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
-      console.log('useVoiceCommands - Voice recognition started');
+      console.log('useVoiceCommands - Voice recognition started (mobile:', mobile, ')');
       setIsListening(true);
       setTranscript('');
       finalTranscriptRef.current = '';
@@ -53,6 +57,16 @@ export const useVoiceCommands = () => {
       // Clear any existing timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+
+      // Mobile gets longer timeout
+      if (!mobile) {
+        timeoutRef.current = setTimeout(() => {
+          console.log('useVoiceCommands - Speech timeout reached, stopping recognition');
+          if (recognition && isListening) {
+            recognition.stop();
+          }
+        }, config.silenceTimeout);
       }
     };
 
@@ -66,7 +80,7 @@ export const useVoiceCommands = () => {
         
         if (result.isFinal) {
           finalTranscript += transcript;
-        } else {
+        } else if (!mobile) { // Only show interim on desktop
           interimTranscript += transcript;
         }
       }
@@ -77,22 +91,20 @@ export const useVoiceCommands = () => {
         console.log('useVoiceCommands - Final transcript so far:', finalTranscriptRef.current);
       }
 
-      // Show current transcript (final + interim)
-      const currentTranscript = finalTranscriptRef.current + interimTranscript;
+      // Show current transcript (final + interim for desktop, final only for mobile)
+      const currentTranscript = finalTranscriptRef.current + (mobile ? '' : interimTranscript);
       setTranscript(currentTranscript);
 
-      // Reset the timeout on each speech detection
-      if (timeoutRef.current) {
+      // Reset timeout on desktop only
+      if (!mobile && timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          console.log('useVoiceCommands - Speech timeout reached, stopping recognition');
+          if (recognition && isListening) {
+            recognition.stop();
+          }
+        }, config.silenceTimeout);
       }
-
-      // Set a new timeout to stop listening after silence
-      timeoutRef.current = setTimeout(() => {
-        console.log('useVoiceCommands - Speech timeout reached, stopping recognition');
-        if (recognition && isListening) {
-          recognition.stop();
-        }
-      }, 2000); // Wait 2 seconds of silence before stopping
     };
 
     recognition.onerror = (event) => {
@@ -104,14 +116,24 @@ export const useVoiceCommands = () => {
         clearTimeout(timeoutRef.current);
       }
 
-      // Don't show error for 'no-speech' as it's common
-      if (event.error !== 'no-speech') {
-        toast({
-          title: "Voice Error",
-          description: `Speech recognition error: ${event.error}. Please try again.`,
-          variant: "destructive",
-        });
+      // More forgiving error handling for mobile
+      if (event.error === 'no-speech') {
+        if (mobile) {
+          toast({
+            title: "No speech detected",
+            description: "Try speaking more clearly or check your microphone.",
+          });
+        }
+        return;
       }
+
+      toast({
+        title: "Voice Error",
+        description: mobile 
+          ? "Voice recognition error. Please try again or check microphone permissions."
+          : `Speech recognition error: ${event.error}. Please try again.`,
+        variant: "destructive",
+      });
     };
 
     recognition.onend = () => {
@@ -134,7 +156,7 @@ export const useVoiceCommands = () => {
     };
 
     return recognition;
-  }, [checkSupport, toast, isListening]);
+  }, [checkSupport, toast, isListening, mobile, config]);
 
   // Process voice command through AI
   const processVoiceCommand = async (voiceText: string) => {
@@ -161,7 +183,9 @@ export const useVoiceCommands = () => {
       console.error('useVoiceCommands - Error processing voice command:', error);
       toast({
         title: "Processing Error",
-        description: "Failed to process voice command. Please try again.",
+        description: mobile 
+          ? "Failed to process voice command. Please check your connection and try again."
+          : "Failed to process voice command. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -346,7 +370,22 @@ export const useVoiceCommands = () => {
     }
   };
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
+    // Request microphone permissions explicitly on mobile
+    if (mobile) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        console.error('Microphone permission denied:', error);
+        toast({
+          title: "Microphone Access Required",
+          description: "Please allow microphone access in your browser settings.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (!recognitionRef.current) {
       recognitionRef.current = initializeRecognition();
     }
@@ -366,7 +405,7 @@ export const useVoiceCommands = () => {
         });
       }
     }
-  }, [initializeRecognition, isListening, toast]);
+  }, [initializeRecognition, isListening, toast, mobile]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
