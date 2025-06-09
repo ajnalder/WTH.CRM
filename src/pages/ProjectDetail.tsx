@@ -111,16 +111,16 @@ const ProjectDetail = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className={isMobileDevice ? 'space-y-4' : 'p-6'}>
-        <MobileContainer>
+      <div className={isMobileDevice ? 'space-y-3' : 'p-6'}>
+        <MobileContainer padding="md">
           <ProjectHeader project={enhancedProject} />
         </MobileContainer>
         
-        <MobileContainer>
+        <MobileContainer padding="md">
           <ProjectHeaderControls project={projectWithRealTasks} />
         </MobileContainer>
         
-        <MobileContainer>
+        <MobileContainer padding="md">
           <ProjectStats 
             project={projectWithRealTasks} 
             daysUntilDue={daysUntilDue} 
@@ -129,18 +129,18 @@ const ProjectDetail = () => {
         </MobileContainer>
 
         <div className={isMobileDevice 
-          ? 'space-y-4' 
+          ? 'space-y-3' 
           : 'grid grid-cols-1 lg:grid-cols-3 gap-6 px-6'
         }>
           <div className={isMobileDevice 
-            ? 'space-y-4' 
+            ? 'space-y-3' 
             : 'lg:col-span-2 space-y-6'
           }>
-            <MobileContainer>
+            <MobileContainer padding="md">
               <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
             </MobileContainer>
             
-            <MobileContainer>
+            <MobileContainer padding="md">
               <TaskCreateDialog 
                 prefilledProject={transformedProject.name}
                 triggerText="Add task"
@@ -148,29 +148,29 @@ const ProjectDetail = () => {
               />
             </MobileContainer>
             
-            <MobileContainer>
+            <MobileContainer padding="md">
               <ProjectTasksList projectName={transformedProject.name} />
             </MobileContainer>
             
             {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
-              <MobileContainer>
+              <MobileContainer padding="md">
                 <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
               </MobileContainer>
             )}
           </div>
 
-          <div className={isMobileDevice ? 'space-y-4' : 'space-y-6'}>
-            <MobileContainer>
+          <div className={isMobileDevice ? 'space-y-3' : 'space-y-6'}>
+            <MobileContainer padding="md">
               <ProjectTeam projectId={transformedProject.id} />
             </MobileContainer>
-            <MobileContainer>
+            <MobileContainer padding="md">
               <ProjectTasks project={projectWithRealTasks} />
             </MobileContainer>
           </div>
         </div>
 
         {!isOnline && (
-          <MobileContainer>
+          <MobileContainer padding="md">
             <div className="text-center py-4">
               <p className="text-amber-600 text-sm">Offline mode - some features may be limited</p>
             </div>

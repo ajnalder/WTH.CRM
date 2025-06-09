@@ -32,37 +32,38 @@ export const ProjectHeaderControls: React.FC<ProjectHeaderControlsProps> = ({ pr
   };
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardContent className="pt-6">
-        <div className="flex flex-col sm:flex-row gap-6 items-start">
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
             <Label htmlFor="project-type-toggle" className="text-sm font-medium">
               Project Type
             </Label>
-            <div className="flex items-center space-x-2">
-              <span className={`text-sm ${!project.isRetainer ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
-                Billable
-              </span>
-              <Switch
-                id="project-type-toggle"
-                checked={project.isRetainer}
-                onCheckedChange={handleToggle}
-                className="data-[state=checked]:bg-green-600"
-              />
-              <span className={`text-sm ${project.isRetainer ? 'font-medium text-green-600' : 'text-gray-500'}`}>
-                Retainer
-              </span>
-            </div>
             
             {project.isRetainer ? (
-              <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
                 Ongoing
               </Badge>
             ) : (
-              <Badge variant="default" className="ml-2 bg-blue-100 text-blue-800">
+              <Badge variant="default" className="bg-blue-100 text-blue-800">
                 Billable
               </Badge>
             )}
+          </div>
+          
+          <div className="flex items-center justify-center space-x-4">
+            <span className={`text-sm ${!project.isRetainer ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
+              Billable
+            </span>
+            <Switch
+              id="project-type-toggle"
+              checked={project.isRetainer}
+              onCheckedChange={handleToggle}
+              className="data-[state=checked]:bg-green-600"
+            />
+            <span className={`text-sm ${project.isRetainer ? 'font-medium text-green-600' : 'text-gray-500'}`}>
+              Retainer
+            </span>
           </div>
         </div>
         
