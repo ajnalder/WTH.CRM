@@ -34,13 +34,16 @@ Required fields:
 Extract these fields when mentioned:
 - title/name: main subject of the task/project
 - description: additional details
-- client: company/client name mentioned
+- client: company/client name mentioned (this is for identifying which client, NOT the project)
 - assignee: "assign to [name]", "for [name]", "assign to me"
 - dueDate: "by [date]", "due [date]", "end of week", "tomorrow", "next Friday"
 - priority: "high priority", "urgent", "low priority"
 - budget: dollar amounts mentioned
 - industry: for clients
 - phone: phone numbers
+
+IMPORTANT: When a client name is mentioned for a task, put it in the "client" field, NOT the "project" field. 
+The client field helps identify which client's projects to show.
 
 Parse relative dates to ISO format where possible.
 For navigation, extract the target route/page.
@@ -51,16 +54,16 @@ Examples:
   "type": "task",
   "action": "create", 
   "extractedData": {"title": "update their menu", "client": "Golf 360"},
-  "missingRequiredFields": [],
+  "missingRequiredFields": ["project"],
   "confidence": 0.9
 }
 
-"Add a new project called Website Redesign" ->
+"Add a new project called Website Redesign for Golf 360" ->
 {
   "type": "project",
   "action": "create",
-  "extractedData": {"name": "Website Redesign"},
-  "missingRequiredFields": ["client_id"], 
+  "extractedData": {"name": "Website Redesign", "client": "Golf 360"},
+  "missingRequiredFields": [], 
   "confidence": 0.8
 }`;
 

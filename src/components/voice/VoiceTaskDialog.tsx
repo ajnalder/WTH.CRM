@@ -70,9 +70,24 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
     onResult: (field, text) => setValue(field as keyof TaskFormData, text)
   });
 
+  // Filter projects based on client context
+  const getAvailableProjects = () => {
+    if (prefilledData.availableProjects && prefilledData.availableProjects.length > 0) {
+      // Use projects from voice command context
+      return prefilledData.availableProjects.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        client_name: prefilledData.clientName || 'Unknown'
+      }));
+    }
+    return projects; // Fall back to all projects
+  };
+
   // Pre-fill form with voice command data
   useEffect(() => {
     if (open && prefilledData) {
+      console.log('Pre-filling form with data:', prefilledData);
+      
       if (prefilledData.title) setValue('title', prefilledData.title);
       if (prefilledData.description) setValue('description', prefilledData.description);
       if (prefilledData.project) setValue('project', prefilledData.project);
@@ -82,6 +97,8 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
   }, [open, prefilledData, setValue]);
 
   const onSubmit = async (data: TaskFormData) => {
+    console.log('Submitting task with data:', data);
+    
     const taskData = {
       title: data.title,
       description: data.description || null,
@@ -94,9 +111,13 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
       dropbox_url: null
     };
     
-    await createTask(taskData);
-    onOpenChange(false);
-    reset();
+    try {
+      await createTask(taskData);
+      onOpenChange(false);
+      reset();
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
 
   const VoiceButton = ({ fieldName }: { fieldName: string }) => (
@@ -112,13 +133,18 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
     </Button>
   );
 
+  const availableProjects = getAvailableProjects();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create Task from Voice Command</DialogTitle>
           <DialogDescription>
-            I've filled in what I understood from your voice command. Complete any missing fields below or use the microphone buttons to speak the missing information.
+            {prefilledData.clientName 
+              ? `Creating a task for ${prefilledData.clientName}. Complete any missing fields below or use the microphone buttons to speak the missing information.`
+              : "I've filled in what I understood from your voice command. Complete any missing fields below or use the microphone buttons to speak the missing information."
+            }
           </DialogDescription>
         </DialogHeader>
         
@@ -152,7 +178,12 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="project">Project</Label>
+            <Label htmlFor="project">Project *</Label>
+            {prefilledData.clientName && (
+              <p className="text-sm text-gray-600 mb-2">
+                Showing projects for: <strong>{prefilledData.clientName}</strong>
+              </p>
+            )}
             <Select
               value={watch('project')}
               onValueChange={(value) => setValue('project', value)}
@@ -161,8 +192,8 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
                 <SelectValue placeholder={isLoadingProjects ? "Loading projects..." : "Select a project"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.name}>
+                {availableProjects.map((project) => (
+                  <SelectItem key={project.id || project.name} value={project.name}>
                     <div className="flex flex-col">
                       <span className="font-medium">{project.name}</span>
                       <span className="text-xs text-gray-500">{project.client_name}</span>
@@ -171,6 +202,9 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {errors.project && (
+              <p className="text-sm text-red-600">{errors.project.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">

@@ -89,12 +89,18 @@ export const useVoiceCommands = () => {
     setIsProcessing(true);
     
     try {
+      console.log('Processing voice command:', voiceText);
+      
       const { data, error } = await supabase.functions.invoke('parse-voice-command', {
         body: { voiceText }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
+      console.log('Voice command parsed:', data);
       const result: VoiceCommandResult = data;
       await handleVoiceCommandResult(result);
       
@@ -113,12 +119,14 @@ export const useVoiceCommands = () => {
 
   // Handle the parsed voice command result
   const handleVoiceCommandResult = async (result: VoiceCommandResult) => {
+    console.log('Handling voice command result:', result);
+    
     switch (result.type) {
       case 'task':
-        openTaskDialog(result.extractedData);
+        await handleTaskCommand(result);
         break;
       case 'project':
-        openProjectDialog(result.extractedData);
+        await handleProjectCommand(result);
         break;
       case 'client':
         openClientDialog(result.extractedData);
@@ -132,6 +140,132 @@ export const useVoiceCommands = () => {
           description: "I couldn't understand that command. Please try again.",
           variant: "destructive",
         });
+    }
+  };
+
+  const handleTaskCommand = async (result: VoiceCommandResult) => {
+    try {
+      console.log('Handling task command with data:', result.extractedData);
+      
+      // If a client is mentioned, look up their projects
+      if (result.extractedData.client) {
+        console.log('Looking up projects for client:', result.extractedData.client);
+        
+        const { data: clients, error: clientError } = await supabase
+          .from('clients')
+          .select('id, company')
+          .ilike('company', `%${result.extractedData.client}%`);
+
+        if (clientError) {
+          console.error('Error fetching clients:', clientError);
+          throw clientError;
+        }
+
+        if (clients && clients.length > 0) {
+          const client = clients[0];
+          console.log('Found client:', client);
+          
+          // Get projects for this client
+          const { data: projects, error: projectError } = await supabase
+            .from('projects')
+            .select('id, name')
+            .eq('client_id', client.id);
+
+          if (projectError) {
+            console.error('Error fetching projects:', projectError);
+            throw projectError;
+          }
+
+          console.log('Found projects for client:', projects);
+
+          // Prepare enhanced data for the dialog
+          const enhancedData = {
+            ...result.extractedData,
+            clientId: client.id,
+            clientName: client.company,
+            availableProjects: projects || [],
+            // If only one project, auto-select it
+            project: projects && projects.length === 1 ? projects[0].name : undefined
+          };
+
+          console.log('Opening task dialog with enhanced data:', enhancedData);
+          openTaskDialog(enhancedData);
+        } else {
+          console.log('No client found matching:', result.extractedData.client);
+          toast({
+            title: "Client Not Found",
+            description: `Couldn't find a client matching "${result.extractedData.client}". Please select manually.`,
+            variant: "destructive",
+          });
+          openTaskDialog(result.extractedData);
+        }
+      } else {
+        console.log('No client mentioned, opening dialog with original data');
+        openTaskDialog(result.extractedData);
+      }
+    } catch (error) {
+      console.error('Error handling task command:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process task command. Please try creating the task manually.",
+        variant: "destructive",
+      });
+      // Still open the dialog with basic data so user can complete manually
+      openTaskDialog(result.extractedData);
+    }
+  };
+
+  const handleProjectCommand = async (result: VoiceCommandResult) => {
+    try {
+      console.log('Handling project command with data:', result.extractedData);
+      
+      // If a client is mentioned, look up the client ID
+      if (result.extractedData.client) {
+        console.log('Looking up client:', result.extractedData.client);
+        
+        const { data: clients, error: clientError } = await supabase
+          .from('clients')
+          .select('id, company')
+          .ilike('company', `%${result.extractedData.client}%`);
+
+        if (clientError) {
+          console.error('Error fetching clients:', clientError);
+          throw clientError;
+        }
+
+        if (clients && clients.length > 0) {
+          const client = clients[0];
+          console.log('Found client:', client);
+          
+          const enhancedData = {
+            ...result.extractedData,
+            client_id: client.id,
+            clientName: client.company
+          };
+
+          console.log('Opening project dialog with enhanced data:', enhancedData);
+          openProjectDialog(enhancedData);
+        } else {
+          console.log('No client found matching:', result.extractedData.client);
+          toast({
+            title: "Client Not Found",
+            description: `Couldn't find a client matching "${result.extractedData.client}". Please select manually.`,
+            variant: "destructive",
+          });
+          openProjectDialog(result.extractedData);
+        }
+      } else {
+        console.log('No client mentioned, opening dialog with original data');
+        openProjectDialog(result.extractedData);
+      }
+    } catch (error) {
+      console.error('Error handling project command:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process project command. Please try creating the project manually.",
+        variant: "destructive",
+      });
+      openProjectDialog(result.extractedData);
     }
   };
 
