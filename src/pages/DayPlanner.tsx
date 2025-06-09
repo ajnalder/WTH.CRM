@@ -87,7 +87,7 @@ const DayPlanner = () => {
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   return (
-    <div className="space-y-6">
+    <div className={isMobileDevice ? "px-4 py-3 space-y-3" : "space-y-6"}>
       <TaskPlanningHeader
         totalAvailable={availableTasks.length}
         totalScheduled={scheduledTasks.length}
@@ -136,9 +136,9 @@ const DayPlanner = () => {
       <DragDropContext onDragEnd={handleDragEnd}>
         {isMobileDevice ? (
           // Mobile Layout: Scheduled tasks first, then available tasks
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Schedule Section */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
@@ -157,7 +157,7 @@ const DayPlanner = () => {
             </div>
 
             {/* Available Tasks Section */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 Available Tasks ({availableTasks.length})
