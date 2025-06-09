@@ -3,8 +3,10 @@ import React from 'react';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { MobileButton } from '@/components/ui/mobile-button';
 import { EditProjectDialog } from './EditProjectDialog';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 
 interface Project {
   id: string;
@@ -27,11 +29,73 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
   const navigate = useNavigate();
+  const { isMobileDevice } = useMobileOptimization();
 
   const handleDelete = () => {
     // TODO: Implement delete project functionality
     console.log('Delete project:', project.id);
   };
+
+  if (isMobileDevice) {
+    return (
+      <div className="mb-6">
+        <MobileButton 
+          variant="ghost" 
+          onClick={() => navigate('/projects')}
+          className="mb-4 -ml-2"
+          hapticFeedback={true}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Projects
+        </MobileButton>
+        
+        <div className="space-y-4">
+          {/* Project title - full width */}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight break-words">
+              {project.name}
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600 mt-1">{project.client}</p>
+          </div>
+          
+          {/* Action buttons - stacked on mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+            <ProjectCompletionDialog
+              projectId={project.id}
+              projectName={project.name}
+              currentStatus={project.status}
+            />
+            <div className="flex gap-2">
+              <EditProjectDialog
+                project={project}
+                trigger={
+                  <MobileButton 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 sm:flex-none"
+                    hapticFeedback={true}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    <span>Edit</span>
+                  </MobileButton>
+                }
+              />
+              <MobileButton 
+                variant="outline" 
+                size="sm"
+                onClick={handleDelete}
+                className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50"
+                hapticFeedback={true}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                <span>Delete</span>
+              </MobileButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">
