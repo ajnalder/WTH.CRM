@@ -87,7 +87,7 @@ const DayPlanner = () => {
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   return (
-    <div className={isMobileDevice ? "px-4 py-3 space-y-3" : "space-y-6"}>
+    <div className={isMobileDevice ? "px-3 py-2 space-y-3 overflow-x-hidden" : "space-y-6"}>
       <TaskPlanningHeader
         totalAvailable={availableTasks.length}
         totalScheduled={scheduledTasks.length}
@@ -96,7 +96,7 @@ const DayPlanner = () => {
 
       {/* Date Navigation */}
       <div className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between">
+        <div className={isMobileDevice ? "space-y-3" : "flex items-center justify-between"}>
           <div className="flex items-center gap-4">
             <Calendar className="w-5 h-5 text-gray-600" />
             <h2 className="text-lg font-semibold text-gray-900">
@@ -108,9 +108,9 @@ const DayPlanner = () => {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className={isMobileDevice ? "flex flex-wrap gap-2" : "flex items-center gap-2"}>
             <Button variant="outline" size="sm" onClick={goToPreviousDay}>
-              Previous Day
+              {isMobileDevice ? "Previous" : "Previous Day"}
             </Button>
             {!isToday && (
               <Button variant="outline" size="sm" onClick={goToToday}>
@@ -118,7 +118,7 @@ const DayPlanner = () => {
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={goToNextDay}>
-              Next Day
+              {isMobileDevice ? "Next" : "Next Day"}
             </Button>
           </div>
         </div>
@@ -136,9 +136,9 @@ const DayPlanner = () => {
       <DragDropContext onDragEnd={handleDragEnd}>
         {isMobileDevice ? (
           // Mobile Layout: Scheduled tasks first, then available tasks
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Schedule Section */}
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
@@ -157,7 +157,7 @@ const DayPlanner = () => {
             </div>
 
             {/* Available Tasks Section */}
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 Available Tasks ({availableTasks.length})
