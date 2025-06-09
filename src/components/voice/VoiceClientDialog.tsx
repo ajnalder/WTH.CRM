@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mic } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +20,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useClientMutations } from '@/hooks/useClientMutations';
-import { useFieldVoiceInput } from '@/hooks/useFieldVoiceInput';
 
 interface ClientFormData {
   company: string;
@@ -57,10 +55,6 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
     }
   });
 
-  const { startFieldListening, isListening, currentField } = useFieldVoiceInput({
-    onResult: (field, text) => setValue(field as keyof ClientFormData, text)
-  });
-
   const industries = [
     'Technology',
     'Healthcare',
@@ -94,19 +88,6 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
     reset();
   };
 
-  const VoiceButton = ({ fieldName }: { fieldName: string }) => (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="ml-2 p-1 h-6 w-6"
-      onClick={() => startFieldListening(fieldName)}
-      disabled={isListening}
-    >
-      <Mic className={`h-3 w-3 ${isListening && currentField === fieldName ? 'text-red-500' : 'text-gray-400'}`} />
-    </Button>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -119,10 +100,7 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="company">Company Name *</Label>
-              <VoiceButton fieldName="company" />
-            </div>
+            <Label htmlFor="company">Company Name *</Label>
             <Input
               id="company"
               placeholder="Enter company name"
@@ -134,10 +112,7 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
           </div>
           
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="phone">Phone</Label>
-              <VoiceButton fieldName="phone" />
-            </div>
+            <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
               placeholder="Enter phone number"
