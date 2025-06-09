@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TaskPlanningHeader } from '@/components/task-planning/TaskPlanningHeader';
 import { TaskPlanningControls } from '@/components/task-planning/TaskPlanningControls';
 import { TaskPool } from '@/components/task-planning/TaskPool';
 import { ScheduledTasksList } from '@/components/task-planning/ScheduledTasksList';
+import { VoiceCommandButton } from '@/components/voice/VoiceCommandButton';
+import { VoiceDialogManager } from '@/components/voice/VoiceDialogManager';
 import { useTaskPlanning } from '@/hooks/useTaskPlanning';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
