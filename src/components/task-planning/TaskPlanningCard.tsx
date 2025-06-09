@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar, User, GripVertical, Clock, Check, AlertCircle, X } from 'lucide-react';
+import { Calendar, User, Clock, Check, AlertCircle, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import type { TaskPlanningItem } from '@/hooks/useTaskPlanning';
 interface TaskPlanningCardProps {
   task: TaskPlanningItem;
   index?: number;
-  dragHandleProps?: any;
   onTimeAllocationChange: (taskId: string, minutes: number) => void;
   onMarkComplete: (taskId: string) => void;
   onSchedule?: (taskId: string) => void;
@@ -28,7 +28,6 @@ interface TaskPlanningCardProps {
 export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
   task,
   index,
-  dragHandleProps,
   onTimeAllocationChange,
   onMarkComplete,
   onSchedule,
@@ -134,16 +133,6 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
     }`}>
       <div className="p-4">
         <div className="flex items-start gap-4">
-          {/* Drag Handle */}
-          {dragHandleProps && (
-            <div
-              {...dragHandleProps}
-              className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
-            >
-              <GripVertical size={16} />
-            </div>
-          )}
-
           {/* Order Number */}
           {index !== undefined && (
             <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
@@ -258,6 +247,17 @@ export const TaskPlanningCard: React.FC<TaskPlanningCardProps> = ({
                     className="h-6 px-2 text-xs"
                   >
                     Schedule
+                  </Button>
+                )}
+
+                {showUnscheduleButton && onUnschedule && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onUnschedule(task.id)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    Unschedule
                   </Button>
                 )}
 

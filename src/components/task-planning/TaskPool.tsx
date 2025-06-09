@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { TaskPlanningCard } from './TaskPlanningCard';
 import type { TaskPlanningItem } from '@/hooks/useTaskPlanning';
 
@@ -37,49 +36,22 @@ export const TaskPool: React.FC<TaskPoolProps> = ({
   }
 
   return (
-    <Droppable droppableId="task-pool">
-      {(provided, snapshot) => (
-        <div
-          {...provided.droppableProps}
-          ref={provided.innerRef}
-          className={`space-y-3 p-4 rounded-lg transition-colors ${
-            snapshot.isDraggingOver ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-50 border-2 border-gray-200'
-          }`}
-        >
-          {tasks.map((task, index) => (
-            <Draggable
-              key={task.id}
-              draggableId={task.id}
-              index={index}
-            >
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.draggableProps}
-                  className={`transition-shadow ${
-                    snapshot.isDragging ? 'shadow-lg' : ''
-                  }`}
-                >
-                  <TaskPlanningCard
-                    task={task}
-                    dragHandleProps={provided.dragHandleProps}
-                    onTimeAllocationChange={onTimeAllocationChange}
-                    onMarkComplete={onMarkComplete}
-                    onSchedule={onScheduleTask}
-                    getAssigneeName={getAssigneeName}
-                    getClientName={getClientName}
-                    getClientGradient={getClientGradient}
-                    getClientInitials={getClientInitials}
-                    isUpdating={isUpdating}
-                    showScheduleButton={true}
-                  />
-                </div>
-              )}
-            </Draggable>
-          ))}
-          {provided.placeholder}
-        </div>
-      )}
-    </Droppable>
+    <div className="space-y-3 p-4 rounded-lg bg-gray-50 border-2 border-gray-200">
+      {tasks.map((task) => (
+        <TaskPlanningCard
+          key={task.id}
+          task={task}
+          onTimeAllocationChange={onTimeAllocationChange}
+          onMarkComplete={onMarkComplete}
+          onSchedule={onScheduleTask}
+          getAssigneeName={getAssigneeName}
+          getClientName={getClientName}
+          getClientGradient={getClientGradient}
+          getClientInitials={getClientInitials}
+          isUpdating={isUpdating}
+          showScheduleButton={true}
+        />
+      ))}
+    </div>
   );
 };
