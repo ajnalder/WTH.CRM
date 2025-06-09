@@ -1,9 +1,6 @@
 
 import React from 'react';
 import { useVoiceDialogs } from '@/hooks/useVoiceDialogs';
-import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
-import { NewProjectForm } from '@/components/NewProjectForm';
-import { AddClientDialog } from '@/components/AddClientDialog';
 import { VoiceTaskDialog } from './VoiceTaskDialog';
 import { VoiceProjectDialog } from './VoiceProjectDialog';
 import { VoiceClientDialog } from './VoiceClientDialog';
