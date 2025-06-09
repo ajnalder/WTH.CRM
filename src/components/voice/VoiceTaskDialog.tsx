@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mic } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,6 @@ import {
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useFieldVoiceInput } from '@/hooks/useFieldVoiceInput';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskFormData {
@@ -66,13 +64,6 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
       project: '',
       assignee: 'unassigned',
       dueDate: ''
-    }
-  });
-
-  const { startFieldListening, isListening, currentField } = useFieldVoiceInput({
-    onResult: (field, text) => {
-      console.log('VoiceTaskDialog - Field voice input result:', { field, text });
-      setValue(field as keyof TaskFormData, text);
     }
   });
 
@@ -186,22 +177,6 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
     }
   };
 
-  const VoiceButton = ({ fieldName }: { fieldName: string }) => (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="ml-2 p-1 h-6 w-6"
-      onClick={() => {
-        console.log('VoiceTaskDialog - Starting voice input for field:', fieldName);
-        startFieldListening(fieldName);
-      }}
-      disabled={isListening}
-    >
-      <Mic className={`h-3 w-3 ${isListening && currentField === fieldName ? 'text-red-500' : 'text-gray-400'}`} />
-    </Button>
-  );
-
   const availableProjects = getAvailableProjects();
 
   console.log('VoiceTaskDialog - Rendering dialog, open:', open);
@@ -215,20 +190,17 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
           </DialogTitle>
           <DialogDescription>
             {isTemporaryMode 
-              ? "I've started creating your task. Please complete the missing information below or use voice commands to fill in details."
+              ? "I've started creating your task. Please complete the missing information below."
               : prefilledData.clientName 
-                ? `Creating a task for ${prefilledData.clientName}. Complete any missing fields below or use the microphone buttons to speak the missing information.`
-                : "I've filled in what I understood from your voice command. Complete any missing fields below or use the microphone buttons to speak the missing information."
+                ? `Creating a task for ${prefilledData.clientName}. Complete any missing fields below.`
+                : "I've filled in what I understood from your voice command. Complete any missing fields below."
             }
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="title">Title *</Label>
-              <VoiceButton fieldName="title" />
-            </div>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               placeholder="Enter task title"
@@ -240,10 +212,7 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="description">Description</Label>
-              <VoiceButton fieldName="description" />
-            </div>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Enter task description (optional)"
@@ -306,10 +275,7 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <VoiceButton fieldName="dueDate" />
-            </div>
+            <Label htmlFor="dueDate">Due Date</Label>
             <Input
               id="dueDate"
               type="date"
