@@ -10,6 +10,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserMenu } from "@/components/UserMenu";
 import { PageLayout } from "@/components/PageLayout";
+import { VoiceCommandButton } from "@/components/voice/VoiceCommandButton";
+import { VoiceDialogManager } from "@/components/voice/VoiceDialogManager";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -73,6 +75,8 @@ const App = () => (
                             <Route path="/settings" element={<Settings />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
+                          <VoiceCommandButton />
+                          <VoiceDialogManager />
                         </PageLayout>
                       </SidebarInset>
                     </div>
