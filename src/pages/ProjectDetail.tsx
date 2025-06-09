@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -111,7 +110,7 @@ const ProjectDetail = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className={isMobileDevice ? 'space-y-3' : 'p-6'}>
+      <div className={isMobileDevice ? 'space-y-4' : 'p-6'}>
         <MobileContainer padding="md">
           <ProjectHeader project={enhancedProject} />
         </MobileContainer>
@@ -129,11 +128,11 @@ const ProjectDetail = () => {
         </MobileContainer>
 
         <div className={isMobileDevice 
-          ? 'space-y-3' 
+          ? 'space-y-4' 
           : 'grid grid-cols-1 lg:grid-cols-3 gap-6 px-6'
         }>
           <div className={isMobileDevice 
-            ? 'space-y-3' 
+            ? 'space-y-4' 
             : 'lg:col-span-2 space-y-6'
           }>
             <MobileContainer padding="md">
@@ -159,7 +158,7 @@ const ProjectDetail = () => {
             )}
           </div>
 
-          <div className={isMobileDevice ? 'space-y-3' : 'space-y-6'}>
+          <div className={isMobileDevice ? 'space-y-4' : 'space-y-6'}>
             <MobileContainer padding="md">
               <ProjectTeam projectId={transformedProject.id} />
             </MobileContainer>
