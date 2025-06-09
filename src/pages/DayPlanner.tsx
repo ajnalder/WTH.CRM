@@ -8,11 +8,13 @@ import { ScheduledTasksList } from '@/components/task-planning/ScheduledTasksLis
 import { VoiceCommandButton } from '@/components/voice/VoiceCommandButton';
 import { VoiceDialogManager } from '@/components/voice/VoiceDialogManager';
 import { useTaskPlanning } from '@/hooks/useTaskPlanning';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
 
 const DayPlanner = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { isMobileDevice } = useMobileOptimization();
   
   const {
     availableTasks,
@@ -132,33 +134,15 @@ const DayPlanner = () => {
       />
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Available Tasks Pool */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              Available Tasks ({availableTasks.length})
-            </h2>
-            <TaskPool
-              tasks={availableTasks}
-              onTimeAllocationChange={updateTaskAllocation}
-              onMarkComplete={markTaskComplete}
-              onScheduleTask={scheduleTask}
-              getAssigneeName={getAssigneeName}
-              getClientName={getClientName}
-              getClientGradient={getClientGradient}
-              getClientInitials={getClientInitials}
-              isUpdating={isUpdating}
-            />
-          </div>
-
-          {/* Schedule - Now Sticky */}
-          <div className="lg:sticky lg:top-6 lg:self-start space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
-            </h2>
-            <div className="lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+        {isMobileDevice ? (
+          // Mobile Layout: Scheduled tasks first, then available tasks
+          <div className="space-y-6">
+            {/* Schedule Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
+              </h2>
               <ScheduledTasksList
                 tasks={scheduledTasks}
                 onTimeAllocationChange={updateTaskAllocation}
@@ -171,8 +155,70 @@ const DayPlanner = () => {
                 isUpdating={isUpdating}
               />
             </div>
+
+            {/* Available Tasks Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                Available Tasks ({availableTasks.length})
+              </h2>
+              <TaskPool
+                tasks={availableTasks}
+                onTimeAllocationChange={updateTaskAllocation}
+                onMarkComplete={markTaskComplete}
+                onScheduleTask={scheduleTask}
+                getAssigneeName={getAssigneeName}
+                getClientName={getClientName}
+                getClientGradient={getClientGradient}
+                getClientInitials={getClientInitials}
+                isUpdating={isUpdating}
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          // Desktop Layout: Side by side
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Available Tasks Pool */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                Available Tasks ({availableTasks.length})
+              </h2>
+              <TaskPool
+                tasks={availableTasks}
+                onTimeAllocationChange={updateTaskAllocation}
+                onMarkComplete={markTaskComplete}
+                onScheduleTask={scheduleTask}
+                getAssigneeName={getAssigneeName}
+                getClientName={getClientName}
+                getClientGradient={getClientGradient}
+                getClientInitials={getClientInitials}
+                isUpdating={isUpdating}
+              />
+            </div>
+
+            {/* Schedule - Now Sticky */}
+            <div className="lg:sticky lg:top-6 lg:self-start space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                {isToday ? "Today's Schedule" : "Scheduled Tasks"} ({scheduledTasks.length})
+              </h2>
+              <div className="lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+                <ScheduledTasksList
+                  tasks={scheduledTasks}
+                  onTimeAllocationChange={updateTaskAllocation}
+                  onMarkComplete={markTaskComplete}
+                  onUnscheduleTask={unscheduleTask}
+                  getAssigneeName={getAssigneeName}
+                  getClientName={getClientName}
+                  getClientGradient={getClientGradient}
+                  getClientInitials={getClientInitials}
+                  isUpdating={isUpdating}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </DragDropContext>
     </div>
   );
