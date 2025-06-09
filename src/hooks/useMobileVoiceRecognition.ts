@@ -25,10 +25,9 @@ export const useMobileVoiceRecognition = ({ onResult }: UseMobileVoiceRecognitio
 
     const recognition = new SpeechRecognition();
     
-    // Mobile-optimized configuration
+    // Mobile-optimized configuration (removed maxAlternatives as it's not supported)
     recognition.continuous = config.continuous;
     recognition.interimResults = config.interimResults;
-    recognition.maxAlternatives = config.maxAlternatives;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {

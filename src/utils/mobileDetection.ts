@@ -25,7 +25,6 @@ export const getMobileVoiceConfig = () => {
   return {
     continuous: mobile ? false : true, // Use tap-to-talk on mobile
     interimResults: mobile ? false : true, // Simpler results on mobile
-    maxAlternatives: mobile ? 1 : 3,
     silenceTimeout: mobile ? 3000 : 2000, // Longer timeout for mobile
     retryAttempts: mobile ? 3 : 1,
     chunkSize: mobileSafari ? 2048 : 4096 // Smaller chunks for mobile Safari
