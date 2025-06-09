@@ -43,7 +43,6 @@ export const useVoiceCommands = () => {
     recognition.continuous = true; // Keep listening continuously
     recognition.interimResults = true; // Show interim results
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       console.log('Voice recognition started');
