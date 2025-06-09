@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, Loader2, CheckCircle, Smartphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MobileButton } from '@/components/ui/mobile-button';
 import { useVoiceCommands } from '@/hooks/useVoiceCommands';
 import { MobileVoiceInstructions } from './MobileVoiceInstructions';
-import { isMobile } from '@/utils/mobileDetection';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { cn } from '@/lib/utils';
 
 export const VoiceCommandButton: React.FC = () => {
@@ -19,27 +19,30 @@ export const VoiceCommandButton: React.FC = () => {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const mobile = isMobile();
+  const { isMobileDevice, vibrate, isOnline } = useMobileOptimization();
 
   // Show success feedback briefly after processing
   useEffect(() => {
     if (!isProcessing && !isListening && transcript === '') {
       setShowSuccess(true);
+      if (isMobileDevice) {
+        vibrate([100, 50, 100]); // Success vibration pattern
+      }
       const timer = setTimeout(() => setShowSuccess(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isProcessing, isListening, transcript]);
+  }, [isProcessing, isListening, transcript, isMobileDevice, vibrate]);
 
   // Show instructions on first mobile interaction
   useEffect(() => {
-    if (mobile && isListening && !showInstructions) {
+    if (isMobileDevice && isListening && !showInstructions) {
       setShowInstructions(true);
       const timer = setTimeout(() => setShowInstructions(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [mobile, isListening, showInstructions]);
+  }, [isMobileDevice, isListening, showInstructions]);
 
-  if (!isSupported) {
+  if (!isSupported || !isOnline) {
     return null;
   }
 
@@ -47,7 +50,7 @@ export const VoiceCommandButton: React.FC = () => {
     if (showSuccess) return <CheckCircle className="h-6 w-6 text-white" />;
     if (isProcessing) return <Loader2 className="h-6 w-6 animate-spin text-white" />;
     if (isListening) return <MicOff className="h-6 w-6 text-white" />;
-    if (mobile) return <Smartphone className="h-5 w-5 text-white mr-1" />;
+    if (isMobileDevice) return <Smartphone className="h-5 w-5 text-white mr-1" />;
     return <Mic className="h-6 w-6 text-white" />;
   };
 
@@ -61,31 +64,31 @@ export const VoiceCommandButton: React.FC = () => {
   const getStatusText = () => {
     if (showSuccess) return "Command processed!";
     if (isProcessing) return "Processing voice command...";
-    if (isListening) return mobile ? "Listening... (release when done)" : "Listening... (speak now)";
-    return mobile ? "Tap & hold to speak" : "Click to start voice command";
+    if (isListening) return isMobileDevice ? "Listening... (release when done)" : "Listening... (speak now)";
+    return isMobileDevice ? "Tap & hold to speak" : "Click to start voice command";
   };
 
   const getButtonText = () => {
-    if (mobile && !isListening && !isProcessing && !showSuccess) {
+    if (isMobileDevice && !isListening && !isProcessing && !showSuccess) {
       return "Voice";
     }
     return "";
   };
 
   const handleMouseDown = () => {
-    if (mobile && !isListening && !isProcessing) {
+    if (isMobileDevice && !isListening && !isProcessing) {
       startListening();
     }
   };
 
   const handleMouseUp = () => {
-    if (mobile && isListening) {
+    if (isMobileDevice && isListening) {
       stopListening();
     }
   };
 
   const handleClick = () => {
-    if (!mobile) {
+    if (!isMobileDevice) {
       if (isListening) {
         stopListening();
       } else {
@@ -114,10 +117,10 @@ export const VoiceCommandButton: React.FC = () => {
           </div>
         )}
         
-        <Button
-          size={mobile ? "default" : "lg"}
+        <MobileButton
+          size={isMobileDevice ? "default" : "lg"}
           className={cn(
-            mobile ? "h-12 px-4 rounded-full" : "h-14 w-14 rounded-full",
+            isMobileDevice ? "h-12 px-4 rounded-full" : "h-14 w-14 rounded-full",
             "shadow-lg transition-all duration-200",
             getButtonColor(),
             isProcessing && "cursor-not-allowed opacity-75"
@@ -128,12 +131,14 @@ export const VoiceCommandButton: React.FC = () => {
           onTouchStart={handleMouseDown}
           onTouchEnd={handleMouseUp}
           disabled={isProcessing}
+          hapticFeedback={true}
+          touchOptimized={true}
         >
           <div className="flex items-center">
             {getButtonIcon()}
             {getButtonText() && <span className="ml-1 text-sm">{getButtonText()}</span>}
           </div>
-        </Button>
+        </MobileButton>
       </div>
     </div>
   );
