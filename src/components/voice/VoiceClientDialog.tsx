@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useClientMutations } from '@/hooks/useClientMutations';
+import { toProperCase } from '@/utils/textFormatting';
 
 interface ClientFormData {
   company: string;
@@ -68,10 +69,10 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
     'Other'
   ];
 
-  // Pre-fill form with voice command data
+  // Pre-fill form with voice command data and format it properly
   useEffect(() => {
     if (open && prefilledData) {
-      if (prefilledData.company) setValue('company', prefilledData.company);
+      if (prefilledData.company) setValue('company', toProperCase(prefilledData.company));
       if (prefilledData.phone) setValue('phone', prefilledData.phone);
       if (prefilledData.industry) setValue('industry', prefilledData.industry);
     }

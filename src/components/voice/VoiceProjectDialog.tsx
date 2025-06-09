@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useClients } from '@/hooks/useClients';
+import { toSentenceCase, formatDescription } from '@/utils/textFormatting';
 
 interface ProjectFormData {
   name: string;
@@ -57,12 +58,12 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
     }
   });
 
-  // Pre-fill form with voice command data
+  // Pre-fill form with voice command data and format it properly
   useEffect(() => {
     if (open && prefilledData) {
-      if (prefilledData.name) setValue('name', prefilledData.name);
+      if (prefilledData.name) setValue('name', toSentenceCase(prefilledData.name));
       if (prefilledData.client_id) setValue('client_id', prefilledData.client_id);
-      if (prefilledData.description) setValue('description', prefilledData.description);
+      if (prefilledData.description) setValue('description', formatDescription(prefilledData.description));
       if (prefilledData.due_date) setValue('due_date', prefilledData.due_date);
       if (prefilledData.priority) setValue('priority', prefilledData.priority);
       if (prefilledData.budget) setValue('budget', prefilledData.budget);

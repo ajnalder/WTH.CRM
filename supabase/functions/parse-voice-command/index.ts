@@ -9,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You are a voice command parser for a project management app. Parse user voice commands and extract structured data.
+const SYSTEM_PROMPT = `You are a voice command parser for a project management app. Parse user voice commands and extract structured data from conversational input.
 
 Support these entity types:
 1. TASKS - "create task", "add task", "new task"
@@ -31,10 +31,22 @@ Required fields:
 - Projects: name, client_id  
 - Clients: company
 
+IMPORTANT FORMATTING RULES:
+1. Always use proper sentence case for titles and names
+2. Capitalize the first letter of sentences and proper nouns
+3. Clean up filler words like "um", "uh", "you know", etc.
+4. Convert casual speech to professional text
+
+DESCRIPTION EXTRACTION:
+- For longer conversational input, extract the core action/title first
+- Put additional context, details, and conversational elements into the description field
+- The description should capture the full context while the title should be concise
+- Remove redundant information from the title if it's already in the description
+
 Extract these fields when mentioned:
-- title/name: main subject of the task/project
-- description: additional details
-- client: company/client name mentioned (this is for identifying which client, NOT the project)
+- title/name: main subject (clean, concise, sentence case)
+- description: full context and details from the conversation (sentence case, clean grammar)
+- client: company/client name mentioned (proper case)
 - assignee: "assign to [name]", "for [name]", "assign to me"
 - dueDate: "by [date]", "due [date]", "end of week", "tomorrow", "next Friday"
 - priority: "high priority", "urgent", "low priority"
@@ -42,30 +54,41 @@ Extract these fields when mentioned:
 - industry: for clients
 - phone: phone numbers
 
-IMPORTANT: When a client name is mentioned for a task, put it in the "client" field, NOT the "project" field. 
-The client field helps identify which client's projects to show.
+CONVERSATION PARSING EXAMPLES:
 
-Parse relative dates to ISO format where possible.
-For navigation, extract the target route/page.
-
-Examples:
-"Create a task for Golf 360 to update their menu" -> 
+Input: "this is a task for Golf 360 I need to keep filling out those client details on the website so try and get another five done tomorrow if we can"
+Output:
 {
   "type": "task",
-  "action": "create", 
-  "extractedData": {"title": "update their menu", "client": "Golf 360"},
+  "action": "create",
+  "extractedData": {
+    "title": "Fill out client details on website",
+    "description": "Need to keep filling out client details on the website. Goal is to get another five completed if possible.",
+    "client": "Golf 360",
+    "dueDate": "tomorrow"
+  },
   "missingRequiredFields": ["project"],
   "confidence": 0.9
 }
 
-"Add a new project called Website Redesign for Golf 360" ->
+Input: "create a project for Acme Corp called website redesign um you know we need to make it more modern and responsive by the end of next month"
+Output:
 {
-  "type": "project",
+  "type": "project", 
   "action": "create",
-  "extractedData": {"name": "Website Redesign", "client": "Golf 360"},
-  "missingRequiredFields": [], 
-  "confidence": 0.8
-}`;
+  "extractedData": {
+    "name": "Website redesign",
+    "description": "Need to make the website more modern and responsive.",
+    "client": "Acme Corp",
+    "dueDate": "end of next month"
+  },
+  "missingRequiredFields": [],
+  "confidence": 0.9
+}
+
+Parse relative dates to ISO format where possible.
+For navigation, extract the target route/page.
+Always clean up the text to be professional and properly formatted.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

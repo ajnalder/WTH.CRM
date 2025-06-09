@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useToast } from '@/hooks/use-toast';
+import { toSentenceCase, formatDescription } from '@/utils/textFormatting';
 
 interface TaskFormData {
   title: string;
@@ -108,13 +108,13 @@ export const VoiceTaskDialog: React.FC<VoiceTaskDialogProps> = ({
     return projects; // Fall back to all projects
   };
 
-  // Pre-fill form with voice command data
+  // Pre-fill form with voice command data and format it properly
   useEffect(() => {
     if (open && prefilledData) {
       console.log('VoiceTaskDialog - Pre-filling form with data:', prefilledData);
       
-      if (prefilledData.title) setValue('title', prefilledData.title);
-      if (prefilledData.description) setValue('description', prefilledData.description);
+      if (prefilledData.title) setValue('title', toSentenceCase(prefilledData.title));
+      if (prefilledData.description) setValue('description', formatDescription(prefilledData.description));
       if (prefilledData.project) setValue('project', prefilledData.project);
       if (prefilledData.assignee) setValue('assignee', prefilledData.assignee);
       if (prefilledData.dueDate) setValue('dueDate', prefilledData.dueDate);
