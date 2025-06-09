@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mic } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useClients } from '@/hooks/useClients';
-import { useFieldVoiceInput } from '@/hooks/useFieldVoiceInput';
 
 interface ProjectFormData {
   name: string;
@@ -59,10 +57,6 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
     }
   });
 
-  const { startFieldListening, isListening, currentField } = useFieldVoiceInput({
-    onResult: (field, text) => setValue(field as keyof ProjectFormData, text)
-  });
-
   // Pre-fill form with voice command data
   useEffect(() => {
     if (open && prefilledData) {
@@ -92,19 +86,6 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
     reset();
   };
 
-  const VoiceButton = ({ fieldName }: { fieldName: string }) => (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="ml-2 p-1 h-6 w-6"
-      onClick={() => startFieldListening(fieldName)}
-      disabled={isListening}
-    >
-      <Mic className={`h-3 w-3 ${isListening && currentField === fieldName ? 'text-red-500' : 'text-gray-400'}`} />
-    </Button>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -117,10 +98,7 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="name">Project Name *</Label>
-              <VoiceButton fieldName="name" />
-            </div>
+            <Label htmlFor="name">Project Name *</Label>
             <Input
               id="name"
               placeholder="Enter project name"
@@ -150,10 +128,7 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="description">Description</Label>
-              <VoiceButton fieldName="description" />
-            </div>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Brief description of the project..."
@@ -164,10 +139,7 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="due_date">Due Date</Label>
-                <VoiceButton fieldName="due_date" />
-              </div>
+              <Label htmlFor="due_date">Due Date</Label>
               <Input
                 id="due_date"
                 type="date"
@@ -189,10 +161,7 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="budget">Budget ($)</Label>
-              <VoiceButton fieldName="budget" />
-            </div>
+            <Label htmlFor="budget">Budget ($)</Label>
             <Input
               id="budget"
               type="number"
