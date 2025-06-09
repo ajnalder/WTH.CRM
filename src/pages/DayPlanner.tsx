@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TaskPlanningHeader } from '@/components/task-planning/TaskPlanningHeader';
 import { TaskPlanningControls } from '@/components/task-planning/TaskPlanningControls';
@@ -65,16 +64,26 @@ const DayPlanner = () => {
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   const handleMoveTaskUp = (taskId: string) => {
-    const taskIndex = scheduledTasks.findIndex(t => t.id === taskId);
-    if (taskIndex > 0) {
-      updateTaskOrder(taskId, taskIndex - 1);
+    const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+    if (currentIndex > 0) {
+      const currentTask = scheduledTasks[currentIndex];
+      const previousTask = scheduledTasks[currentIndex - 1];
+      
+      // Swap the order indices
+      updateTaskOrder(taskId, previousTask.order_index);
+      updateTaskOrder(previousTask.id, currentTask.order_index);
     }
   };
 
   const handleMoveTaskDown = (taskId: string) => {
-    const taskIndex = scheduledTasks.findIndex(t => t.id === taskId);
-    if (taskIndex < scheduledTasks.length - 1) {
-      updateTaskOrder(taskId, taskIndex + 1);
+    const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+    if (currentIndex < scheduledTasks.length - 1) {
+      const currentTask = scheduledTasks[currentIndex];
+      const nextTask = scheduledTasks[currentIndex + 1];
+      
+      // Swap the order indices
+      updateTaskOrder(taskId, nextTask.order_index);
+      updateTaskOrder(nextTask.id, currentTask.order_index);
     }
   };
 
