@@ -88,7 +88,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
       <TableBody>
         {tasks.map((task) => {
           const clientGradient = task.client_name ? getClientGradient(task.client_name) : 'from-blue-400 to-blue-600';
-          const overdueTask = isOverdue(task.due_date);
+          // Only apply overdue styling if task is not completed
+          const isTaskCompleted = task.status === 'Done';
+          const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
           
           return (
             <TableRow key={task.id} className={overdueTask ? 'bg-red-50/50' : ''}>

@@ -86,7 +86,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return 'bg-blue-50/80 border-blue-200/80'; // default
   };
 
-  const overdueTask = isOverdue(task.due_date);
+  // Only apply overdue styling if task is not completed
+  const isTaskCompleted = task.status === 'Done';
+  const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
   const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
 
   return (
