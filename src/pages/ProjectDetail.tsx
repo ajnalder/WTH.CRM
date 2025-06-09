@@ -2,6 +2,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { MobileContainer } from '@/components/ui/mobile-container';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
 import { ProjectHeaderControls } from '@/components/project/ProjectHeaderControls';
 import { ProjectStats } from '@/components/project/ProjectStats';
@@ -11,6 +12,7 @@ import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasks } from '@/components/project/ProjectTasks';
 import { ProjectTasksList } from '@/components/project/ProjectTasksList';
 import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useClients } from '@/hooks/useClients';
@@ -22,25 +24,33 @@ const ProjectDetail = () => {
   const { projects, isLoading, error, updateProject } = useProjects();
   const { tasks } = useTasks();
   const { clients } = useClients();
+  const { isMobileDevice, isOnline } = useMobileOptimization();
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <MobileContainer>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </MobileContainer>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Project</h1>
-          <p className="text-gray-600 mb-4">There was an error loading the project details.</p>
-          <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <MobileContainer>
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Project</h1>
+            <p className="text-gray-600 mb-4">There was an error loading the project details.</p>
+            {!isOnline && (
+              <p className="text-red-600 text-sm mb-4">You appear to be offline. Please check your connection.</p>
+            )}
+            <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
+          </div>
+        </MobileContainer>
       </div>
     );
   }
@@ -49,12 +59,14 @@ const ProjectDetail = () => {
   
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
-          <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or you don't have permission to view it.</p>
-          <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <MobileContainer>
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
+            <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or you don't have permission to view it.</p>
+            <Button onClick={() => navigate('/projects')}>Back to Projects</Button>
+          </div>
+        </MobileContainer>
       </div>
     );
   }
@@ -99,39 +111,71 @@ const ProjectDetail = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="p-6">
-        <ProjectHeader project={enhancedProject} />
+      <div className={isMobileDevice ? 'space-y-4' : 'p-6'}>
+        <MobileContainer>
+          <ProjectHeader project={enhancedProject} />
+        </MobileContainer>
         
-        <ProjectHeaderControls project={projectWithRealTasks} />
+        <MobileContainer>
+          <ProjectHeaderControls project={projectWithRealTasks} />
+        </MobileContainer>
         
-        <ProjectStats 
-          project={projectWithRealTasks} 
-          daysUntilDue={daysUntilDue} 
-          onDueDateUpdate={handleDueDateUpdate}
-        />
+        <MobileContainer>
+          <ProjectStats 
+            project={projectWithRealTasks} 
+            daysUntilDue={daysUntilDue} 
+            onDueDateUpdate={handleDueDateUpdate}
+          />
+        </MobileContainer>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
+        <div className={isMobileDevice 
+          ? 'space-y-4' 
+          : 'grid grid-cols-1 lg:grid-cols-3 gap-6 px-6'
+        }>
+          <div className={isMobileDevice 
+            ? 'space-y-4' 
+            : 'lg:col-span-2 space-y-6'
+          }>
+            <MobileContainer>
+              <ProjectDescription project={{ id: transformedProject.id, description: transformedProject.description }} />
+            </MobileContainer>
             
-            <TaskCreateDialog 
-              prefilledProject={transformedProject.name}
-              triggerText="Add task"
-              triggerVariant="default"
-            />
+            <MobileContainer>
+              <TaskCreateDialog 
+                prefilledProject={transformedProject.name}
+                triggerText="Add task"
+                triggerVariant="default"
+              />
+            </MobileContainer>
             
-            <ProjectTasksList projectName={transformedProject.name} />
+            <MobileContainer>
+              <ProjectTasksList projectName={transformedProject.name} />
+            </MobileContainer>
             
             {!transformedProject.isRetainer && transformedProject.startDate && transformedProject.dueDate && (
-              <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
+              <MobileContainer>
+                <ProjectTimeline project={transformedProject} projectDuration={projectDuration} />
+              </MobileContainer>
             )}
           </div>
 
-          <div className="space-y-6">
-            <ProjectTeam projectId={transformedProject.id} />
-            <ProjectTasks project={projectWithRealTasks} />
+          <div className={isMobileDevice ? 'space-y-4' : 'space-y-6'}>
+            <MobileContainer>
+              <ProjectTeam projectId={transformedProject.id} />
+            </MobileContainer>
+            <MobileContainer>
+              <ProjectTasks project={projectWithRealTasks} />
+            </MobileContainer>
           </div>
         </div>
+
+        {!isOnline && (
+          <MobileContainer>
+            <div className="text-center py-4">
+              <p className="text-amber-600 text-sm">Offline mode - some features may be limited</p>
+            </div>
+          </MobileContainer>
+        )}
       </div>
     </div>
   );
