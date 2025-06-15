@@ -29,7 +29,19 @@ const QuotePreview = () => {
       console.log('Fetching quote with ID:', id);
 
       try {
-        // Fetch quote by ID (for internal preview)
+        // First try to get the current user session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Current session:', session ? 'authenticated' : 'unauthenticated');
+
+        // If no session, we can't access quotes with RLS - need to implement public access
+        if (!session) {
+          console.log('No authenticated session, cannot access quotes table');
+          setError('This preview requires authentication. Please access the quote through a public link instead.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch quote by ID (for internal preview with authentication)
         const { data: quoteData, error: quoteError } = await supabase
           .from('quotes')
           .select(`
@@ -125,6 +137,9 @@ const QuotePreview = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Quote Not Found</h1>
           <p className="text-gray-600">{error || 'The quote you\'re looking for doesn\'t exist or has been removed.'}</p>
           <p className="text-sm text-gray-500 mt-2">Quote ID: {id}</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Tip: For public access, use the shareable link instead of the preview.
+          </p>
         </div>
       </div>
     );
