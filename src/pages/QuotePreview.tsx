@@ -20,10 +20,13 @@ const QuotePreview = () => {
   useEffect(() => {
     const fetchQuote = async () => {
       if (!id) {
+        console.error('No quote ID provided');
         setError('Invalid quote ID');
         setIsLoading(false);
         return;
       }
+
+      console.log('Fetching quote with ID:', id);
 
       try {
         // Fetch quote by ID (for internal preview)
@@ -40,9 +43,16 @@ const QuotePreview = () => {
           .eq('id', id)
           .single();
 
-        if (quoteError) throw quoteError;
+        console.log('Quote data response:', quoteData);
+        console.log('Quote error:', quoteError);
+
+        if (quoteError) {
+          console.error('Supabase error:', quoteError);
+          throw quoteError;
+        }
 
         if (!quoteData) {
+          console.error('No quote data found');
           setError('Quote not found');
           setIsLoading(false);
           return;
@@ -59,7 +69,13 @@ const QuotePreview = () => {
           .eq('quote_id', quoteData.id)
           .order('position_order', { ascending: true });
 
-        if (elementsError) throw elementsError;
+        console.log('Elements data:', elementsData);
+        console.log('Elements error:', elementsError);
+
+        if (elementsError) {
+          console.error('Elements error:', elementsError);
+          throw elementsError;
+        }
 
         // Transform the elements data using our type helpers
         const transformedElements = (elementsData || []).map(element => {
@@ -75,7 +91,7 @@ const QuotePreview = () => {
 
       } catch (error) {
         console.error('Error fetching quote:', error);
-        setError('Failed to load quote');
+        setError(`Failed to load quote: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setIsLoading(false);
       }
@@ -108,6 +124,7 @@ const QuotePreview = () => {
           <div className="text-6xl mb-4">😵</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Quote Not Found</h1>
           <p className="text-gray-600">{error || 'The quote you\'re looking for doesn\'t exist or has been removed.'}</p>
+          <p className="text-sm text-gray-500 mt-2">Quote ID: {id}</p>
         </div>
       </div>
     );
