@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download, Check, X, Calendar, DollarSign } from 'lucide-react';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteElement } from '@/types/quoteTypes';
 import { QuoteElementRenderer } from '@/components/quotes/QuoteElementRenderer';
+import { transformSupabaseQuote, transformSupabaseQuoteElement } from '@/utils/quoteTypeHelpers';
 
 const QuoteView = () => {
   const { token } = useParams<{ token: string }>();
@@ -47,17 +47,8 @@ const QuoteView = () => {
           return;
         }
 
-        // Transform the quote data to match our Quote type
-        const transformedQuote = {
-          ...quoteData,
-          status: quoteData.status as Quote['status'],
-          client_id: quoteData.client_id as string | null,
-          description: quoteData.description as string | null,
-          valid_until: quoteData.valid_until as string | null,
-          terms_and_conditions: quoteData.terms_and_conditions as string | null,
-          public_link_token: quoteData.public_link_token as string | null
-        };
-
+        // Transform the quote data using our type helpers
+        const transformedQuote = transformSupabaseQuote(quoteData);
         setQuote(transformedQuote);
 
         // Fetch quote elements
@@ -69,12 +60,15 @@ const QuoteView = () => {
 
         if (elementsError) throw elementsError;
 
-        // Transform the elements data to match our QuoteElement type
-        const transformedElements = (elementsData || []).map(element => ({
-          ...element,
-          element_type: element.element_type as QuoteElement['element_type'],
-          content: element.content as Record<string, any>
-        }));
+        // Transform the elements data using our type helpers
+        const transformedElements = (elementsData || []).map(element => {
+          try {
+            return transformSupabaseQuoteElement(element);
+          } catch (transformError) {
+            console.error('Error transforming quote element:', transformError);
+            return null;
+          }
+        }).filter(Boolean) as QuoteElement[];
 
         setElements(transformedElements);
 

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteElement } from '@/types/quoteTypes';
 import { useToast } from '@/hooks/use-toast';
+import { transformSupabaseQuoteElement } from '@/utils/quoteTypeHelpers';
+import { QuoteElementInsertData } from '@/types/supabaseQuoteTypes';
 
 export const useQuoteElements = (quoteId: string | null) => {
   const [elements, setElements] = useState<QuoteElement[]>([]);
@@ -25,12 +27,15 @@ export const useQuoteElements = (quoteId: string | null) => {
 
       if (error) throw error;
       
-      // Transform the data to match our QuoteElement type
-      const transformedElements = (data || []).map(element => ({
-        ...element,
-        element_type: element.element_type as QuoteElement['element_type'],
-        content: element.content as Record<string, any>
-      }));
+      // Transform the data using our type helpers
+      const transformedElements = (data || []).map(element => {
+        try {
+          return transformSupabaseQuoteElement(element);
+        } catch (transformError) {
+          console.error('Error transforming quote element:', transformError);
+          return null;
+        }
+      }).filter(Boolean) as QuoteElement[];
       
       setElements(transformedElements);
     } catch (error) {
@@ -51,14 +56,16 @@ export const useQuoteElements = (quoteId: string | null) => {
     try {
       const maxOrder = elements.length > 0 ? Math.max(...elements.map(e => e.position_order)) : -1;
       
+      const insertData: QuoteElementInsertData = {
+        quote_id: quoteId,
+        element_type: elementData.element_type!,
+        content: elementData.content || {},
+        position_order: maxOrder + 1
+      };
+
       const { data, error } = await supabase
         .from('quote_elements')
-        .insert([{
-          quote_id: quoteId,
-          element_type: elementData.element_type!,
-          content: elementData.content || {},
-          position_order: maxOrder + 1
-        }])
+        .insert(insertData)
         .select()
         .single();
 
@@ -79,9 +86,12 @@ export const useQuoteElements = (quoteId: string | null) => {
 
   const updateElement = async (id: string, updates: Partial<QuoteElement>) => {
     try {
+      // Filter out fields that shouldn't be updated directly
+      const { id: _, created_at, updated_at, ...safeUpdates } = updates;
+      
       const { error } = await supabase
         .from('quote_elements')
-        .update(updates)
+        .update(safeUpdates)
         .eq('id', id);
 
       if (error) throw error;
