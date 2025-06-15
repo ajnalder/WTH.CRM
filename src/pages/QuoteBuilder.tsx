@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Plus, Save, Eye, ArrowLeft, Trash2, Image, Type, Grid, DollarSign, Minus } from 'lucide-react';
+import { Plus, Save, Eye, ArrowLeft, Trash2, Image, Type, Grid, DollarSign, Minus, Share, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuotes } from '@/hooks/useQuotes';
@@ -98,6 +99,43 @@ const QuoteBuilder = () => {
   const viewQuote = () => {
     if (quote?.public_link_token) {
       window.open(`/quote/${quote.public_link_token}`, '_blank');
+    } else {
+      toast({
+        title: "No public link",
+        description: "Generate a shareable link first to preview the quote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generatePublicLink = async () => {
+    if (!quote) return;
+
+    try {
+      // Update quote status to 'sent' to make it viewable
+      await updateQuote(quote.id, { status: 'sent' });
+      
+      toast({
+        title: "Public link generated",
+        description: "Your quote is now ready to share!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate public link",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyPublicLink = () => {
+    if (quote?.public_link_token) {
+      const url = `${window.location.origin}/quote/${quote.public_link_token}`;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "The shareable link has been copied to your clipboard",
+      });
     }
   };
 
@@ -130,6 +168,17 @@ const QuoteBuilder = () => {
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
+          {quote.public_link_token && quote.status === 'sent' ? (
+            <Button variant="outline" onClick={copyPublicLink}>
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Link
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={generatePublicLink}>
+              <Share className="w-4 h-4 mr-2" />
+              Create Link
+            </Button>
+          )}
           <Button onClick={() => toast({ title: "Saved", description: "Quote saved successfully" })}>
             <Save className="w-4 h-4 mr-2" />
             Save
