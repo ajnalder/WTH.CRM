@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteElement } from '@/types/quoteTypes';
 import { QuoteElementRenderer } from '@/components/quotes/QuoteElementRenderer';
 import { InvestmentBreakdown } from '@/components/quotes/InvestmentBreakdown';
+import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { transformSupabaseQuote, transformSupabaseQuoteElement } from '@/utils/quoteTypeHelpers';
 
 const QuoteView = () => {
@@ -139,25 +140,15 @@ const QuoteView = () => {
 
   const isExpired = quote.valid_until ? new Date(quote.valid_until) < new Date() : false;
   const canRespond = quote.status !== 'accepted' && quote.status !== 'rejected' && !isExpired;
-  const lineItemElements = elements.filter(el => el.element_type === 'line_item');
-  const nonLineItemElements = elements.filter(el => el.element_type !== 'line_item');
+
+  // Group elements by their position in the design
+  const allElementsWithLineItems = [...elements].sort((a, b) => a.position_order - b.position_order);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <img 
-            src="/lovable-uploads/c848f237-7df6-492e-95f2-7ce8824226b0.png" 
-            alt="What the Heck Logo" 
-            className="h-12 w-auto mx-auto mb-4"
-          />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{quote.title}</h1>
-          <p className="text-gray-600">{quote.quote_number}</p>
-        </div>
-
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Quote Status and Actions */}
-        <Card className="mb-6">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -206,57 +197,59 @@ const QuoteView = () => {
           </CardContent>
         </Card>
 
-        {/* Quote Content - Centered */}
-        <div className="max-w-3xl mx-auto">
-          <Card>
-            <CardContent className="p-8">
-              {/* Quote Description */}
-              {quote.description && (
-                <div className="mb-8 text-gray-700 text-center">
+        {/* Quote Header */}
+        <QuoteHeader quote={quote} />
+
+        {/* Quote Content in Order */}
+        <div className="space-y-6">
+          {/* Quote Description */}
+          {quote.description && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-gray-700">
                   {quote.description}
                 </div>
-              )}
+              </CardContent>
+            </Card>
+          )}
 
-              {/* All Elements in Order (excluding line items) */}
-              {nonLineItemElements.length > 0 && (
-                <div className="space-y-6 mb-8">
-                  {nonLineItemElements.map((element) => (
-                    <div key={element.id} className="text-center">
-                      <QuoteElementRenderer
-                        element={element}
-                        isSelected={false}
-                        onUpdate={() => {}}
-                        isEditable={false}
-                      />
-                    </div>
-                  ))}
-                </div>
+          {/* All Elements in Correct Order */}
+          {allElementsWithLineItems.map((element) => (
+            <div key={element.id}>
+              {element.element_type === 'line_item' ? (
+                <InvestmentBreakdown
+                  elements={[element]}
+                  onUpdateElement={() => {}}
+                  onRemoveElement={() => {}}
+                  onTotalChange={() => {}}
+                  isEditable={false}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <QuoteElementRenderer
+                      element={element}
+                      isSelected={false}
+                      onUpdate={() => {}}
+                      isEditable={false}
+                    />
+                  </CardContent>
+                </Card>
               )}
+            </div>
+          ))}
 
-              {/* Investment Breakdown - Only if there are line items */}
-              {lineItemElements.length > 0 && (
-                <div className="mt-8">
-                  <InvestmentBreakdown
-                    elements={elements}
-                    onUpdateElement={() => {}}
-                    onRemoveElement={() => {}}
-                    onTotalChange={() => {}}
-                    isEditable={false}
-                  />
+          {/* Terms and Conditions */}
+          {quote.terms_and_conditions && (
+            <Card>
+              <CardContent className="p-8">
+                <h3 className="font-semibold mb-3">Terms and Conditions</h3>
+                <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {quote.terms_and_conditions}
                 </div>
-              )}
-
-              {/* Terms and Conditions */}
-              {quote.terms_and_conditions && (
-                <div className="mt-8 pt-6 border-t">
-                  <h3 className="font-semibold mb-3">Terms and Conditions</h3>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {quote.terms_and_conditions}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
