@@ -97,13 +97,11 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
       {/* Top Row - Two Columns */}
       <div className="flex justify-between items-center mb-12">
         <div className="flex items-center">
-          {settings?.logo_base64 && (
-            <img 
-              src={settings.logo_base64} 
-              alt={settings.company_name} 
-              className="h-16 w-auto filter brightness-0 invert"
-            />
-          )}
+          <img 
+            src="/lovable-uploads/76b90808-c896-4614-bae6-01cc0780d0fa.png" 
+            alt="Company Logo" 
+            className="h-16 w-auto"
+          />
         </div>
         
         <h3 className="text-xl font-bold text-white">
