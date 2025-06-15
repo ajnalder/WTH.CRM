@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -98,10 +99,23 @@ const QuoteBuilder = () => {
 
   const viewQuote = () => {
     if (quote?.public_link_token) {
+      // If public link exists, use it
       window.open(`/quote/${quote.public_link_token}`, '_blank');
     } else {
-      // Allow preview using quote ID even without public link
-      window.open(`/quote-preview/${quote?.id}`, '_blank');
+      // If no public link, generate one first and then open
+      toast({
+        title: "Generating preview link",
+        description: "Creating a shareable link for the quote...",
+      });
+      generatePublicLink().then(() => {
+        // After generating the link, the quote state should be updated
+        // We'll open the preview with the new token
+        setTimeout(() => {
+          if (quote?.public_link_token) {
+            window.open(`/quote/${quote.public_link_token}`, '_blank');
+          }
+        }, 1000);
+      });
     }
   };
 
@@ -118,10 +132,15 @@ const QuoteBuilder = () => {
         public_link_token: token
       });
       
+      // Update local state
+      setQuote(prev => prev ? { ...prev, public_link_token: token, status: 'sent' } : null);
+      
       toast({
         title: "Public link generated",
         description: "Your quote is now ready to share!",
       });
+      
+      return token;
     } catch (error) {
       console.error('Error generating public link:', error);
       toast({
@@ -170,19 +189,19 @@ const QuoteBuilder = () => {
         <div className="flex gap-2">
           <Button variant="outline" onClick={viewQuote}>
             <Eye className="w-4 h-4 mr-2" />
-            Preview
+            {quote.public_link_token ? 'Preview' : 'Create Preview'}
           </Button>
           {quote.public_link_token && quote.status === 'sent' ? (
             <Button variant="outline" onClick={copyPublicLink}>
               <Copy className="w-4 h-4 mr-2" />
               Copy Link
             </Button>
-          ) : (
+          ) : !quote.public_link_token ? (
             <Button variant="outline" onClick={generatePublicLink}>
               <Share className="w-4 h-4 mr-2" />
               Create Link
             </Button>
-          )}
+          ) : null}
           <Button onClick={() => toast({ title: "Saved", description: "Quote saved successfully" })}>
             <Save className="w-4 h-4 mr-2" />
             Save
