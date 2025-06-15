@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download, Calendar, DollarSign } from 'lucide-react';
@@ -165,6 +166,7 @@ const QuotePreview = () => {
   }
 
   const isExpired = quote.valid_until ? new Date(quote.valid_until) < new Date() : false;
+  const lineItemElements = elements.filter(el => el.element_type === 'line_item');
   const nonLineItemElements = elements.filter(el => el.element_type !== 'line_item');
 
   return (
@@ -214,17 +216,18 @@ const QuotePreview = () => {
           </CardContent>
         </Card>
 
-        {/* Centered Quote Content */}
+        {/* Quote Content - Centered */}
         <div className="max-w-3xl mx-auto">
           <Card>
             <CardContent className="p-8">
+              {/* Quote Description */}
               {quote.description && (
                 <div className="mb-8 text-gray-700 text-center">
                   {quote.description}
                 </div>
               )}
 
-              {/* Other Elements - Centered */}
+              {/* All Elements in Order (excluding line items) */}
               {nonLineItemElements.length > 0 && (
                 <div className="space-y-6 mb-8">
                   {nonLineItemElements.map((element) => (
@@ -240,14 +243,18 @@ const QuotePreview = () => {
                 </div>
               )}
 
-              {/* Investment Breakdown - Consolidated */}
-              <InvestmentBreakdown
-                elements={elements}
-                onUpdateElement={() => {}}
-                onRemoveElement={() => {}}
-                onTotalChange={() => {}}
-                isEditable={false}
-              />
+              {/* Investment Breakdown - Only if there are line items */}
+              {lineItemElements.length > 0 && (
+                <div className="mt-8">
+                  <InvestmentBreakdown
+                    elements={elements}
+                    onUpdateElement={() => {}}
+                    onRemoveElement={() => {}}
+                    onTotalChange={() => {}}
+                    isEditable={false}
+                  />
+                </div>
+              )}
 
               {/* Terms and Conditions */}
               {quote.terms_and_conditions && (

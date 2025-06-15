@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download, Check, X, Calendar, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteElement } from '@/types/quoteTypes';
@@ -138,6 +139,7 @@ const QuoteView = () => {
 
   const isExpired = quote.valid_until ? new Date(quote.valid_until) < new Date() : false;
   const canRespond = quote.status !== 'accepted' && quote.status !== 'rejected' && !isExpired;
+  const lineItemElements = elements.filter(el => el.element_type === 'line_item');
   const nonLineItemElements = elements.filter(el => el.element_type !== 'line_item');
 
   return (
@@ -204,17 +206,18 @@ const QuoteView = () => {
           </CardContent>
         </Card>
 
-        {/* Centered Quote Content */}
+        {/* Quote Content - Centered */}
         <div className="max-w-3xl mx-auto">
           <Card>
             <CardContent className="p-8">
+              {/* Quote Description */}
               {quote.description && (
                 <div className="mb-8 text-gray-700 text-center">
                   {quote.description}
                 </div>
               )}
 
-              {/* Other Elements - Centered */}
+              {/* All Elements in Order (excluding line items) */}
               {nonLineItemElements.length > 0 && (
                 <div className="space-y-6 mb-8">
                   {nonLineItemElements.map((element) => (
@@ -230,14 +233,18 @@ const QuoteView = () => {
                 </div>
               )}
 
-              {/* Investment Breakdown - Consolidated */}
-              <InvestmentBreakdown
-                elements={elements}
-                onUpdateElement={() => {}}
-                onRemoveElement={() => {}}
-                onTotalChange={() => {}}
-                isEditable={false}
-              />
+              {/* Investment Breakdown - Only if there are line items */}
+              {lineItemElements.length > 0 && (
+                <div className="mt-8">
+                  <InvestmentBreakdown
+                    elements={elements}
+                    onUpdateElement={() => {}}
+                    onRemoveElement={() => {}}
+                    onTotalChange={() => {}}
+                    isEditable={false}
+                  />
+                </div>
+              )}
 
               {/* Terms and Conditions */}
               {quote.terms_and_conditions && (
