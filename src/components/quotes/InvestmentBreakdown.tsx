@@ -137,6 +137,7 @@ export const InvestmentBreakdown: React.FC<InvestmentBreakdownProps> = ({
               ${total.toLocaleString()}
             </div>
           </div>
+          <p className="text-sm text-gray-600 mt-2">*Prices include GST</p>
         </div>
       </CardContent>
     </Card>

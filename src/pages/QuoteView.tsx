@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteElement } from '@/types/quoteTypes';
 import { QuoteElementRenderer } from '@/components/quotes/QuoteElementRenderer';
+import { InvestmentBreakdown } from '@/components/quotes/InvestmentBreakdown';
 import { transformSupabaseQuote, transformSupabaseQuoteElement } from '@/utils/quoteTypeHelpers';
 
 const QuoteView = () => {
@@ -137,6 +138,7 @@ const QuoteView = () => {
 
   const isExpired = quote.valid_until ? new Date(quote.valid_until) < new Date() : false;
   const canRespond = quote.status !== 'accepted' && quote.status !== 'rejected' && !isExpired;
+  const nonLineItemElements = elements.filter(el => el.element_type !== 'line_item');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -202,59 +204,53 @@ const QuoteView = () => {
           </CardContent>
         </Card>
 
-        {/* Quote Content */}
-        <Card>
-          <CardContent className="p-8">
-            {quote.description && (
-              <div className="mb-8 text-gray-700">
-                {quote.description}
-              </div>
-            )}
+        {/* Centered Quote Content */}
+        <div className="max-w-3xl mx-auto">
+          <Card>
+            <CardContent className="p-8">
+              {quote.description && (
+                <div className="mb-8 text-gray-700 text-center">
+                  {quote.description}
+                </div>
+              )}
 
-            {/* Quote Elements */}
-            <div className="space-y-6">
-              {elements.map((element) => (
-                <QuoteElementRenderer
-                  key={element.id}
-                  element={element}
-                  isSelected={false}
-                  onUpdate={() => {}}
-                  isEditable={false}
-                />
-              ))}
-            </div>
+              {/* Other Elements - Centered */}
+              {nonLineItemElements.length > 0 && (
+                <div className="space-y-6 mb-8">
+                  {nonLineItemElements.map((element) => (
+                    <div key={element.id} className="text-center">
+                      <QuoteElementRenderer
+                        element={element}
+                        isSelected={false}
+                        onUpdate={() => {}}
+                        isEditable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {/* Quote Totals */}
-            <div className="mt-8 pt-6 border-t">
-              <div className="flex justify-end">
-                <div className="w-64 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${quote.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>GST ({quote.gst_rate}%):</span>
-                    <span>${quote.gst_amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg border-t pt-2">
-                    <span>Total:</span>
-                    <span>${quote.total_amount.toFixed(2)}</span>
+              {/* Investment Breakdown - Consolidated */}
+              <InvestmentBreakdown
+                elements={elements}
+                onUpdateElement={() => {}}
+                onRemoveElement={() => {}}
+                onTotalChange={() => {}}
+                isEditable={false}
+              />
+
+              {/* Terms and Conditions */}
+              {quote.terms_and_conditions && (
+                <div className="mt-8 pt-6 border-t">
+                  <h3 className="font-semibold mb-3">Terms and Conditions</h3>
+                  <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {quote.terms_and_conditions}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Terms and Conditions */}
-            {quote.terms_and_conditions && (
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="font-semibold mb-3">Terms and Conditions</h3>
-                <div className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {quote.terms_and_conditions}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
