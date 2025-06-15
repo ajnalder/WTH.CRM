@@ -650,6 +650,109 @@ export type Database = {
           },
         ]
       }
+      quote_elements: {
+        Row: {
+          content: Json
+          created_at: string
+          element_type: string
+          id: string
+          position_order: number
+          quote_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          element_type: string
+          id?: string
+          position_order?: number
+          quote_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          element_type?: string
+          id?: string
+          position_order?: number
+          quote_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_elements_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          description: string | null
+          gst_amount: number
+          gst_rate: number
+          id: string
+          public_link_token: string | null
+          quote_number: string
+          status: string
+          subtotal: number
+          terms_and_conditions: string | null
+          title: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          public_link_token?: string | null
+          quote_number: string
+          status?: string
+          subtotal?: number
+          terms_and_conditions?: string | null
+          title: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          public_link_token?: string | null
+          quote_number?: string
+          status?: string
+          subtotal?: number
+          terms_and_conditions?: string | null
+          title?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_files: {
         Row: {
           created_at: string
@@ -871,7 +974,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_quote_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

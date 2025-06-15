@@ -1,0 +1,149 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { QuoteElement } from '@/types/quoteTypes';
+import { useToast } from '@/hooks/use-toast';
+
+export const useQuoteElements = (quoteId: string | null) => {
+  const [elements, setElements] = useState<QuoteElement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchElements = async () => {
+    if (!quoteId) {
+      setElements([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('quote_elements')
+        .select('*')
+        .eq('quote_id', quoteId)
+        .order('position_order', { ascending: true });
+
+      if (error) throw error;
+      setElements(data || []);
+    } catch (error) {
+      console.error('Error fetching quote elements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch quote elements",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createElement = async (elementData: Partial<QuoteElement>) => {
+    if (!quoteId) return;
+
+    try {
+      const maxOrder = elements.length > 0 ? Math.max(...elements.map(e => e.position_order)) : -1;
+      
+      const { data, error } = await supabase
+        .from('quote_elements')
+        .insert([{
+          ...elementData,
+          quote_id: quoteId,
+          position_order: maxOrder + 1
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      fetchElements();
+      return data;
+    } catch (error) {
+      console.error('Error creating quote element:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create quote element",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const updateElement = async (id: string, updates: Partial<QuoteElement>) => {
+    try {
+      const { error } = await supabase
+        .from('quote_elements')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchElements();
+    } catch (error) {
+      console.error('Error updating quote element:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update quote element",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteElement = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('quote_elements')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchElements();
+    } catch (error) {
+      console.error('Error deleting quote element:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete quote element",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const reorderElements = async (newOrder: QuoteElement[]) => {
+    try {
+      const updates = newOrder.map((element, index) => ({
+        id: element.id,
+        position_order: index
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('quote_elements')
+          .update({ position_order: update.position_order })
+          .eq('id', update.id);
+      }
+
+      fetchElements();
+    } catch (error) {
+      console.error('Error reordering quote elements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reorder quote elements",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchElements();
+  }, [quoteId]);
+
+  return {
+    elements,
+    isLoading,
+    createElement,
+    updateElement,
+    deleteElement,
+    reorderElements,
+    refetch: fetchElements,
+  };
+};

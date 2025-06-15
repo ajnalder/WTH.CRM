@@ -1,0 +1,261 @@
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Plus, Save, Eye, ArrowLeft, Trash2, Image, Type, Grid, DollarSign, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuotes } from '@/hooks/useQuotes';
+import { useQuoteElements } from '@/hooks/useQuoteElements';
+import { Quote, QuoteElement } from '@/types/quoteTypes';
+import { QuoteElementRenderer } from '@/components/quotes/QuoteElementRenderer';
+import { ElementToolbar } from '@/components/quotes/ElementToolbar';
+import { useToast } from '@/hooks/use-toast';
+
+const QuoteBuilder = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { quotes } = useQuotes();
+  const { elements, createElement, updateElement, deleteElement, reorderElements } = useQuoteElements(id || null);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (id && quotes.length > 0) {
+      const foundQuote = quotes.find(q => q.id === id);
+      setQuote(foundQuote || null);
+    }
+  }, [id, quotes]);
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(elements);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    reorderElements(items);
+  };
+
+  const addElement = async (type: QuoteElement['element_type']) => {
+    let content = {};
+    
+    switch (type) {
+      case 'text':
+        content = { text: 'Click to edit text', fontSize: 'medium', textAlign: 'left' };
+        break;
+      case 'image':
+        content = { url: '', alt: 'Image', alignment: 'center' };
+        break;
+      case 'line_item':
+        content = { description: 'New item', quantity: 1, rate: 0, amount: 0 };
+        break;
+      case 'spacer':
+        content = { height: 20 };
+        break;
+      case 'pricing_grid':
+        content = { 
+          title: 'Pricing Table',
+          columns: ['Feature', 'Basic', 'Premium'],
+          rows: [
+            { label: 'Feature 1', values: ['✓', '✓', '✓'] },
+            { label: 'Feature 2', values: ['✗', '✓', '✓'] }
+          ]
+        };
+        break;
+    }
+
+    await createElement({
+      element_type: type,
+      content
+    });
+  };
+
+  const updateElementContent = async (elementId: string, newContent: any) => {
+    await updateElement(elementId, { content: newContent });
+  };
+
+  const removeElement = async (elementId: string) => {
+    await deleteElement(elementId);
+    setSelectedElement(null);
+  };
+
+  const viewQuote = () => {
+    if (quote?.public_link_token) {
+      window.open(`/quote/${quote.public_link_token}`, '_blank');
+    }
+  };
+
+  if (!quote) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Loading quote...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate('/quotes')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Quotes
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{quote.title}</h1>
+            <p className="text-gray-600">{quote.quote_number}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={viewQuote}>
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button onClick={() => toast({ title: "Saved", description: "Quote saved successfully" })}>
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Element Toolbar */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Elements</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => addElement('text')}
+              >
+                <Type className="w-4 h-4 mr-2" />
+                Text Block
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => addElement('image')}
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Image
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => addElement('line_item')}
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Line Item
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => addElement('pricing_grid')}
+              >
+                <Grid className="w-4 h-4 mr-2" />
+                Pricing Grid
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => addElement('spacer')}
+              >
+                <Minus className="w-4 h-4 mr-2" />
+                Spacer
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Element Properties */}
+          {selectedElement && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Element Properties
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeElement(selectedElement)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ElementToolbar
+                  element={elements.find(e => e.id === selectedElement)}
+                  onUpdate={updateElementContent}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Quote Builder Canvas */}
+        <div className="lg:col-span-3">
+          <Card className="min-h-[600px]">
+            <CardContent className="p-6">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="quote-elements">
+                  {(provided, snapshot) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className={`space-y-4 min-h-[500px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+                        snapshot.isDraggingOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                      }`}
+                    >
+                      {elements.length === 0 ? (
+                        <div className="text-center py-20 text-gray-500">
+                          <div className="mb-4">
+                            <Plus className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                          </div>
+                          <p className="text-lg font-medium">Start building your quote</p>
+                          <p className="text-sm">Add elements from the toolbar on the left</p>
+                        </div>
+                      ) : (
+                        elements.map((element, index) => (
+                          <Draggable key={element.id} draggableId={element.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`${
+                                  snapshot.isDragging ? 'opacity-75' : ''
+                                } ${
+                                  selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
+                                }`}
+                                onClick={() => setSelectedElement(element.id)}
+                              >
+                                <QuoteElementRenderer
+                                  element={element}
+                                  isSelected={selectedElement === element.id}
+                                  onUpdate={updateElementContent}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuoteBuilder;
