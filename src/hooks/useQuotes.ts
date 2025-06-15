@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quoteTypes';
@@ -85,8 +84,8 @@ export const useQuotes = () => {
 
   const updateQuote = async (id: string, updates: Partial<Quote>) => {
     try {
-      // Filter out fields that shouldn't be updated directly
-      const { id: _, created_at, updated_at, quote_number, public_link_token, ...safeUpdates } = updates;
+      // Filter out fields that shouldn't be updated directly (except public_link_token)
+      const { id: _, created_at, updated_at, quote_number, ...safeUpdates } = updates;
       
       const { error } = await supabase
         .from('quotes')

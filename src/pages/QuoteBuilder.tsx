@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -13,6 +12,7 @@ import { ElementToolbar } from '@/components/quotes/ElementToolbar';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { InvestmentBreakdown } from '@/components/quotes/InvestmentBreakdown';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const QuoteBuilder = () => {
   const { id } = useParams<{ id: string }>();
@@ -100,11 +100,8 @@ const QuoteBuilder = () => {
     if (quote?.public_link_token) {
       window.open(`/quote/${quote.public_link_token}`, '_blank');
     } else {
-      toast({
-        title: "No public link",
-        description: "Generate a shareable link first to preview the quote",
-        variant: "destructive",
-      });
+      // Allow preview using quote ID even without public link
+      window.open(`/quote-preview/${quote?.id}`, '_blank');
     }
   };
 
@@ -112,14 +109,21 @@ const QuoteBuilder = () => {
     if (!quote) return;
 
     try {
-      // Update quote status to 'sent' to make it viewable
-      await updateQuote(quote.id, { status: 'sent' });
+      // Generate a unique token for the public link
+      const token = crypto.randomUUID();
+      
+      // Update quote with the public link token and status
+      await updateQuote(quote.id, { 
+        status: 'sent',
+        public_link_token: token
+      });
       
       toast({
         title: "Public link generated",
         description: "Your quote is now ready to share!",
       });
     } catch (error) {
+      console.error('Error generating public link:', error);
       toast({
         title: "Error",
         description: "Failed to generate public link",
