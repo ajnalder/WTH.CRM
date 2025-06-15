@@ -1,6 +1,6 @@
 
 import { Quote, QuoteElement } from '@/types/quoteTypes';
-import { SupabaseQuote, SupabaseQuoteElement } from '@/types/supabaseQuoteTypes';
+import { SupabaseQuote, SupabaseQuoteElement, QuoteInsertData } from '@/types/supabaseQuoteTypes';
 import { validateRequiredString, validateCurrency, validatePositiveNumber } from '@/utils/validation';
 
 // Type guards to safely validate data
@@ -49,8 +49,7 @@ export const transformSupabaseQuote = (supabaseQuote: SupabaseQuote & { clients?
     terms_and_conditions: supabaseQuote.terms_and_conditions,
     public_link_token: supabaseQuote.public_link_token,
     created_at: supabaseQuote.created_at,
-    updated_at: supabaseQuote.updated_at,
-    clients: supabaseQuote.clients
+    updated_at: supabaseQuote.updated_at
   };
 };
 
