@@ -34,19 +34,22 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
               <img 
                 src={settings.logo_base64} 
                 alt={settings.company_name} 
-                className="h-16 w-auto filter brightness-0 invert"
+                className="h-12 w-auto filter brightness-0 invert"
               />
             </div>
           )}
           
-          <div>
-            <h2 className="text-sm font-medium text-gray-300 mb-1">
-              {settings?.company_name || "Your Agency"}
-            </h2>
-            <h1 className="text-3xl font-bold mb-4">{quote.title}</h1>
-            <div className="space-y-1 text-sm">
-              <p className="text-gray-300">By</p>
-              <p className="font-medium">
+          <div className="flex-1">
+            <div className="flex items-baseline gap-4 mb-6">
+              <h2 className="text-lg font-medium text-white">
+                {settings?.company_name || "Your Agency"}
+              </h2>
+              <h1 className="text-4xl font-bold text-white">{quote.title}</h1>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-gray-300 text-sm">By</p>
+              <p className="font-medium text-white">
                 {user?.email || "Team Member"} - Team Member
               </p>
             </div>
@@ -54,16 +57,16 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
         </div>
         
         <div className="text-right">
-          <h3 className="text-lg font-semibold mb-2">
+          <h3 className="text-2xl font-bold mb-4 text-white">
             Prepared For {client?.company || "[Client Name]"}
           </h3>
-          <div className="space-y-1 text-sm">
-            <p className="text-gray-300">Contact</p>
-            <p className="font-medium">
+          <div className="space-y-1">
+            <p className="text-gray-300 text-sm">Contact</p>
+            <p className="font-medium text-white text-lg">
               {primaryContact?.email || "contact@clientcompany.com"}
             </p>
             {primaryContact?.name && (
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-sm">
                 {primaryContact.name}
               </p>
             )}
