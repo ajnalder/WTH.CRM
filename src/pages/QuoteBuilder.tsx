@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -10,12 +9,14 @@ import { useQuoteElements } from '@/hooks/useQuoteElements';
 import { Quote, QuoteElement } from '@/types/quoteTypes';
 import { QuoteElementRenderer } from '@/components/quotes/QuoteElementRenderer';
 import { ElementToolbar } from '@/components/quotes/ElementToolbar';
+import { QuoteHeader } from '@/components/quotes/QuoteHeader';
+import { InvestmentBreakdown } from '@/components/quotes/InvestmentBreakdown';
 import { useToast } from '@/hooks/use-toast';
 
 const QuoteBuilder = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes } = useQuotes();
+  const { quotes, updateQuote } = useQuotes();
   const { elements, createElement, updateElement, deleteElement, reorderElements } = useQuoteElements(id || null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
@@ -49,7 +50,7 @@ const QuoteBuilder = () => {
         content = { url: '', alt: 'Image', alignment: 'center' };
         break;
       case 'line_item':
-        content = { description: 'New item', quantity: 1, rate: 0, amount: 0 };
+        content = { description: 'New service item', quantity: 1, rate: 0, amount: 0 };
         break;
       case 'spacer':
         content = { height: 20 };
@@ -81,6 +82,19 @@ const QuoteBuilder = () => {
     setSelectedElement(null);
   };
 
+  const handleTotalChange = async (total: number) => {
+    if (quote && total !== quote.subtotal) {
+      const gstAmount = total * (quote.gst_rate / 100);
+      const totalAmount = total + gstAmount;
+      
+      await updateQuote(quote.id, {
+        subtotal: total,
+        gst_amount: gstAmount,
+        total_amount: totalAmount
+      });
+    }
+  };
+
   const viewQuote = () => {
     if (quote?.public_link_token) {
       window.open(`/quote/${quote.public_link_token}`, '_blank');
@@ -94,6 +108,8 @@ const QuoteBuilder = () => {
       </div>
     );
   }
+
+  const nonLineItemElements = elements.filter(el => el.element_type !== 'line_item');
 
   return (
     <div className="space-y-6">
@@ -199,59 +215,75 @@ const QuoteBuilder = () => {
         </div>
 
         {/* Quote Builder Canvas */}
-        <div className="lg:col-span-3">
-          <Card className="min-h-[600px]">
-            <CardContent className="p-6">
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="quote-elements">
-                  {(provided, snapshot) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className={`space-y-4 min-h-[500px] p-4 rounded-lg border-2 border-dashed transition-colors ${
-                        snapshot.isDraggingOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-                      }`}
-                    >
-                      {elements.length === 0 ? (
-                        <div className="text-center py-20 text-gray-500">
-                          <div className="mb-4">
-                            <Plus className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+        <div className="lg:col-span-3 space-y-6">
+          {/* Quote Header */}
+          <QuoteHeader quote={quote} />
+
+          {/* Investment Breakdown */}
+          <InvestmentBreakdown
+            elements={elements}
+            onUpdateElement={updateElementContent}
+            onRemoveElement={removeElement}
+            onTotalChange={handleTotalChange}
+          />
+
+          {/* Other Elements */}
+          {nonLineItemElements.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Content</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="quote-elements">
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className={`space-y-4 min-h-[200px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+                          snapshot.isDraggingOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                        }`}
+                      >
+                        {nonLineItemElements.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <div className="mb-4">
+                              <Plus className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                            </div>
+                            <p className="text-sm">Add text, images, or other content here</p>
                           </div>
-                          <p className="text-lg font-medium">Start building your quote</p>
-                          <p className="text-sm">Add elements from the toolbar on the left</p>
-                        </div>
-                      ) : (
-                        elements.map((element, index) => (
-                          <Draggable key={element.id} draggableId={element.id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`${
-                                  snapshot.isDragging ? 'opacity-75' : ''
-                                } ${
-                                  selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
-                                }`}
-                                onClick={() => setSelectedElement(element.id)}
-                              >
-                                <QuoteElementRenderer
-                                  element={element}
-                                  isSelected={selectedElement === element.id}
-                                  onUpdate={updateElementContent}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))
-                      )}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </CardContent>
-          </Card>
+                        ) : (
+                          nonLineItemElements.map((element, index) => (
+                            <Draggable key={element.id} draggableId={element.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`${
+                                    snapshot.isDragging ? 'opacity-75' : ''
+                                  } ${
+                                    selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
+                                  }`}
+                                  onClick={() => setSelectedElement(element.id)}
+                                >
+                                  <QuoteElementRenderer
+                                    element={element}
+                                    isSelected={selectedElement === element.id}
+                                    onUpdate={updateElementContent}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))
+                        )}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
