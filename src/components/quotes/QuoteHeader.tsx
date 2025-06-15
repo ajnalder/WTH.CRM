@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Quote } from '@/types/quoteTypes';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useClients } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Upload, X } from 'lucide-react';
 
 interface QuoteHeaderProps {
   quote: Quote;
@@ -14,6 +17,7 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
   const { settings } = useCompanySettings();
   const { clients } = useClients();
   const { user } = useAuth();
+  const [backgroundImage, setBackgroundImage] = useState<string>('');
   
   // Find the client for this quote
   const client = clients.find(c => c.id === quote.client_id);
@@ -24,21 +28,72 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
   // Get primary contact or first contact
   const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
 
+  const handleBackgroundUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBackgroundImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    setBackgroundImage('');
+  };
+
+  const backgroundStyle = backgroundImage 
+    ? {
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }
+    : {};
+
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white p-8 rounded-lg mb-6">
+    <div 
+      className="bg-gradient-to-r from-gray-900 to-gray-700 text-white p-8 rounded-lg mb-6 min-h-[300px] relative"
+      style={backgroundStyle}
+    >
+      {/* Background Image Controls */}
+      <div className="absolute top-4 right-4 flex gap-2 z-10">
+        <label htmlFor="background-upload">
+          <Button variant="outline" size="sm" className="cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Upload className="w-4 h-4 mr-2" />
+            Background
+          </Button>
+          <Input
+            id="background-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleBackgroundUpload}
+            className="hidden"
+          />
+        </label>
+        {backgroundImage && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={removeBackgroundImage}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+
       {/* Top Row - Two Columns */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex justify-between items-center mb-12">
+        <div className="flex items-center">
           {settings?.logo_base64 && (
             <img 
               src={settings.logo_base64} 
               alt={settings.company_name} 
-              className="h-12 w-auto filter brightness-0 invert"
+              className="h-16 w-auto filter brightness-0 invert"
             />
           )}
-          <h2 className="text-lg font-medium text-white">
-            {settings?.company_name || "Your Agency"}
-          </h2>
         </div>
         
         <h3 className="text-xl font-bold text-white">
@@ -47,8 +102,8 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
       </div>
 
       {/* Middle Row - Centered Title */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white">{quote.title}</h1>
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-white">{quote.title}</h1>
       </div>
 
       {/* Bottom Row - Two Columns */}
