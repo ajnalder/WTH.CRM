@@ -23,6 +23,7 @@ import NewInvoice from "./pages/NewInvoice";
 import Quotes from "./pages/Quotes";
 import QuoteBuilder from "./pages/QuoteBuilder";
 import QuoteView from "./pages/QuoteView";
+import QuotePreview from "./pages/QuotePreview";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import SiteLaunch from "./pages/SiteLaunch";
@@ -42,6 +43,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/quote/:token" element={<QuoteView />} />
+              <Route path="/quote-preview/:id" element={<QuotePreview />} />
               <Route
                 path="/*"
                 element={
