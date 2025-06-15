@@ -216,7 +216,7 @@ const QuoteBuilder = () => {
 
         {/* Quote Builder Canvas */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Quote Header */}
+          {/* Quote Header - Updated to only pass quote */}
           <QuoteHeader quote={quote} />
 
           {/* Investment Breakdown */}
