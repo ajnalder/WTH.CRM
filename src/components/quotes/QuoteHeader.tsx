@@ -33,7 +33,9 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setBackgroundImage(e.target?.result as string);
+        const result = e.target?.result as string;
+        setBackgroundImage(result);
+        console.log('Background image loaded:', result.substring(0, 100) + '...');
       };
       reader.readAsDataURL(file);
     }
@@ -41,6 +43,11 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
 
   const removeBackgroundImage = () => {
     setBackgroundImage('');
+  };
+
+  const triggerFileUpload = () => {
+    const fileInput = document.getElementById('background-upload') as HTMLInputElement;
+    fileInput?.click();
   };
 
   const backgroundStyle = backgroundImage 
@@ -59,19 +66,22 @@ export const QuoteHeader: React.FC<QuoteHeaderProps> = ({ quote }) => {
     >
       {/* Background Image Controls */}
       <div className="absolute top-4 right-4 flex gap-2 z-10">
-        <label htmlFor="background-upload">
-          <Button variant="outline" size="sm" className="cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20">
-            <Upload className="w-4 h-4 mr-2" />
-            Background
-          </Button>
-          <Input
-            id="background-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleBackgroundUpload}
-            className="hidden"
-          />
-        </label>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={triggerFileUpload}
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Background
+        </Button>
+        <Input
+          id="background-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleBackgroundUpload}
+          className="hidden"
+        />
         {backgroundImage && (
           <Button 
             variant="outline" 
