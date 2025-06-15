@@ -29,11 +29,20 @@ const QuotePreview = () => {
       console.log('Fetching quote with ID:', id);
 
       try {
-        // First try to get the current user session
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Current session:', session ? 'authenticated' : 'unauthenticated');
+        // Check if user is authenticated
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Session check:', { 
+          hasSession: !!session, 
+          sessionError,
+          userId: session?.user?.id 
+        });
 
-        // If no session, we can't access quotes with RLS - need to implement public access
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw new Error(`Session error: ${sessionError.message}`);
+        }
+
+        // If no session, show error suggesting public link
         if (!session) {
           console.log('No authenticated session, cannot access quotes table');
           setError('This preview requires authentication. Please access the quote through a public link instead.');
@@ -41,7 +50,8 @@ const QuotePreview = () => {
           return;
         }
 
-        // Fetch quote by ID (for internal preview with authentication)
+        // Fetch quote by ID with better error handling
+        console.log('Attempting to fetch quote with session user:', session.user.id);
         const { data: quoteData, error: quoteError } = await supabase
           .from('quotes')
           .select(`
@@ -55,38 +65,45 @@ const QuotePreview = () => {
           .eq('id', id)
           .single();
 
-        console.log('Quote data response:', quoteData);
-        console.log('Quote error:', quoteError);
+        console.log('Quote fetch result:', { quoteData, quoteError });
 
         if (quoteError) {
-          console.error('Supabase error:', quoteError);
-          throw quoteError;
+          console.error('Supabase quote error:', quoteError);
+          if (quoteError.code === 'PGRST116') {
+            throw new Error('Quote not found or you do not have permission to view it');
+          }
+          throw new Error(`Database error: ${quoteError.message}`);
         }
 
         if (!quoteData) {
-          console.error('No quote data found');
+          console.error('No quote data returned');
           setError('Quote not found');
           setIsLoading(false);
           return;
         }
+
+        console.log('Successfully fetched quote:', quoteData.title);
 
         // Transform the quote data using our type helpers
         const transformedQuote = transformSupabaseQuote(quoteData);
         setQuote(transformedQuote);
 
         // Fetch quote elements
+        console.log('Fetching quote elements for quote:', quoteData.id);
         const { data: elementsData, error: elementsError } = await supabase
           .from('quote_elements')
           .select('*')
           .eq('quote_id', quoteData.id)
           .order('position_order', { ascending: true });
 
-        console.log('Elements data:', elementsData);
-        console.log('Elements error:', elementsError);
+        console.log('Elements fetch result:', { 
+          elementsCount: elementsData?.length || 0, 
+          elementsError 
+        });
 
         if (elementsError) {
           console.error('Elements error:', elementsError);
-          throw elementsError;
+          throw new Error(`Elements error: ${elementsError.message}`);
         }
 
         // Transform the elements data using our type helpers
@@ -99,11 +116,13 @@ const QuotePreview = () => {
           }
         }).filter(Boolean) as QuoteElement[];
 
+        console.log('Successfully transformed elements:', transformedElements.length);
         setElements(transformedElements);
 
       } catch (error) {
         console.error('Error fetching quote:', error);
-        setError(`Failed to load quote: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setError(`Failed to load quote: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
