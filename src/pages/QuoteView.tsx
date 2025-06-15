@@ -47,7 +47,18 @@ const QuoteView = () => {
           return;
         }
 
-        setQuote(quoteData);
+        // Transform the quote data to match our Quote type
+        const transformedQuote = {
+          ...quoteData,
+          status: quoteData.status as Quote['status'],
+          client_id: quoteData.client_id as string | null,
+          description: quoteData.description as string | null,
+          valid_until: quoteData.valid_until as string | null,
+          terms_and_conditions: quoteData.terms_and_conditions as string | null,
+          public_link_token: quoteData.public_link_token as string | null
+        };
+
+        setQuote(transformedQuote);
 
         // Fetch quote elements
         const { data: elementsData, error: elementsError } = await supabase
@@ -58,7 +69,14 @@ const QuoteView = () => {
 
         if (elementsError) throw elementsError;
 
-        setElements(elementsData || []);
+        // Transform the elements data to match our QuoteElement type
+        const transformedElements = (elementsData || []).map(element => ({
+          ...element,
+          element_type: element.element_type as QuoteElement['element_type'],
+          content: element.content as Record<string, any>
+        }));
+
+        setElements(transformedElements);
 
         // Update quote status to 'viewed' if it's currently 'sent'
         if (quoteData.status === 'sent') {

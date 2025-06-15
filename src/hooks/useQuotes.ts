@@ -23,7 +23,19 @@ export const useQuotes = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setQuotes(data || []);
+      
+      // Transform the data to match our Quote type
+      const transformedQuotes = (data || []).map(quote => ({
+        ...quote,
+        status: quote.status as Quote['status'],
+        client_id: quote.client_id as string | null,
+        description: quote.description as string | null,
+        valid_until: quote.valid_until as string | null,
+        terms_and_conditions: quote.terms_and_conditions as string | null,
+        public_link_token: quote.public_link_token as string | null
+      }));
+      
+      setQuotes(transformedQuotes);
     } catch (error) {
       console.error('Error fetching quotes:', error);
       toast({
@@ -38,11 +50,23 @@ export const useQuotes = () => {
 
   const createQuote = async (quoteData: Partial<Quote>) => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('quotes')
         .insert([{
-          ...quoteData,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          title: quoteData.title!,
+          description: quoteData.description || null,
+          client_id: quoteData.client_id || null,
+          valid_until: quoteData.valid_until || null,
+          terms_and_conditions: quoteData.terms_and_conditions || null,
+          user_id: userData.user.id,
+          status: 'draft',
+          subtotal: 0,
+          gst_rate: 15.00,
+          gst_amount: 0,
+          total_amount: 0
         }])
         .select()
         .single();

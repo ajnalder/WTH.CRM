@@ -24,7 +24,15 @@ export const useQuoteElements = (quoteId: string | null) => {
         .order('position_order', { ascending: true });
 
       if (error) throw error;
-      setElements(data || []);
+      
+      // Transform the data to match our QuoteElement type
+      const transformedElements = (data || []).map(element => ({
+        ...element,
+        element_type: element.element_type as QuoteElement['element_type'],
+        content: element.content as Record<string, any>
+      }));
+      
+      setElements(transformedElements);
     } catch (error) {
       console.error('Error fetching quote elements:', error);
       toast({
@@ -46,8 +54,9 @@ export const useQuoteElements = (quoteId: string | null) => {
       const { data, error } = await supabase
         .from('quote_elements')
         .insert([{
-          ...elementData,
           quote_id: quoteId,
+          element_type: elementData.element_type!,
+          content: elementData.content || {},
           position_order: maxOrder + 1
         }])
         .select()
