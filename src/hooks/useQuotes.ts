@@ -55,7 +55,7 @@ export const useQuotes = () => {
 
       const { data, error } = await supabase
         .from('quotes')
-        .insert([{
+        .insert({
           title: quoteData.title!,
           description: quoteData.description || null,
           client_id: quoteData.client_id || null,
@@ -67,7 +67,7 @@ export const useQuotes = () => {
           gst_rate: 15.00,
           gst_amount: 0,
           total_amount: 0
-        }])
+        })
         .select()
         .single();
 
