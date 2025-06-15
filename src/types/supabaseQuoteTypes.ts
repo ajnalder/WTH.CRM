@@ -11,9 +11,7 @@ export type SupabaseQuoteElementInsert = Database['public']['Tables']['quote_ele
 export type SupabaseQuoteElementUpdate = Database['public']['Tables']['quote_elements']['Update'];
 
 // Create safe insert types that work with our database triggers
-export type QuoteInsertData = Omit<SupabaseQuoteInsert, 'quote_number' | 'id' | 'created_at' | 'updated_at' | 'public_link_token'> & {
-  quote_number?: string; // Make optional since it's auto-generated
-  public_link_token?: string; // Make optional since it's auto-generated
-};
+// We'll use the exact Supabase insert type but omit auto-generated fields
+export type QuoteInsertData = Omit<SupabaseQuoteInsert, 'id' | 'created_at' | 'updated_at'>;
 
 export type QuoteElementInsertData = Omit<SupabaseQuoteElementInsert, 'id' | 'created_at' | 'updated_at'>;
