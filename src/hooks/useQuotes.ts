@@ -52,21 +52,24 @@ export const useQuotes = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
+      // Map the fields correctly for Supabase insertion
+      const insertData = {
+        title: quoteData.title!,
+        description: quoteData.description || null,
+        client_id: quoteData.client_id || null,
+        valid_until: quoteData.valid_until || null,
+        terms_and_conditions: quoteData.terms_and_conditions || null,
+        user_id: userData.user.id,
+        status: 'draft' as const,
+        subtotal: 0,
+        gst_rate: 15.00,
+        gst_amount: 0,
+        total_amount: 0
+      };
+
       const { data, error } = await supabase
         .from('quotes')
-        .insert({
-          title: quoteData.title!,
-          description: quoteData.description || null,
-          client_id: quoteData.client_id || null,
-          valid_until: quoteData.valid_until || null,
-          terms_and_conditions: quoteData.terms_and_conditions || null,
-          user_id: userData.user.id,
-          status: 'draft',
-          subtotal: 0,
-          gst_rate: 15.00,
-          gst_amount: 0,
-          total_amount: 0
-        })
+        .insert(insertData)
         .select()
         .single();
 
