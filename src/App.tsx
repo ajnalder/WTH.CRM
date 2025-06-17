@@ -5,80 +5,147 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { PageLayout } from "@/components/PageLayout";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
-import Tasks from "./pages/Tasks";
-import TaskDetails from "./pages/TaskDetails";
-import Team from "./pages/Team";
+import ProjectPlanning from "./pages/ProjectPlanning";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
-import NewInvoice from "./pages/NewInvoice";
-import Quotes from "./pages/Quotes";
-import QuoteBuilder from "./pages/QuoteBuilder";
-import QuoteView from "./pages/QuoteView";
-import QuotePreview from "./pages/QuotePreview";
-import Calendar from "./pages/Calendar";
+import Tasks from "./pages/Tasks";
+import TaskDetails from "./pages/TaskDetails";
 import Settings from "./pages/Settings";
-import SiteLaunch from "./pages/SiteLaunch";
-import DayPlanner from "./pages/DayPlanner";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/quote/:token" element={<QuoteView />} />
-              <Route path="/quote-preview/:id" element={<QuotePreview />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <PageLayout>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/projects" element={<Projects />} />
-                        <Route path="/projects/:id" element={<ProjectDetail />} />
-                        <Route path="/tasks" element={<Tasks />} />
-                        <Route path="/tasks/:id" element={<TaskDetails />} />
-                        <Route path="/team" element={<Team />} />
-                        <Route path="/clients" element={<Clients />} />
-                        <Route path="/clients/:id" element={<ClientDetail />} />
-                        <Route path="/quotes" element={<Quotes />} />
-                        <Route path="/quote-builder/:id" element={<QuoteBuilder />} />
-                        <Route path="/invoices" element={<Invoices />} />
-                        <Route path="/invoices/:id" element={<InvoiceDetail />} />
-                        <Route path="/invoices/new" element={<NewInvoice />} />
-                        <Route path="/calendar" element={<Calendar />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/site-launch" element={<SiteLaunch />} />
-                        <Route path="/day-planner" element={<DayPlanner />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </PageLayout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </SidebarProvider>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full">
+                <AppSidebar />
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route
+                      path="/projects"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <Projects />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/projects/:id"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <ProjectDetail />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/planning"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <ProjectPlanning />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/clients"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <Clients />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/clients/:id"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <ClientDetail />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/invoices"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <Invoices />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/invoices/:id"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <InvoiceDetail />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/tasks"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <Tasks />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/tasks/:id"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <TaskDetails />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <PageLayout>
+                            <Settings />
+                          </PageLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </main>
+              </div>
+            </SidebarProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
