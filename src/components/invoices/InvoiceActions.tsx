@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Send, Download, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Edit, Send, Download, MoreHorizontal, ExternalLink, Printer } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,17 +12,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { Invoice } from '@/types/invoiceTypes';
+import { Client } from '@/hooks/useClients';
 import { XeroSyncButton } from './XeroSyncButton';
 
 interface InvoiceActionsProps {
   invoice: Invoice;
-  onEmailInvoice: () => void;
+  client?: Client;
+  onPrint: () => void;
   onDownloadPDF: () => void;
 }
 
 export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
   invoice,
-  onEmailInvoice,
+  client,
+  onPrint,
   onDownloadPDF,
 }) => {
   const navigate = useNavigate();
@@ -63,10 +66,10 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={onEmailInvoice}
+          onClick={onPrint}
         >
-          <Send size={16} className="mr-2" />
-          Email
+          <Printer size={16} className="mr-2" />
+          Print
         </Button>
 
         <XeroSyncButton invoiceId={invoice.id} />
