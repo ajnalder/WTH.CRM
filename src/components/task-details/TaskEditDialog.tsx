@@ -255,8 +255,20 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                       <Calendar
                         mode="single"
                         selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date ? date.toISOString().split('T')[0] : null)}
+                        onSelect={(date) => {
+                          if (date) {
+                            // Format the date to YYYY-MM-DD to avoid timezone issues
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const formattedDate = `${year}-${month}-${day}`;
+                            field.onChange(formattedDate);
+                          } else {
+                            field.onChange(null);
+                          }
+                        }}
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                       <div className="p-3 border-t">
                         <Button

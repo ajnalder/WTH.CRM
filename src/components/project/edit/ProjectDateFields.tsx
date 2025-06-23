@@ -69,9 +69,18 @@ export const ProjectDateFields: React.FC<ProjectDateFieldsProps> = ({
                 <CalendarComponent
                   mode="single"
                   selected={field.value}
-                  onSelect={field.onChange}
+                  onSelect={(date) => {
+                    if (date) {
+                      // Create a new date with local timezone to avoid offset issues
+                      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                      field.onChange(localDate);
+                    } else {
+                      field.onChange(undefined);
+                    }
+                  }}
                   disabled={(date) => date < new Date("1900-01-01")}
                   initialFocus
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
@@ -93,7 +102,7 @@ export const ProjectDateFields: React.FC<ProjectDateFieldsProps> = ({
                     variant="outline"
                     className={cn(
                       "w-full pl-3 text-left font-normal",
-                      !field.value && "text-muted-foreground"
+                      !field.value && "text-muted-foregroundß"
                     )}
                   >
                     {field.value ? (
@@ -109,9 +118,18 @@ export const ProjectDateFields: React.FC<ProjectDateFieldsProps> = ({
                 <CalendarComponent
                   mode="single"
                   selected={field.value}
-                  onSelect={field.onChange}
+                  onSelect={(date) => {
+                    if (date) {
+                      // Create a new date with local timezone to avoid offset issues
+                      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                      field.onChange(localDate);
+                    } else {
+                      field.onChange(undefined);
+                    }
+                  }}
                   disabled={(date) => date < new Date("1900-01-01")}
                   initialFocus
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
