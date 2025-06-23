@@ -27,9 +27,23 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
   teamMembers, 
   clients 
 }) => {
-  const activeProjects = projects.filter(p => p.status === 'In Progress' || p.status === 'Planning').length;
-  const completedTasks = tasks.filter(t => t.status === 'Done' || t.status === 'Completed').length;
-  const totalHours = teamMembers.reduce((sum, member) => sum + member.hours_this_week, 0);
+  // Calculate active projects (In Progress or Planning)
+  const activeProjects = projects.filter(p => 
+    p.status === 'In Progress' || p.status === 'Planning'
+  ).length;
+  
+  // Calculate completed tasks (Done or Completed status)
+  const completedTasks = tasks.filter(t => 
+    t.status === 'Done' || t.status === 'Completed'
+  ).length;
+  
+  // Calculate total hours this week from team members
+  const totalHours = teamMembers.reduce((sum, member) => {
+    const hours = member.hours_this_week || 0;
+    return sum + hours;
+  }, 0);
+  
+  // Calculate active clients
   const activeClients = clients.filter(c => c.status === 'active').length;
 
   const stats = [
@@ -56,7 +70,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
     },
     {
       title: 'Hours This Week',
-      value: totalHours.toString(),
+      value: totalHours.toFixed(1),
       change: `${teamMembers.length} team members`,
       icon: Clock,
       color: 'from-orange-500 to-orange-600',

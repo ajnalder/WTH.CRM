@@ -12,10 +12,29 @@ import { useTasks } from '@/hooks/useTasks';
 import { useClients } from '@/hooks/useClients';
 
 export const Dashboard = () => {
-  const { teamMembers } = useTeamMembers();
-  const { projects } = useProjects();
-  const { tasks } = useTasks();
-  const { clients } = useClients();
+  const { teamMembers, isLoading: isLoadingTeam } = useTeamMembers();
+  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const { tasks, isLoading: isLoadingTasks } = useTasks();
+  const { clients, isLoading: isLoadingClients } = useClients();
+
+  // Show loading state if any data is still loading
+  const isLoading = isLoadingTeam || isLoadingProjects || isLoadingTasks || isLoadingClients;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-600">Loading your project overview...</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
