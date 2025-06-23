@@ -28,11 +28,13 @@ export const TaskTimeTracker: React.FC<TaskTimeTrackerProps> = ({ onTimerComplet
     };
   }, [isTimerRunning]);
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const formatTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Format as HH:MM:SS
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const toggleTimer = () => {
@@ -41,10 +43,11 @@ export const TaskTimeTracker: React.FC<TaskTimeTrackerProps> = ({ onTimerComplet
       if (timerSeconds > 0) {
         const hours = (timerSeconds / 3600).toFixed(2);
         onTimerComplete(hours);
+        setTimerSeconds(0); // Reset timer after completing
       }
     } else {
       setIsTimerRunning(true);
-      setTimerSeconds(0);
+      setTimerSeconds(0); // Start fresh
     }
   };
 
