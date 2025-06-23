@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,6 +11,70 @@ export const useXeroIntegration = () => {
     tenantName?: string;
   }>({ isConnected: false });
   const { toast } = useToast();
+
+  // Handle OAuth callback on component mount
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('xero_code');
+      const state = urlParams.get('xero_state');
+      const error = urlParams.get('xero_error');
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: `Xero connection failed: ${error}`,
+          variant: "destructive",
+        });
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      if (code && state) {
+        setIsConnecting(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error('Not authenticated');
+
+          const { data, error } = await supabase.functions.invoke('xero-oauth', {
+            body: { 
+              action: 'exchange_code',
+              code,
+              state 
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: `Connected to Xero: ${data.tenant_name}`,
+          });
+
+          // Refresh connection status
+          await checkConnectionStatus();
+        } catch (error) {
+          console.error('Error exchanging code:', error);
+          toast({
+            title: "Error",
+            description: "Failed to complete Xero connection",
+            variant: "destructive",
+          });
+        } finally {
+          setIsConnecting(false);
+        }
+
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    handleOAuthCallback();
+  }, [toast]);
 
   const checkConnectionStatus = async () => {
     try {
@@ -53,17 +117,8 @@ export const useXeroIntegration = () => {
 
       if (error) throw error;
 
-      // Open Xero OAuth in popup
-      const popup = window.open(data.auth_url, 'xero-oauth', 'width=600,height=700');
-      
-      // Listen for popup close or message
-      const checkClosed = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(checkClosed);
-          checkConnectionStatus();
-          setIsConnecting(false);
-        }
-      }, 1000);
+      // Redirect to Xero OAuth page
+      window.location.href = data.auth_url;
 
     } catch (error) {
       console.error('Error connecting to Xero:', error);

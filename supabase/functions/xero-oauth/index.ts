@@ -41,8 +41,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { action } = await req.json();
 
     if (action === 'get_auth_url') {
-      // Generate Xero OAuth URL with comprehensive scopes
-      const redirectUri = `${new URL(req.url).origin}/xero-callback`;
+      // Use a fixed redirect URI that you'll configure in your Xero app
+      const redirectUri = 'https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/xero-oauth-callback';
       const state = crypto.randomUUID();
       const scopes = [
         'accounting.transactions',
@@ -89,8 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Invalid state parameter');
       }
 
-      // Exchange code for tokens
-      const redirectUri = `${new URL(req.url).origin}/xero-callback`;
+      // Exchange code for tokens using the same redirect URI
+      const redirectUri = 'https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/xero-oauth-callback';
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
         headers: {
