@@ -10,15 +10,17 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useClients } from '@/hooks/useClients';
+import { useWeeklyTimeEntries } from '@/hooks/useTimeEntries';
 
 export const Dashboard = () => {
   const { teamMembers, isLoading: isLoadingTeam } = useTeamMembers();
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const { tasks, isLoading: isLoadingTasks } = useTasks();
   const { clients, isLoading: isLoadingClients } = useClients();
+  const { data: weeklyTimeEntries, isLoading: isLoadingTimeEntries } = useWeeklyTimeEntries();
 
   // Show loading state if any data is still loading
-  const isLoading = isLoadingTeam || isLoadingProjects || isLoadingTasks || isLoadingClients;
+  const isLoading = isLoadingTeam || isLoadingProjects || isLoadingTasks || isLoadingClients || isLoadingTimeEntries;
 
   if (isLoading) {
     return (
@@ -52,6 +54,7 @@ export const Dashboard = () => {
         tasks={tasks} 
         teamMembers={teamMembers}
         clients={clients}
+        weeklyTimeEntries={weeklyTimeEntries || []}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

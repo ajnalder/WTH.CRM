@@ -14,18 +14,26 @@ interface TeamMember {
   hours_this_week: number;
 }
 
+interface TimeEntry {
+  id: string;
+  hours: number;
+  date: string;
+}
+
 interface StatsCardsProps {
   projects: Project[];
   tasks: TaskWithClient[];
   teamMembers: TeamMember[];
   clients: Client[];
+  weeklyTimeEntries: TimeEntry[];
 }
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ 
   projects, 
   tasks, 
   teamMembers, 
-  clients 
+  clients,
+  weeklyTimeEntries 
 }) => {
   // Calculate active projects (In Progress or Planning)
   const activeProjects = projects.filter(p => 
@@ -37,9 +45,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
     t.status === 'Done' || t.status === 'Completed'
   ).length;
   
-  // Calculate total hours this week from team members
-  const totalHours = teamMembers.reduce((sum, member) => {
-    const hours = member.hours_this_week || 0;
+  // Calculate total hours this week from actual time entries
+  const totalHours = weeklyTimeEntries.reduce((sum, entry) => {
+    const hours = Number(entry.hours) || 0;
     return sum + hours;
   }, 0);
   
@@ -71,7 +79,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
     {
       title: 'Hours This Week',
       value: totalHours.toFixed(1),
-      change: `${teamMembers.length} team members`,
+      change: `${weeklyTimeEntries.length} time entries`,
       icon: Clock,
       color: 'from-orange-500 to-orange-600',
     },

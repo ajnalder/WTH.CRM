@@ -105,6 +105,7 @@ export const useTimeEntries = (taskId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time_entries', taskId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['weekly_time_entries', user?.id] });
       toast({
         title: "Success",
         description: "Time entry logged successfully",
@@ -130,4 +131,40 @@ export const useTimeEntries = (taskId: string) => {
     isCreating: createTimeEntryMutation.isPending,
     totalHours,
   };
+};
+
+// New hook for getting weekly time entries for dashboard
+export const useWeeklyTimeEntries = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['weekly_time_entries', user?.id],
+    queryFn: async () => {
+      if (!user) {
+        return [];
+      }
+
+      // Get the start of the current week (Monday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startOfWeek.toISOString().split('T')[0])
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching weekly time entries:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    enabled: !!user,
+  });
 };
