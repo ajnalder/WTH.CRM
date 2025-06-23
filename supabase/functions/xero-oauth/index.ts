@@ -38,20 +38,26 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid authentication token');
     }
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    const { action } = await req.json();
 
     if (action === 'get_auth_url') {
-      // Generate Xero OAuth URL
-      const redirectUri = `${url.origin}/xero-callback`;
+      // Generate Xero OAuth URL with comprehensive scopes
+      const redirectUri = `${new URL(req.url).origin}/xero-callback`;
       const state = crypto.randomUUID();
-      const scope = 'accounting.transactions accounting.contacts accounting.settings';
+      const scopes = [
+        'accounting.transactions',
+        'accounting.transactions.read',
+        'accounting.contacts',
+        'accounting.contacts.read',
+        'accounting.settings',
+        'accounting.settings.read'
+      ].join(' ');
       
       const authUrl = new URL('https://login.xero.com/identity/connect/authorize');
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('client_id', xeroClientId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
-      authUrl.searchParams.set('scope', scope);
+      authUrl.searchParams.set('scope', scopes);
       authUrl.searchParams.set('state', state);
 
       // Store state for validation
@@ -84,6 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Exchange code for tokens
+      const redirectUri = `${new URL(req.url).origin}/xero-callback`;
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
         headers: {
@@ -93,12 +100,13 @@ const handler = async (req: Request): Promise<Response> => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: `${url.origin}/xero-callback`
+          redirect_uri: redirectUri
         })
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for tokens');
+        const errorText = await tokenResponse.text();
+        throw new Error(`Failed to exchange code for tokens: ${errorText}`);
       }
 
       const tokens: XeroTokenResponse = await tokenResponse.json();
@@ -110,6 +118,10 @@ const handler = async (req: Request): Promise<Response> => {
           'Content-Type': 'application/json'
         }
       });
+
+      if (!connectionsResponse.ok) {
+        throw new Error('Failed to get Xero connections');
+      }
 
       const connections = await connectionsResponse.json();
 
@@ -132,7 +144,10 @@ const handler = async (req: Request): Promise<Response> => {
         .delete()
         .eq('user_id', user.id);
 
-      return new Response(JSON.stringify({ success: true, tenant_name: connections[0]?.tenantName }), {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        tenant_name: connections[0]?.tenantName 
+      }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }

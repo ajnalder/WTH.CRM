@@ -459,6 +459,7 @@ export type Database = {
           total_amount: number
           updated_at: string
           user_id: string
+          xero_invoice_id: string | null
         }
         Insert: {
           balance_due?: number | null
@@ -483,6 +484,7 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           user_id: string
+          xero_invoice_id?: string | null
         }
         Update: {
           balance_due?: number | null
@@ -507,6 +509,7 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           user_id?: string
+          xero_invoice_id?: string | null
         }
         Relationships: [
           {
@@ -861,6 +864,63 @@ export type Database = {
           task_type?: string | null
           time_slot?: string
           title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xero_oauth_states: {
+        Row: {
+          created_at: string
+          id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xero_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          tenant_id: string
+          tenant_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          tenant_id: string
+          tenant_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          tenant_id?: string
+          tenant_name?: string | null
           updated_at?: string
           user_id?: string
         }
