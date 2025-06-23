@@ -141,6 +141,7 @@ export const useWeeklyTimeEntries = () => {
     queryKey: ['weekly_time_entries', user?.id],
     queryFn: async () => {
       if (!user) {
+        console.log('No authenticated user, returning empty weekly time entries');
         return [];
       }
 
@@ -150,6 +151,8 @@ export const useWeeklyTimeEntries = () => {
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
       startOfWeek.setHours(0, 0, 0, 0);
+
+      console.log('Fetching weekly time entries from:', startOfWeek.toISOString().split('T')[0]);
 
       const { data, error } = await supabase
         .from('time_entries')
@@ -162,6 +165,9 @@ export const useWeeklyTimeEntries = () => {
         console.error('Error fetching weekly time entries:', error);
         throw error;
       }
+
+      console.log('Weekly time entries fetched:', data?.length || 0, 'entries');
+      console.log('Total hours:', data?.reduce((sum, entry) => sum + Number(entry.hours), 0) || 0);
 
       return data || [];
     },
