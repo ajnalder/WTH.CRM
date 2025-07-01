@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { XeroSyncButton } from './XeroSyncButton';
+import { EmailInvoiceDialog } from './EmailInvoiceDialog';
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -48,20 +49,13 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border">
       <Badge variant="outline" className={getStatusColor(invoice.status)}>
         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
       </Badge>
       
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
-        >
-          <Edit size={16} className="mr-2" />
-          Edit
-        </Button>
+      <div className="flex items-center gap-2 ml-auto">
+        <EmailInvoiceDialog invoice={invoice} client={client} />
 
         <Button
           variant="outline"
@@ -70,6 +64,24 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
         >
           <Printer size={16} className="mr-2" />
           Print
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDownloadPDF}
+        >
+          <Download size={16} className="mr-2" />
+          Download PDF
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
+        >
+          <Edit size={16} className="mr-2" />
+          Edit
         </Button>
 
         <XeroSyncButton invoiceId={invoice.id} />
@@ -81,11 +93,6 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onDownloadPDF}>
-              <Download size={16} className="mr-2" />
-              Download PDF
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => navigate(`/invoices/${invoice.id}`)}
             >

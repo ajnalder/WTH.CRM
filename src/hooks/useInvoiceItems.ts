@@ -8,18 +8,29 @@ export const useInvoiceItems = (invoiceId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, error } = useQuery({
     queryKey: ['invoice-items', invoiceId],
     queryFn: async () => {
+      console.log('Fetching invoice items for invoice:', invoiceId);
       const { data, error } = await supabase
         .from('invoice_items')
         .select('*')
         .eq('invoice_id', invoiceId)
         .order('created_at', { ascending: true });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error fetching invoice items:', error);
+        throw error;
+      }
+      
+      console.log('Successfully fetched invoice items:', data?.length || 0);
       return data as InvoiceItem[];
     },
     enabled: !!invoiceId,
+    retry: (failureCount, error) => {
+      console.error(`Invoice items fetch attempt ${failureCount + 1} failed:`, error);
+      return failureCount < 2;
+    }
   });
 
   const addItem = useMutation({
@@ -118,6 +129,7 @@ export const useInvoiceItems = (invoiceId: string) => {
   return {
     items,
     isLoading,
+    error,
     addItem: addItem.mutateAsync,
     updateItem: updateItem.mutateAsync,
     deleteItem: deleteItem.mutateAsync,

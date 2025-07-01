@@ -12,6 +12,8 @@ import { InvoiceTotalsPreview } from './InvoiceTotalsPreview';
 import { InvoiceActions } from './InvoiceActions';
 import { EmailLogs } from './EmailLogs';
 import { generateInvoicePDF } from '@/utils/invoicePDF';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface InvoicePreviewProps {
   invoice: Invoice;
@@ -19,16 +21,40 @@ interface InvoicePreviewProps {
 }
 
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client }) => {
-  const { items } = useInvoiceItems(invoice.id);
-  const { settings: companySettings } = useCompanySettings();
+  const { items, isLoading: itemsLoading } = useInvoiceItems(invoice.id);
+  const { settings: companySettings, isLoading: settingsLoading } = useCompanySettings();
+
+  console.log('InvoicePreview rendering:', { 
+    invoiceId: invoice.id, 
+    itemsLoading, 
+    settingsLoading,
+    itemsCount: items?.length || 0,
+    hasClient: !!client 
+  });
 
   const handlePrint = () => {
+    console.log('Print button clicked');
     window.print();
   };
 
   const handleDownloadPDF = async () => {
-    await generateInvoicePDF(invoice, client, items, companySettings);
+    console.log('Download PDF button clicked');
+    try {
+      await generateInvoicePDF(invoice, client, items, companySettings);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
   };
+
+  if (itemsLoading || settingsLoading) {
+    console.log('Loading invoice items or company settings');
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -42,7 +68,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
       <Card className="print:shadow-none print:border-none invoice-content">
         <CardContent className="p-8">
           <InvoiceHeader invoice={invoice} companySettings={companySettings} />
-          <InvoiceClientInfo client={client} />
+          
+          {client ? (
+            <InvoiceClientInfo client={client} />
+          ) : (
+            <Alert className="mb-8">
+              <AlertDescription>
+                Client information not available for this invoice.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Project Description */}
           {invoice.description && (
@@ -52,7 +87,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
             </div>
           )}
 
-          <InvoiceItemsTablePreview items={items} />
+          {items && items.length > 0 ? (
+            <InvoiceItemsTablePreview items={items} />
+          ) : (
+            <Alert className="mb-8">
+              <AlertDescription>
+                No items found for this invoice.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <InvoiceTotalsPreview invoice={invoice} />
 
           {/* Footer */}
