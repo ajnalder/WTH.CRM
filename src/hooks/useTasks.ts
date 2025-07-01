@@ -107,7 +107,7 @@ export const useTasks = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       toast({
         title: "Success",
@@ -209,11 +209,19 @@ export const useTasks = () => {
     },
   });
 
+  const createTask = (taskData: Omit<TaskInsert, 'user_id'>, options?: { onSuccess?: (data: Task) => void }) => {
+    return createTaskMutation.mutate(taskData, {
+      onSuccess: (data) => {
+        options?.onSuccess?.(data);
+      }
+    });
+  };
+
   return {
     tasks: tasksQuery.data || [],
     isLoading: tasksQuery.isLoading,
     error: tasksQuery.error,
-    createTask: createTaskMutation.mutate,
+    createTask,
     updateTask: updateTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     isCreating: createTaskMutation.isPending,

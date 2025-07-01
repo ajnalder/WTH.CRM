@@ -1,18 +1,24 @@
-
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 export const useTasksPage = () => {
-  const { tasks, isLoading, error } = useTasks();
+  const navigate = useNavigate();
+  const { tasks, isLoading, error, createTask } = useTasks();
   const { teamMembers } = useTeamMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('due_date');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
-  const handleTaskCreated = () => {
-    // The useTasks hook will automatically refetch tasks after creation
+  const handleTaskCreated = (taskData: any) => {
+    createTask(taskData, {
+      onSuccess: (newTask) => {
+        // Navigate to the new task's detail page
+        navigate(`/tasks/${newTask.id}`);
+      }
+    });
   };
 
   const getAssigneeName = (assigneeId: string | null) => {
