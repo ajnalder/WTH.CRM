@@ -20,7 +20,8 @@ export const InvoiceClientInfo: React.FC<InvoiceClientInfoProps> = ({ client }) 
         <div className="font-medium">{client.company}</div>
         {primaryContact?.name && <div>{primaryContact.name}</div>}
         {primaryContact?.email && <div>{primaryContact.email}</div>}
-        {(primaryContact?.phone || client.phone) && <div>{primaryContact.phone || client.phone}</div>}
+        {primaryContact?.phone && <div>{primaryContact.phone}</div>}
+        {!primaryContact?.phone && client.phone && <div>{client.phone}</div>}
       </div>
     </div>
   );
