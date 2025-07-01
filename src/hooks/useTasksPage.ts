@@ -12,13 +12,9 @@ export const useTasksPage = () => {
   const [sortBy, setSortBy] = useState('due_date');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
-  const handleTaskCreated = (taskData: any) => {
-    createTask(taskData, {
-      onSuccess: (newTask) => {
-        // Navigate to the new task's detail page
-        navigate(`/tasks/${newTask.id}`);
-      }
-    });
+  const handleTaskCreated = () => {
+    // This will be called after a task is successfully created
+    // The navigation will be handled by the TaskCreateDialog itself
   };
 
   const getAssigneeName = (assigneeId: string | null) => {

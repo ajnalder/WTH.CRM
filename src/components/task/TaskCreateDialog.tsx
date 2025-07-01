@@ -1,296 +1,170 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Calendar, User, Tag, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  project: string;
-  assignee: string;
-  dueDate: string;
-  multipleTasks: string;
-}
+import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 
 interface TaskCreateDialogProps {
-  triggerText?: string;
-  triggerVariant?: 'default' | 'outline';
-  prefilledProject?: string;
-  multipleMode?: boolean;
   onTaskCreated?: () => void;
 }
 
-export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
-  triggerText = "New Task",
-  triggerVariant = "default",
-  prefilledProject,
-  multipleMode = false,
-  onTaskCreated
-}) => {
-  const [open, setOpen] = useState(false);
+export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreated }) => {
+  const navigate = useNavigate();
   const { createTask, isCreating } = useTasks();
-  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const { projects } = useProjects();
   const { teamMembers } = useTeamMembers();
   
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors }
-  } = useForm<TaskFormData>({
-    defaultValues: {
-      title: '',
-      description: '',
-      project: prefilledProject || '',
-      assignee: 'unassigned',
-      dueDate: '',
-      multipleTasks: ''
-    }
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    project: '',
+    assignee: '',
+    due_date: '',
+    status: 'To Do' as const,
+    tags: [] as string[]
   });
 
-  const selectedProject = watch('project');
-  const selectedAssignee = watch('assignee');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const taskData = {
+      title: formData.title,
+      description: formData.description || null,
+      project: formData.project || null,
+      assignee: formData.assignee || null,
+      due_date: formData.due_date || null,
+      status: formData.status,
+      tags: formData.tags.length > 0 ? formData.tags : null
+    };
 
-  React.useEffect(() => {
-    if (open && prefilledProject) {
-      setValue('project', prefilledProject);
-    }
-  }, [open, prefilledProject, setValue]);
-
-  const onSubmit = async (data: TaskFormData) => {
-    console.log('TaskCreateDialog - Form submission:', { data, multipleMode });
-
-    if (multipleMode) {
-      // Handle multiple tasks
-      if (!data.multipleTasks?.trim()) {
-        console.error('Multiple tasks text is required');
-        return;
-      }
-
-      const taskLines = data.multipleTasks
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-
-      console.log('TaskCreateDialog - Creating multiple tasks:', taskLines);
-
-      for (const taskTitle of taskLines) {
-        const taskData = {
-          title: taskTitle,
-          description: data.description || null,
-          project: data.project,
-          assignee: data.assignee === 'unassigned' ? null : data.assignee,
-          due_date: data.dueDate || null,
+    createTask(taskData, {
+      onSuccess: (newTask) => {
+        setOpen(false);
+        setFormData({
+          title: '',
+          description: '',
+          project: '',
+          assignee: '',
+          due_date: '',
           status: 'To Do',
-          progress: 0,
-          tags: null,
-          dropbox_url: null
-        };
-        
-        console.log('TaskCreateDialog - Creating task:', taskData);
-        await createTask(taskData);
+          tags: []
+        });
+        onTaskCreated?.();
+        // Navigate to the new task's detail page
+        navigate(`/tasks/${newTask.id}`);
       }
-    } else {
-      // Handle single task
-      if (!data.title?.trim()) {
-        console.error('Task title is required');
-        return;
-      }
-
-      const taskData = {
-        title: data.title,
-        description: data.description || null,
-        project: data.project,
-        assignee: data.assignee === 'unassigned' ? null : data.assignee,
-        due_date: data.dueDate || null,
-        status: 'To Do',
-        progress: 0,
-        tags: null,
-        dropbox_url: null
-      };
-      
-      console.log('TaskCreateDialog - Creating single task:', taskData);
-      await createTask(taskData);
-    }
-
-    // Close dialog and reset form
-    setOpen(false);
-    reset();
-    onTaskCreated?.();
+    });
   };
-
-  const renderTrigger = () => {
-    if (!triggerText || triggerText.trim() === '') {
-      return (
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <Plus className="w-4 h-4" />
-        </Button>
-      );
-    }
-
-    if (triggerVariant === 'outline') {
-      return (
-        <Button variant="outline" size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          {triggerText}
-        </Button>
-      );
-    }
-
-    return (
-      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-        <Plus size={20} className="mr-2" />
-        {triggerText}
-      </Button>
-    );
-  };
-
-  const dialogTitle = multipleMode ? "Add Multiple Tasks" : "Create New Task";
-  const dialogDescription = multipleMode 
-    ? "Add multiple tasks to this project. Enter each task on a new line."
-    : "Add a new task to track progress and assign to team members.";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {renderTrigger()}
+        <Button size="sm" className="h-7 text-xs">
+          <Plus className="h-3 w-3 mr-1" />
+          New Task
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create New Task
+          </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {!multipleMode && (
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                placeholder="Enter task title"
-                {...register('title', { required: 'Task title is required' })}
-              />
-              {errors.title && (
-                <p className="text-sm text-red-600">{errors.title.message}</p>
-              )}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Task Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Enter task title..."
+              required
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Enter task description (optional)"
-              className="min-h-[80px]"
-              {...register('description')}
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Task description..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Project</Label>
+              <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.name}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(value: 'To Do' | 'In Progress' | 'Review' | 'Done') => setFormData(prev => ({ ...prev, status: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="To Do">To Do</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Review">Review</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assignee</Label>
+            <TeamMemberSelector
+              value={formData.assignee}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
+              placeholder="Select assignee"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="project">Project *</Label>
-            <Select
-              value={selectedProject}
-              onValueChange={(value) => setValue('project', value)}
-              disabled={!!prefilledProject}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingProjects ? "Loading projects..." : "Select a project"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.name}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{project.name}</span>
-                      <span className="text-xs text-gray-500">{project.client_name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.project && (
-              <p className="text-sm text-red-600">{errors.project.message}</p>
-            )}
+            <Label htmlFor="due_date">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+            />
           </div>
 
-          {multipleMode ? (
-            <div className="space-y-2">
-              <Label htmlFor="multipleTasks">Tasks *</Label>
-              <Textarea
-                id="multipleTasks"
-                placeholder="Task 1&#10;Task 2&#10;Task 3"
-                className="min-h-[120px]"
-                {...register('multipleTasks', { required: 'Please enter at least one task' })}
-              />
-              {errors.multipleTasks && (
-                <p className="text-sm text-red-600">{errors.multipleTasks.message}</p>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="assignee">Assignee</Label>
-                <Select
-                  value={selectedAssignee}
-                  onValueChange={(value) => setValue('assignee', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team member (optional)" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  {...register('dueDate')}
-                />
-              </div>
-            </>
-          )}
-
-          <DialogFooter>
+          <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isCreating}>
-              {isCreating ? 'Creating...' : multipleMode ? 'Add Tasks' : 'Create Task'}
+            <Button type="submit" disabled={isCreating || !formData.title.trim()}>
+              {isCreating ? 'Creating...' : 'Create Task'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
