@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Calendar, User, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -89,16 +90,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
   const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
 
-  const handleLinkClick = (e: React.MouseEvent) => {
-    console.log('TaskCard - Link clicked, task ID:', task.id);
-    console.log('TaskCard - Should navigate to:', `/tasks/${task.id}`);
-  };
-
   return (
     <Link 
       to={`/tasks/${task.id}`}
-      className="block"
-      onClick={handleLinkClick}
+      className="block no-underline"
+      style={{ textDecoration: 'none' }}
     >
       <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
         <CardHeader className="pb-3">
