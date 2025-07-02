@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Calendar, User, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { TaskWithClient } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
@@ -15,6 +14,7 @@ interface TaskCardProps {
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
+  const navigate = useNavigate();
 
   console.log('TaskCard - Rendering task:', task.id, 'Title:', task.title);
 
@@ -94,17 +94,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
 
   const handleCardClick = (e: React.MouseEvent) => {
-    console.log('TaskCard - Card clicked, task ID:', task.id);
-    // Don't prevent default or stop propagation, let Link handle navigation
+    e.preventDefault();
+    console.log('TaskCard - Card clicked, navigating to task ID:', task.id);
+    navigate(`/tasks/${task.id}`);
   };
 
   return (
-    <Link 
-      to={`/tasks/${task.id}`}
-      className="block"
+    <div 
+      className={`block cursor-pointer`}
       onClick={handleCardClick}
     >
-      <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
+      <Card className={`hover:shadow-lg transition-shadow ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
@@ -164,6 +164,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           )}
         </CardContent>
       </Card>
-    </Link>
+    </div>
   );
 };
