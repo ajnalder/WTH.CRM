@@ -16,6 +16,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
 
+  console.log('TaskCard - Rendering task:', task.id, 'Title:', task.title);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'To Do': return 'bg-gray-100 text-gray-800';
@@ -91,8 +93,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
   const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    console.log('TaskCard - Card clicked, task ID:', task.id);
+    // Don't prevent default or stop propagation, let Link handle navigation
+  };
+
   return (
-    <Link to={`/tasks/${task.id}`}>
+    <Link 
+      to={`/tasks/${task.id}`}
+      className="block"
+      onClick={handleCardClick}
+    >
       <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between mb-2">
