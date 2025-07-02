@@ -5,19 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import type { TaskWithClient } from '@/hooks/useTasks';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useClients } from '@/hooks/useClients';
+import type { TeamMember } from '@/hooks/useTeamMembers';
+import type { Client } from '@/hooks/useClients';
 
 interface TaskCardProps {
   task: TaskWithClient;
+  teamMembers?: TeamMember[];
+  clients?: Client[];
 }
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { teamMembers } = useTeamMembers();
-  const { clients } = useClients();
-
-  console.log('TaskCard - Rendering task:', task.id, 'Title:', task.title);
-
+export const TaskCard: React.FC<TaskCardProps> = ({ task, teamMembers = [], clients = [] }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'To Do': return 'bg-gray-100 text-gray-800';

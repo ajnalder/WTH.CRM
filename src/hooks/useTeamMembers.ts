@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -84,8 +85,8 @@ export const useTeamMembers = () => {
       }
     },
     enabled: !!user,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache the data (renamed from cacheTime)
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // For now, createTeamMember is not needed since users are created through auth

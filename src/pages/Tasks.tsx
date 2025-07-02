@@ -15,6 +15,8 @@ const Tasks = () => {
     filteredActiveTasks,
     filteredCompletedTasks,
     statusCounts,
+    teamMembers,
+    clients,
     searchTerm,
     statusFilter,
     sortBy,
@@ -86,6 +88,8 @@ const Tasks = () => {
         title="Active Tasks"
         tasks={filteredActiveTasks}
         viewMode={viewMode}
+        teamMembers={teamMembers}
+        clients={clients}
         onRefresh={isMobileDevice ? () => window.location.reload() : undefined}
       />
 
@@ -95,6 +99,8 @@ const Tasks = () => {
           title="Finished Tasks"
           tasks={filteredCompletedTasks}
           viewMode={viewMode}
+          teamMembers={teamMembers}
+          clients={clients}
           isCompleted={true}
         />
       )}

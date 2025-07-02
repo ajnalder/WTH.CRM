@@ -1,12 +1,15 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
 
 export const useTasksPage = () => {
   const navigate = useNavigate();
   const { tasks, isLoading, error, createTask } = useTasks();
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('due_date');
@@ -88,6 +91,8 @@ export const useTasksPage = () => {
     filteredActiveTasks,
     filteredCompletedTasks,
     statusCounts: getStatusCounts(),
+    teamMembers,
+    clients,
     
     // State
     searchTerm,
