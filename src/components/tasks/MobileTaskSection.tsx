@@ -8,11 +8,15 @@ import { MobileButton } from '@/components/ui/mobile-button';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { cn } from '@/lib/utils';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import type { TeamMember } from '@/hooks/useTeamMembers';
+import type { Client } from '@/hooks/useClients';
 
 interface MobileTaskSectionProps {
   title: string;
   tasks: TaskWithClient[];
   viewMode: 'cards' | 'table';
+  teamMembers?: TeamMember[];
+  clients?: Client[];
   isCompleted?: boolean;
   onRefresh?: () => void;
 }
@@ -21,6 +25,8 @@ export const MobileTaskSection: React.FC<MobileTaskSectionProps> = ({
   title, 
   tasks, 
   viewMode, 
+  teamMembers = [],
+  clients = [],
   isCompleted = false,
   onRefresh
 }) => {
@@ -62,7 +68,12 @@ export const MobileTaskSection: React.FC<MobileTaskSectionProps> = ({
           containerClasses
         )}>
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              teamMembers={teamMembers}
+              clients={clients}
+            />
           ))}
         </div>
       ) : (
