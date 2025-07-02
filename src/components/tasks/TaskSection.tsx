@@ -15,6 +15,7 @@ interface TaskSectionProps {
   teamMembers?: TeamMember[];
   clients?: Client[];
   isCompleted?: boolean;
+  onRefresh?: () => void;
 }
 
 export const TaskSection: React.FC<TaskSectionProps> = ({ 
@@ -23,7 +24,8 @@ export const TaskSection: React.FC<TaskSectionProps> = ({
   viewMode, 
   teamMembers = [],
   clients = [],
-  isCompleted = false 
+  isCompleted = false,
+  onRefresh
 }) => {
   const containerClasses = isCompleted ? 'opacity-75' : '';
 
