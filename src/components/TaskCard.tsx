@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, User, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -42,8 +41,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     if (!dateString) return false;
     const dueDate = new Date(dateString);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day
-    dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
     return dueDate < today;
   };
 
@@ -62,11 +61,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return member ? member.name : 'Unknown User';
   };
 
-  // Find the client by name to get their gradient color
   const client = clients.find(c => c.company === task.client_name);
   const clientGradient = client?.gradient || 'from-blue-400 to-blue-600';
   
-  // Extract the base color from the gradient for the card background with tint
   const getCardBackgroundClass = (gradient: string) => {
     if (gradient.includes('blue')) return 'bg-blue-50/80 border-blue-200/80';
     if (gradient.includes('green')) return 'bg-green-50/80 border-green-200/80';
@@ -85,18 +82,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     if (gradient.includes('violet')) return 'bg-violet-50/80 border-violet-200/80';
     if (gradient.includes('sky')) return 'bg-sky-50/80 border-sky-200/80';
     if (gradient.includes('fuchsia')) return 'bg-fuchsia-50/80 border-fuchsia-200/80';
-    return 'bg-blue-50/80 border-blue-200/80'; // default
+    return 'bg-blue-50/80 border-blue-200/80';
   };
 
-  // Only apply overdue styling if task is not completed
   const isTaskCompleted = task.status === 'Done';
   const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
   const cardBackgroundClass = overdueTask ? 'bg-red-50/80 border-red-200/80' : getCardBackgroundClass(clientGradient);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    console.log('TaskCard - Link clicked, task ID:', task.id);
+    console.log('TaskCard - Should navigate to:', `/tasks/${task.id}`);
+  };
 
   return (
     <Link 
       to={`/tasks/${task.id}`}
       className="block"
+      onClick={handleLinkClick}
     >
       <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${cardBackgroundClass} ${overdueTask ? 'ring-1 ring-red-300' : ''}`}>
         <CardHeader className="pb-3">
