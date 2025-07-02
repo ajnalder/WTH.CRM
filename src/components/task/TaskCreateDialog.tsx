@@ -11,13 +11,20 @@ import { Label } from '@/components/ui/label';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { TeamMemberSelector } from '@/components/TeamMemberSelector';
 
 interface TaskCreateDialogProps {
   onTaskCreated?: () => void;
+  prefilledProject?: string;
+  triggerText?: string;
+  triggerVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
 }
 
-export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreated }) => {
+export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ 
+  onTaskCreated, 
+  prefilledProject,
+  triggerText = "New Task",
+  triggerVariant = "default"
+}) => {
   const navigate = useNavigate();
   const { createTask, isCreating } = useTasks();
   const { projects } = useProjects();
@@ -27,10 +34,10 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreate
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    project: '',
+    project: prefilledProject || '',
     assignee: '',
     due_date: '',
-    status: 'To Do' as const,
+    status: 'To Do' as 'To Do' | 'In Progress' | 'Review' | 'Done',
     tags: [] as string[]
   });
 
@@ -53,7 +60,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreate
         setFormData({
           title: '',
           description: '',
-          project: '',
+          project: prefilledProject || '',
           assignee: '',
           due_date: '',
           status: 'To Do',
@@ -69,9 +76,9 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreate
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-7 text-xs">
+        <Button size="sm" className="h-7 text-xs" variant={triggerVariant}>
           <Plus className="h-3 w-3 mr-1" />
-          New Task
+          {triggerText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -140,11 +147,23 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ onTaskCreate
 
           <div className="space-y-2">
             <Label>Assignee</Label>
-            <TeamMemberSelector
-              value={formData.assignee}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
-              placeholder="Select assignee"
-            />
+            <Select value={formData.assignee} onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers?.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                        {member.avatar}
+                      </div>
+                      {member.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
