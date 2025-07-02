@@ -6,9 +6,7 @@ import { useTimeEntries } from '@/hooks/useTimeEntries';
 import { useTasks } from '@/hooks/useTasks';
 import { TaskDetailsHeader } from '@/components/task-details/TaskDetailsHeader';
 import { TaskDetailsMain } from '@/components/task-details/TaskDetailsMain';
-import { TaskTimeSummary } from '@/components/task-details/TaskTimeSummary';
-import { TaskTimeTracker } from '@/components/task-details/TaskTimeTracker';
-import { TaskTimeLogger } from '@/components/task-details/TaskTimeLogger';
+import { TaskTimeManagement } from '@/components/task-details/TaskTimeManagement';
 import { TaskTimeEntries } from '@/components/task-details/TaskTimeEntries';
 import { TaskFiles } from '@/components/task-details/TaskFiles';
 import { TaskNotes } from '@/components/task-details/TaskNotes';
@@ -92,7 +90,7 @@ const TaskDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-8">
         <TaskDetailsHeader 
           task={task} 
           onDelete={handleDeleteTask}
@@ -101,9 +99,10 @@ const TaskDetails = () => {
           isUpdatingDetails={isUpdatingDetails}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main content area */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content - Takes 3 columns */}
+          <div className="lg:col-span-3 space-y-8">
             <TaskDetailsMain 
               task={task} 
               onStatusUpdate={handleStatusUpdate}
@@ -120,21 +119,19 @@ const TaskDetails = () => {
             <TaskTimeEntries timeEntries={timeEntries} />
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <TaskTimeSummary totalHours={totalHours} />
-
-            <TaskFiles taskId={id!} />
-
-            <TaskTimeTracker onTimerComplete={handleTimerComplete} />
-
-            <TaskTimeLogger
+          {/* Sidebar - Takes 1 column */}
+          <div className="lg:col-span-1 space-y-6">
+            <TaskTimeManagement
+              totalHours={totalHours}
               taskId={id!}
               createTimeEntry={createTimeEntry}
               isCreating={isCreating}
+              onTimerComplete={handleTimerComplete}
               initialHours={timerHours}
               onHoursChange={setTimerHours}
             />
+
+            <TaskFiles taskId={id!} />
           </div>
         </div>
       </div>

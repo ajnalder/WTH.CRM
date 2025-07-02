@@ -2,9 +2,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskNotesProps {
@@ -75,29 +74,33 @@ export const TaskNotes: React.FC<TaskNotesProps> = ({
   ];
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Task Notes</CardTitle>
-        <div className="flex items-center gap-2">
-          {hasChanges && (
-            <span className="text-sm text-orange-600">Unsaved changes</span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSave}
-            disabled={!hasChanges || isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-6">
+        <div className="flex flex-row items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Task Notes</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <span className="text-sm text-orange-600">Unsaved changes</span>
             )}
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
+        
         <div className="min-h-[200px]">
           <ReactQuill
             theme="snow"
@@ -109,12 +112,13 @@ export const TaskNotes: React.FC<TaskNotesProps> = ({
             className="bg-white"
           />
         </div>
+        
         {hasChanges && (
           <p className="text-xs text-gray-500 mt-2">
             Notes will auto-save after 3 seconds of inactivity
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

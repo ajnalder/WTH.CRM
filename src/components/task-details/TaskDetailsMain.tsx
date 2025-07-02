@@ -1,8 +1,8 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Calendar, User, Tag } from 'lucide-react';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { TaskStatusDropdown } from './TaskStatusDropdown';
 import type { TaskWithClient } from '@/hooks/useTasks';
@@ -33,85 +33,106 @@ export const TaskDetailsMain: React.FC<TaskDetailsMainProps> = ({
   console.log('TaskDetailsMain - Found team member:', currentTeamMember);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Task Details</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {task.description && (
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-600">{task.description}</p>
-          </div>
-        )}
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2">Team Member</h3>
-            {currentTeamMember ? (
-              <Badge variant="secondary" className="flex items-center gap-2 w-fit">
-                <div className={`w-4 h-4 bg-gradient-to-r ${currentTeamMember.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
-                  {currentTeamMember.avatar}
-                </div>
-                {currentTeamMember.name}
-              </Badge>
-            ) : (
-              <span className="text-gray-500">No team member assigned</span>
-            )}
-          </div>
-          <div>
-            {onStatusUpdate ? (
-              <TaskStatusDropdown
-                currentStatus={task.status}
-                onStatusUpdate={onStatusUpdate}
-                isUpdating={isUpdatingStatus}
-              />
-            ) : (
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Status</h3>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-8">
+        <div className="space-y-6">
+          {/* Description */}
+          {task.description && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+              <p className="text-gray-700 leading-relaxed">{task.description}</p>
+            </div>
+          )}
+          
+          {/* Task Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Team Member */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                <User className="w-4 h-4" />
+                Team Member
+              </div>
+              {currentTeamMember ? (
+                <Badge variant="secondary" className="flex items-center gap-2 w-fit">
+                  <div className={`w-4 h-4 bg-gradient-to-r ${currentTeamMember.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                    {currentTeamMember.avatar}
+                  </div>
+                  {currentTeamMember.name}
+                </Badge>
+              ) : (
+                <span className="text-gray-500">No team member assigned</span>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                Status
+              </div>
+              {onStatusUpdate ? (
+                <TaskStatusDropdown
+                  currentStatus={task.status}
+                  onStatusUpdate={onStatusUpdate}
+                  isUpdating={isUpdatingStatus}
+                />
+              ) : (
                 <Badge className={`text-xs ${getStatusColor(task.status)}`}>
                   {task.status}
                 </Badge>
+              )}
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                <Calendar className="w-4 h-4" />
+                Due Date
               </div>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="font-medium text-gray-900 mb-2">Due Date</h3>
-          <p className="text-gray-600">{formatDisplayDate(task.due_date)}</p>
-        </div>
-
-        <div>
-          <h3 className="font-medium text-gray-900 mb-2">Dropbox Files</h3>
-          {task.dropbox_url ? (
-            <a
-              href={task.dropbox_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
-            >
-              View Files <ExternalLink className="h-3 w-3" />
-            </a>
-          ) : (
-            <p className="text-gray-600 text-sm">No files linked</p>
-          )}
-        </div>
-
-        {task.tags && task.tags.length > 0 && (
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2">Tags</h3>
-            <div className="flex flex-wrap gap-2">
-              {task.tags.map((tag, index) => (
-                <Badge key={index} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
+              <p className="text-gray-700">{formatDisplayDate(task.due_date)}</p>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Dropbox Files */}
+          {(task.dropbox_url || onStatusUpdate) && (
+            <div className="pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-3">
+                <ExternalLink className="w-4 h-4" />
+                Dropbox Files
+              </div>
+              {task.dropbox_url ? (
+                <a
+                  href={task.dropbox_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
+                >
+                  View Files <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <p className="text-gray-500 text-sm">No files linked</p>
+              )}
+            </div>
+          )}
+
+          {/* Tags */}
+          {task.tags && task.tags.length > 0 && (
+            <div className="pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-3">
+                <Tag className="w-4 h-4" />
+                Tags
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {task.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
   function getStatusColor(status: string) {

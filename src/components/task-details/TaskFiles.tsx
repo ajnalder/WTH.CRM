@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Download, FileText, Image } from 'lucide-react';
+import { Trash2, Download, FileText, Image, Folder } from 'lucide-react';
 import { TaskFileUpload } from './TaskFileUpload';
 import { useTaskFiles, type TaskFile } from '@/hooks/useTaskFiles';
 
@@ -52,25 +51,31 @@ export const TaskFiles: React.FC<TaskFilesProps> = ({ taskId }) => {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Files</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-24">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Folder className="w-5 h-5 text-gray-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Files</h3>
+        </div>
+        <div className="flex items-center justify-center h-24">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Files</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Folder className="w-5 h-5 text-gray-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Files</h3>
+          {files.length > 0 && (
+            <span className="bg-gray-100 text-gray-700 text-sm px-2 py-1 rounded-full">
+              {files.length}
+            </span>
+          )}
+        </div>
+        
         <TaskFileUpload onFileSelect={handleFileUpload} isUploading={isUploading} />
         
         {files.length === 0 ? (
@@ -94,8 +99,8 @@ export const TaskFiles: React.FC<TaskFilesProps> = ({ taskId }) => {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
