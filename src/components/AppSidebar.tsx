@@ -57,16 +57,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
+        <div className="flex items-center space-x-2">
           <img 
             src="/lovable-uploads/c848f237-7df6-492e-95f2-7ce8824226b0.png" 
             alt="What the Heck Logo" 
             className="h-8 w-auto"
           />
-        </div>
-        <div className="space-y-2">
-          <TaskCreateDialog triggerText="New Task" />
-          <NewProjectForm />
         </div>
       </SidebarHeader>
       
@@ -91,6 +87,16 @@ export function AppSidebar() {
                 );
               })}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="space-y-2 px-2">
+              <TaskCreateDialog triggerText="New Task" />
+              <NewProjectForm />
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
