@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
+import { NewProjectForm } from '@/components/NewProjectForm';
 
 const navigationItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
@@ -55,12 +57,16 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mb-4">
           <img 
             src="/lovable-uploads/c848f237-7df6-492e-95f2-7ce8824226b0.png" 
             alt="What the Heck Logo" 
             className="h-8 w-auto"
           />
+        </div>
+        <div className="space-y-2">
+          <TaskCreateDialog triggerText="New Task" />
+          <NewProjectForm />
         </div>
       </SidebarHeader>
       
