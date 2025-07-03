@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -13,14 +13,20 @@ import {
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useClients } from '@/hooks/useClients';
 import type { TaskWithClient } from '@/hooks/useTasks';
+import { cn } from '@/lib/utils';
 
 interface TaskTableProps {
   tasks: TaskWithClient[];
 }
 
 export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
+  const navigate = useNavigate();
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
+
+  const handleRowClick = (taskId: string) => {
+    navigate(`/tasks/${taskId}`);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -46,8 +52,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
     if (!dateString) return false;
     const dueDate = new Date(dateString);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day
-    dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
     return dueDate < today;
   };
 
@@ -88,12 +94,18 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
       <TableBody>
         {tasks.map((task) => {
           const clientGradient = task.client_name ? getClientGradient(task.client_name) : 'from-blue-400 to-blue-600';
-          // Only apply overdue styling if task is not completed
           const isTaskCompleted = task.status === 'Done';
           const overdueTask = !isTaskCompleted && isOverdue(task.due_date);
           
           return (
-            <TableRow key={task.id} className={overdueTask ? 'bg-red-50/50' : ''}>
+            <TableRow 
+              key={task.id} 
+              className={cn(
+                'cursor-pointer hover:bg-gray-50 transition-colors',
+                overdueTask ? 'bg-red-50/50' : ''
+              )}
+              onClick={() => handleRowClick(task.id)}
+            >
               <TableCell>
                 <div>
                   <div className="font-medium text-gray-900">{task.title}</div>
