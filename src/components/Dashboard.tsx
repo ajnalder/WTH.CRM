@@ -5,6 +5,7 @@ import { ProjectGrid } from '@/components/ProjectGrid';
 import { RecentActivity } from '@/components/RecentActivity';
 import { TeamOverview } from '@/components/TeamOverview';
 import { NewProjectForm } from '@/components/NewProjectForm';
+import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 import { ShadowBox } from '@/components/ui/shadow-box';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useProjects } from '@/hooks/useProjects';
@@ -46,7 +47,10 @@ export const Dashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Overview of your projects, tasks, and team performance</p>
         </div>
-        <NewProjectForm />
+        <div className="flex items-center gap-3">
+          <TaskCreateDialog triggerText="New Task" />
+          <NewProjectForm />
+        </div>
       </div>
 
       <StatsCards 
