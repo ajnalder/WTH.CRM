@@ -76,8 +76,8 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-7 text-xs" variant={triggerVariant}>
-          <Plus className="h-3 w-3 mr-1" />
+        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+          <Plus className="mr-2" />
           {triggerText}
         </Button>
       </DialogTrigger>
