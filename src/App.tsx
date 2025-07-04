@@ -26,6 +26,7 @@ import Invoices from "./pages/Invoices";
 import NewInvoice from "./pages/NewInvoice";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Settings from "./pages/Settings";
+import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import SiteLaunch from "./pages/SiteLaunch";
@@ -72,6 +73,7 @@ const App = () => (
                             <Route path="/calendar" element={<Calendar />} />
                             <Route path="/day-planner" element={<DayPlanner />} />
                             <Route path="/site-launch" element={<SiteLaunch />} />
+                            <Route path="/reports" element={<Reports />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
