@@ -40,7 +40,7 @@ const Reports = () => {
         .select(`
           hours,
           task_id,
-          tasks!inner (
+          tasks (
             title,
             client_id,
             clients (
@@ -64,14 +64,21 @@ const Reports = () => {
 
       timeEntries?.forEach(entry => {
         const task = entry.tasks;
-        if (!task || !task.client_id || !task.clients) return;
+        if (!task) return;
 
-        const clientId = task.client_id;
-        const clientName = Array.isArray(task.clients) 
-          ? task.clients[0]?.company 
-          : task.clients.company;
+        let clientId: string;
+        let clientName: string;
 
-        if (!clientName) return;
+        if (task.client_id && task.clients) {
+          clientId = task.client_id;
+          clientName = Array.isArray(task.clients) 
+            ? task.clients[0]?.company 
+            : task.clients.company;
+        } else {
+          // Handle unassigned tasks
+          clientId = 'unassigned';
+          clientName = 'Unassigned Tasks';
+        }
 
         const existing = clientHours.get(clientId) || {
           client_id: clientId,
