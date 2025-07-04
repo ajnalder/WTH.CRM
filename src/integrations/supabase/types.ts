@@ -741,6 +741,7 @@ export type Database = {
       tasks: {
         Row: {
           assignee: string | null
+          client_id: string | null
           created_at: string
           description: string | null
           dropbox_url: string | null
@@ -757,6 +758,7 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
+          client_id?: string | null
           created_at?: string
           description?: string | null
           dropbox_url?: string | null
@@ -773,6 +775,7 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
+          client_id?: string | null
           created_at?: string
           description?: string | null
           dropbox_url?: string | null
@@ -787,7 +790,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_entries: {
         Row: {

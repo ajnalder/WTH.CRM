@@ -78,7 +78,9 @@ export const useTask = (taskId: string) => {
       assignee: string | null; 
       status: string; 
       due_date: string | null; 
-      dropbox_url: string | null 
+      dropbox_url: string | null;
+      client_id: string | null;
+      project: string | null;
     }) => {
       const { data, error } = await supabase
         .from('tasks')
@@ -88,7 +90,9 @@ export const useTask = (taskId: string) => {
           assignee: updateData.assignee,
           status: updateData.status,
           due_date: updateData.due_date,
-          dropbox_url: updateData.dropbox_url
+          dropbox_url: updateData.dropbox_url,
+          client_id: updateData.client_id,
+          project: updateData.project
         })
         .eq('id', taskId)
         .select()

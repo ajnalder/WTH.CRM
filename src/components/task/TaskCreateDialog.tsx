@@ -38,7 +38,8 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
     assignee: '',
     due_date: '',
     status: 'To Do' as 'To Do' | 'In Progress' | 'Review' | 'Done',
-    tags: [] as string[]
+    tags: [] as string[],
+    client_id: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +65,8 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
           assignee: '',
           due_date: '',
           status: 'To Do',
-          tags: []
+          tags: [],
+          client_id: ''
         });
         onTaskCreated?.();
         // Navigate to the new task's detail page

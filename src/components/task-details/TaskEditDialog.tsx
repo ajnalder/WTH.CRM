@@ -27,6 +27,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
+import { useProjects } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
@@ -37,6 +39,8 @@ interface TaskEditFormData {
   status: string;
   due_date: string | null;
   dropbox_url: string;
+  client_id: string | null;
+  project: string | null;
 }
 
 interface TaskEditDialogProps {
@@ -62,6 +66,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   isUpdating
 }) => {
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
+  const { projects } = useProjects();
   
   const form = useForm<TaskEditFormData>({
     defaultValues: {
@@ -71,8 +77,19 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
       status: task.status,
       due_date: task.due_date,
       dropbox_url: task.dropbox_url || '',
+      client_id: (task as any).client_id || null,
+      project: task.project || null,
     },
   });
+
+  // Watch client_id to filter projects
+  const selectedClientId = form.watch('client_id');
+  
+  // Filter projects by selected client
+  const filteredProjects = React.useMemo(() => {
+    if (!selectedClientId) return projects || [];
+    return (projects || []).filter(project => project.client_id === selectedClientId);
+  }, [projects, selectedClientId]);
 
   React.useEffect(() => {
     if (open) {
@@ -83,9 +100,22 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
         status: task.status,
         due_date: task.due_date,
         dropbox_url: task.dropbox_url || '',
+        client_id: (task as any).client_id || null,
+        project: task.project || null,
       });
     }
   }, [open, task, form]);
+
+  // Clear project when client changes
+  React.useEffect(() => {
+    if (selectedClientId) {
+      const currentProject = form.getValues('project');
+      const isProjectValid = filteredProjects.some(p => p.name === currentProject);
+      if (!isProjectValid) {
+        form.setValue('project', null);
+      }
+    }
+  }, [selectedClientId, filteredProjects, form]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -286,6 +316,96 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="client_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client</FormLabel>
+                    <Select value={field.value || 'unassigned'} onValueChange={(value) => field.onChange(value === 'unassigned' ? null : value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue>
+                            {field.value ? (
+                              (() => {
+                                const client = clients?.find(c => c.id === field.value);
+                                return client ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-4 h-4 bg-gradient-to-r ${client.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                                      {client.avatar}
+                                    </div>
+                                    {client.company}
+                                  </div>
+                                ) : 'No client';
+                              })()
+                            ) : (
+                              <span className="text-gray-500">No client</span>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="unassigned">
+                          <span className="text-gray-500">No client</span>
+                        </SelectItem>
+                        {clients?.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 bg-gradient-to-r ${client.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                                {client.avatar}
+                              </div>
+                              {client.company}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="project"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project</FormLabel>
+                    <Select value={field.value || 'unassigned'} onValueChange={(value) => field.onChange(value === 'unassigned' ? null : value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue>
+                            {field.value ? (
+                              <span>{field.value}</span>
+                            ) : (
+                              <span className="text-gray-500">No project</span>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="unassigned">
+                          <span className="text-gray-500">No project</span>
+                        </SelectItem>
+                        {filteredProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.name}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                        {!selectedClientId && (projects || []).map((project) => (
+                          <SelectItem key={project.id} value={project.name}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

@@ -75,7 +75,9 @@ const TaskDetails = () => {
     assignee: string | null; 
     status: string; 
     due_date: string | null; 
-    dropbox_url: string | null 
+    dropbox_url: string | null;
+    client_id: string | null;
+    project: string | null;
   }) => {
     updateTaskDetails(data);
   };
