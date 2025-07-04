@@ -74,51 +74,53 @@ export const TaskNotes: React.FC<TaskNotesProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6">
-        <div className="flex flex-row items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Task Notes</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            {hasChanges && (
-              <span className="text-sm text-orange-600">Unsaved changes</span>
+    <div className="p-4">
+      <div className="flex flex-row items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-base font-semibold">Task Notes</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasChanges && (
+            <span className="text-xs text-orange-600">Unsaved changes</span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
         </div>
-        
-        <div className="min-h-[200px]">
-          <ReactQuill
-            theme="snow"
-            value={notes}
-            onChange={handleNotesChange}
-            modules={modules}
-            formats={formats}
-            placeholder="Add your notes here... You can format text, create lists, and more."
-            className="bg-white"
-          />
-        </div>
-        
-        {hasChanges && (
-          <p className="text-xs text-gray-500 mt-2">
-            Notes will auto-save after 3 seconds of inactivity
-          </p>
-        )}
       </div>
+      
+      <div>
+        <ReactQuill
+          theme="snow"
+          value={notes}
+          onChange={handleNotesChange}
+          modules={modules}
+          formats={formats}
+          placeholder="Add your notes here... You can format text, create lists, and more."
+          className="bg-white"
+          style={{ 
+            '--quill-editor-height': 'auto',
+            '--quill-editor-min-height': '120px'
+          } as React.CSSProperties}
+        />
+      </div>
+      
+      {hasChanges && (
+        <p className="text-xs text-muted-foreground mt-2">
+          Notes will auto-save after 3 seconds of inactivity
+        </p>
+      )}
     </div>
   );
 };
