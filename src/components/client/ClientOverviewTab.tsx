@@ -2,10 +2,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Clock } from 'lucide-react';
 import { Client } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
 import { useProjects } from '@/hooks/useProjects';
 import { useDomains } from '@/hooks/useDomains';
+import { useClientTimeEntries } from '@/hooks/useClientTimeEntries';
 
 interface ClientOverviewTabProps {
   client: Client;
@@ -15,6 +17,7 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
   const { contacts, isLoading } = useContacts(client.id);
   const { projects } = useProjects(client.id);
   const { domains } = useDomains(client.id);
+  const { data: timeData, isLoading: timeLoading } = useClientTimeEntries(client.id);
   
   // Use the contacts directly from the hook (Supabase format with is_primary)
   const primaryContact = contacts?.find(contact => contact.is_primary);
@@ -80,6 +83,49 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              <CardTitle>Time Tracking</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {timeLoading ? (
+              <p className="text-gray-500">Loading time tracking data...</p>
+            ) : timeData && timeData.tasks.length > 0 ? (
+              <div className="space-y-4">
+                <div className="text-sm text-gray-600 mb-4">
+                  {timeData.totalEntries} entries across {timeData.tasks.length} tasks
+                </div>
+                <div className="space-y-3">
+                  {timeData.tasks.map((task) => (
+                    <div key={task.task_id} className="border-l-2 border-blue-200 pl-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{task.task_title}</p>
+                          <p className="text-sm text-gray-500">{task.entry_count} entries</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-blue-600">{task.total_hours.toFixed(1)}h</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t pt-3 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-900">Total Hours</span>
+                    <span className="font-bold text-lg text-blue-600">{timeData.totalHours.toFixed(1)}h</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">No time entries logged for this client yet</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="space-y-6">
@@ -95,6 +141,10 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Total Value</span>
               <span className="font-semibold">${actualTotalValue.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Total Hours</span>
+              <span className="font-semibold">{timeData?.totalHours.toFixed(1) || '0.0'}h</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Domains</span>
