@@ -238,10 +238,10 @@ const Ideas = () => {
                     </CardDescription>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Badge variant={getPriorityVariant(idea.priority)} className="text-center">
+                    <Badge variant={getPriorityVariant(idea.priority)} className="self-start">
                       {idea.priority}
                     </Badge>
-                    <Badge variant={getStatusVariant(idea.status)} className="text-center">
+                    <Badge variant={getStatusVariant(idea.status)} className="self-start">
                       {idea.status}
                     </Badge>
                   </div>
