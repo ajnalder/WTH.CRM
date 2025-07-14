@@ -225,10 +225,10 @@ const Ideas = () => {
         </div>
 
         {/* Ideas Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredIdeas?.map((idea) => (
-            <Card key={idea.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <Card key={idea.id} className="hover:shadow-lg transition-shadow h-64">
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg">{idea.title}</CardTitle>
@@ -247,8 +247,8 @@ const Ideas = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+              <CardContent className="flex flex-col h-full pb-4">
+                <p className="text-sm text-muted-foreground mb-4 flex-1 overflow-hidden">
                   {idea.content}
                 </p>
                 <div className="flex items-center justify-between">
