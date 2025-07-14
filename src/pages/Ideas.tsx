@@ -80,21 +80,21 @@ const Ideas = () => {
     });
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityVariant = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'default';
+      default: return 'outline';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'new': return 'bg-blue-500';
-      case 'in_progress': return 'bg-orange-500';
-      case 'implemented': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'new': return 'default';
+      case 'in_progress': return 'secondary';
+      case 'implemented': return 'outline';
+      default: return 'outline';
     }
   };
 
@@ -238,10 +238,10 @@ const Ideas = () => {
                     </CardDescription>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Badge className={`${getPriorityColor(idea.priority)} text-white`}>
+                    <Badge variant={getPriorityVariant(idea.priority)}>
                       {idea.priority}
                     </Badge>
-                    <Badge className={`${getStatusColor(idea.status)} text-white`}>
+                    <Badge variant={getStatusVariant(idea.status)}>
                       {idea.status}
                     </Badge>
                   </div>
