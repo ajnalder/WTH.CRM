@@ -30,6 +30,7 @@ import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import SiteLaunch from "./pages/SiteLaunch";
+import Ideas from "./pages/Ideas";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ const App = () => (
                             <Route path="/calendar" element={<Calendar />} />
                             <Route path="/day-planner" element={<DayPlanner />} />
                             <Route path="/site-launch" element={<SiteLaunch />} />
+                            <Route path="/ideas" element={<Ideas />} />
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="*" element={<NotFound />} />

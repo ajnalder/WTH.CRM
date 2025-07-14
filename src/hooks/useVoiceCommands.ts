@@ -6,7 +6,7 @@ import { useVoiceDialogs } from './useVoiceDialogs';
 import { getMobileVoiceConfig, isMobile } from '@/utils/mobileDetection';
 
 interface VoiceCommandResult {
-  type: 'task' | 'project' | 'client' | 'navigation' | 'unknown';
+  type: 'task' | 'project' | 'client' | 'idea' | 'navigation' | 'unknown';
   action: string;
   extractedData: Record<string, any>;
   missingRequiredFields: string[];
@@ -211,6 +211,10 @@ export const useVoiceCommands = () => {
         console.log('useVoiceCommands - Processing client command');
         openClientDialog(result.extractedData);
         break;
+      case 'idea':
+        console.log('useVoiceCommands - Processing idea command');
+        await handleIdeaCommand(result);
+        break;
       case 'navigation':
         console.log('useVoiceCommands - Processing navigation command');
         handleNavigation(result.extractedData.route);
@@ -357,6 +361,54 @@ export const useVoiceCommands = () => {
         variant: "destructive",
       });
       openProjectDialog(result.extractedData);
+    }
+  };
+
+  const handleIdeaCommand = async (result: VoiceCommandResult) => {
+    try {
+      console.log('useVoiceCommands - Handling idea command with data:', result.extractedData);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to create ideas.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const ideaData = {
+        title: result.extractedData.title || "Quick Idea",
+        content: result.extractedData.content || result.extractedData.description || finalTranscriptRef.current,
+        priority: result.extractedData.priority || "medium",
+        status: "new",
+        user_id: user.id
+      };
+
+      const { error } = await supabase
+        .from('ideas')
+        .insert([ideaData]);
+
+      if (error) {
+        console.error('useVoiceCommands - Error creating idea:', error);
+        throw error;
+      }
+
+      toast({
+        title: "Idea saved!",
+        description: "Your idea has been stored successfully.",
+      });
+
+      // Navigate to ideas page
+      navigate('/ideas');
+    } catch (error) {
+      console.error('useVoiceCommands - Error creating idea:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save idea. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 

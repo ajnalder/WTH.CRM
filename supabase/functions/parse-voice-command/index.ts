@@ -15,11 +15,12 @@ Support these entity types:
 1. TASKS - "create task", "add task", "new task"
 2. PROJECTS - "create project", "add project", "new project"  
 3. CLIENTS - "add client", "create client", "new client"
-4. NAVIGATION - "show me", "go to", "open"
+4. IDEAS - "this is an idea", "I have an idea", "idea:", "here's an idea"
+5. NAVIGATION - "show me", "go to", "open"
 
 For each command, return JSON with:
 {
-  "type": "task|project|client|navigation|unknown",
+  "type": "task|project|client|idea|navigation|unknown",
   "action": "create|add|navigate",
   "extractedData": {},
   "missingRequiredFields": [],
@@ -30,6 +31,7 @@ Required fields:
 - Tasks: title
 - Projects: name, client_id  
 - Clients: company
+- Ideas: title or content (at least one)
 
 IMPORTANT FORMATTING RULES:
 1. Always use proper sentence case for titles and names
@@ -46,6 +48,7 @@ DESCRIPTION EXTRACTION:
 Extract these fields when mentioned:
 - title/name: main subject (clean, concise, sentence case)
 - description: full context and details from the conversation (sentence case, clean grammar)
+- content: for ideas, the full idea description
 - client: company/client name mentioned (proper case)
 - assignee: "assign to [name]", "for [name]", "assign to me"
 - dueDate: "by [date]", "due [date]", "end of week", "tomorrow", "next Friday"
@@ -81,6 +84,20 @@ Output:
     "description": "Need to make the website more modern and responsive.",
     "client": "Acme Corp",
     "dueDate": "end of next month"
+  },
+  "missingRequiredFields": [],
+  "confidence": 0.9
+}
+
+Input: "This is an idea about creating a mobile app for inventory management that could integrate with our existing system"
+Output:
+{
+  "type": "idea",
+  "action": "create",
+  "extractedData": {
+    "title": "Mobile app for inventory management",
+    "content": "Creating a mobile app for inventory management that could integrate with our existing system",
+    "priority": "medium"
   },
   "missingRequiredFields": [],
   "confidence": 0.9
