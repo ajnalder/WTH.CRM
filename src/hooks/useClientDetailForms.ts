@@ -8,7 +8,8 @@ export const useClientDetailForms = () => {
     registrar: '',
     expiry_date: '',
     status: 'active',
-    renewal_cost: 0
+    renewal_cost: 0,
+    client_managed: false
   });
 
   const [newHosting, setNewHosting] = useState<NewHostingForm>({
@@ -35,7 +36,8 @@ export const useClientDetailForms = () => {
       registrar: '',
       expiry_date: '',
       status: 'active',
-      renewal_cost: 0
+      renewal_cost: 0,
+      client_managed: false
     });
   };
 

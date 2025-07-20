@@ -31,6 +31,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import SiteLaunch from "./pages/SiteLaunch";
 import Ideas from "./pages/Ideas";
+import Domains from "./pages/Domains";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
                             <Route path="/team" element={<Team />} />
                             <Route path="/clients" element={<Clients />} />
                             <Route path="/clients/:id" element={<ClientDetail />} />
+                            <Route path="/domains" element={<Domains />} />
                             <Route path="/invoices" element={<Invoices />} />
                             <Route path="/invoices/new" element={<NewInvoice />} />
                             <Route path="/invoices/:id" element={<InvoiceDetail />} />

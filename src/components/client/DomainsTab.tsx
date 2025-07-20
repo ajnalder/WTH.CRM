@@ -96,6 +96,9 @@ const DomainsTab = ({
                       {domain.status}
                     </span>
                     <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiry_date).toLocaleDateString()}</p>
+                    {domain.client_managed && (
+                      <p className="text-sm text-blue-600 font-medium mt-1">Client Managed</p>
+                    )}
                   </div>
                   {onDeleteDomain && (
                     <AlertDialog>

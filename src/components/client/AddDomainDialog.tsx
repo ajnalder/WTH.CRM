@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
 
 interface AddDomainDialogProps {
@@ -28,6 +29,7 @@ interface AddDomainDialogProps {
     expiry_date: string;
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
+    client_managed: boolean;
   };
   setNewDomain: (domain: {
     name: string;
@@ -35,6 +37,7 @@ interface AddDomainDialogProps {
     expiry_date: string;
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
+    client_managed: boolean;
   }) => void;
   onAddDomain: () => void;
 }
@@ -108,6 +111,21 @@ const AddDomainDialog = ({
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="client_managed"
+              checked={newDomain.client_managed}
+              onCheckedChange={(checked) =>
+                setNewDomain({
+                  ...newDomain,
+                  client_managed: checked as boolean,
+                })
+              }
+            />
+            <Label htmlFor="client_managed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Client manages this domain (I'm not responsible for renewal)
+            </Label>
           </div>
           <Button onClick={onAddDomain} className="w-full">Add Domain</Button>
         </div>

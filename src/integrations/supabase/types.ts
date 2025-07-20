@@ -232,6 +232,7 @@ export type Database = {
       domains: {
         Row: {
           client_id: string
+          client_managed: boolean
           created_at: string
           expiry_date: string
           id: string
@@ -243,6 +244,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          client_managed?: boolean
           created_at?: string
           expiry_date: string
           id?: string
@@ -254,6 +256,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          client_managed?: boolean
           created_at?: string
           expiry_date?: string
           id?: string
