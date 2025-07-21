@@ -380,15 +380,12 @@ const Domains = () => {
                         </div>
                       </TableCell>
                       <TableCell className="w-[120px]">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteDomainMutation.mutate(domain.id)}
-                          className="border-red-300 text-red-600 hover:bg-red-50 w-full"
-                          title="Delete domain"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div title="Delete domain">
+                          <Trash2 
+                            className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
+                            onClick={() => deleteDomainMutation.mutate(domain.id)}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -475,25 +472,19 @@ const Domains = () => {
                         </div>
                       </TableCell>
                       <TableCell className="w-[120px]">
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            size="sm"
-                            onClick={() => saveNewRow(newRow.tempId!)}
-                            disabled={!newRow.name || !newRow.registrar || !newRow.client_id}
-                            className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400 w-full"
-                            title="Save domain"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => removeNewRow(newRow.tempId!)}
-                            className="border-red-300 text-red-600 hover:bg-red-50 w-full"
-                            title="Cancel"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                        <div className="flex gap-2">
+                          <div title="Save domain">
+                            <Check 
+                              className="h-4 w-4 text-green-600 cursor-pointer hover:text-green-700" 
+                              onClick={() => saveNewRow(newRow.tempId!)}
+                            />
+                          </div>
+                          <div title="Cancel">
+                            <X 
+                              className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
+                              onClick={() => removeNewRow(newRow.tempId!)}
+                            />
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
