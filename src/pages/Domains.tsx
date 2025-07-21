@@ -438,16 +438,19 @@ const Domains = () => {
                           size="sm"
                           onClick={() => saveNewRow(newRow.tempId!)}
                           disabled={!newRow.name || !newRow.registrar || !newRow.client_id}
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+                          title={`Save domain (${!newRow.name ? 'missing name' : ''}${!newRow.registrar ? ' missing registrar' : ''}${!newRow.client_id ? ' missing client' : ''})`}
                         >
-                          <Check className="h-3 w-3" />
+                          <Check className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => removeNewRow(newRow.tempId!)}
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          title="Cancel and remove this row"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
