@@ -4,14 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { UserMenu } from "@/components/UserMenu";
-import { PageLayout } from "@/components/PageLayout";
-import { VoiceCommandButton } from "@/components/voice/VoiceCommandButton";
-import { VoiceDialogManager } from "@/components/voice/VoiceDialogManager";
+import { PageWithSidebar } from "@/components/PageWithSidebar";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -44,52 +39,26 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <SidebarProvider>
-                    <div className="min-h-screen flex w-full">
-                      <AppSidebar />
-                      <SidebarInset>
-                        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                          <SidebarTrigger className="-ml-1" />
-                          <div className="ml-auto">
-                            <UserMenu />
-                          </div>
-                        </header>
-                        <PageLayout>
-                          <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/projects" element={<Projects />} />
-                            <Route path="/projects/:id" element={<ProjectDetail />} />
-                            <Route path="/tasks" element={<Tasks />} />
-                            <Route path="/tasks/:id" element={<TaskDetails />} />
-                            <Route path="/team" element={<Team />} />
-                            <Route path="/clients" element={<Clients />} />
-                            <Route path="/clients/:id" element={<ClientDetail />} />
-                            <Route path="/domains" element={<Domains />} />
-                            <Route path="/invoices" element={<Invoices />} />
-                            <Route path="/invoices/new" element={<NewInvoice />} />
-                            <Route path="/invoices/:id" element={<InvoiceDetail />} />
-                            <Route path="/invoices/:id/edit" element={<InvoiceDetail editMode />} />
-                            <Route path="/calendar" element={<Calendar />} />
-                            <Route path="/day-planner" element={<DayPlanner />} />
-                            <Route path="/site-launch" element={<SiteLaunch />} />
-                            <Route path="/ideas" element={<Ideas />} />
-                            <Route path="/reports" element={<Reports />} />
-                            <Route path="/settings" element={<Settings />} />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                          <VoiceCommandButton />
-                          <VoiceDialogManager />
-                        </PageLayout>
-                      </SidebarInset>
-                    </div>
-                  </SidebarProvider>
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<ProtectedRoute><PageWithSidebar><Index /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><PageWithSidebar><Projects /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/projects/:id" element={<ProtectedRoute><PageWithSidebar><ProjectDetail /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><PageWithSidebar><Tasks /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/tasks/:id" element={<ProtectedRoute><PageWithSidebar><TaskDetails /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/team" element={<ProtectedRoute><PageWithSidebar><Team /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/clients" element={<ProtectedRoute><PageWithSidebar><Clients /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/clients/:id" element={<ProtectedRoute><PageWithSidebar><ClientDetail /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/domains" element={<ProtectedRoute><PageWithSidebar><Domains /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute><PageWithSidebar><Invoices /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/invoices/new" element={<ProtectedRoute><PageWithSidebar><NewInvoice /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/invoices/:id" element={<ProtectedRoute><PageWithSidebar><InvoiceDetail /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/invoices/:id/edit" element={<ProtectedRoute><PageWithSidebar><InvoiceDetail editMode /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><PageWithSidebar><Calendar /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/day-planner" element={<ProtectedRoute><PageWithSidebar><DayPlanner /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/site-launch" element={<ProtectedRoute><PageWithSidebar><SiteLaunch /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/ideas" element={<ProtectedRoute><PageWithSidebar><Ideas /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><PageWithSidebar><Reports /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><PageWithSidebar><Settings /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
