@@ -71,10 +71,6 @@ const Domains = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-domains'] });
-      toast({
-        title: "Success",
-        description: "Domain updated successfully",
-      });
     },
     onError: (error) => {
       toast({
