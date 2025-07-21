@@ -322,7 +322,23 @@ const Domains = () => {
                         />
                       </TableCell>
                        <TableCell className="w-[280px]">
-                        <div className="text-sm font-medium">{domain.clients?.company}</div>
+                        <Select 
+                          value={domain.client_id} 
+                          onValueChange={(value) => handleFieldUpdate(domain.id, 'client_id', value)}
+                        >
+                          <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
+                            <SelectValue>
+                              {domain.clients?.company}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clients.map((client) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.company}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                        <TableCell className="w-[200px]">
                         <Input
