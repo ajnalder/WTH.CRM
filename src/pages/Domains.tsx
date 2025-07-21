@@ -279,7 +279,7 @@ const Domains = () => {
                   <TableHead className="min-w-[100px]">Status</TableHead>
                   <TableHead className="min-w-[120px]">Renewal Cost</TableHead>
                   <TableHead className="min-w-[130px]">Client Managed</TableHead>
-                  <TableHead className="min-w-[120px]">Actions</TableHead>
+                  <TableHead className="min-w-[140px] w-[140px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -345,7 +345,7 @@ const Domains = () => {
                         onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-[140px] w-[140px]">
                       <div className="flex gap-2">
                         {domain.client_managed && (
                           <Badge variant="secondary" className="text-xs">
@@ -432,13 +432,13 @@ const Domains = () => {
                         onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                    <TableCell className="min-w-[140px] w-[140px]">
+                      <div className="flex gap-1 justify-start">
                         <Button
                           size="sm"
                           onClick={() => saveNewRow(newRow.tempId!)}
                           disabled={!newRow.name || !newRow.registrar || !newRow.client_id}
-                          className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+                          className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400 flex-shrink-0"
                           title={`Save domain (${!newRow.name ? 'missing name' : ''}${!newRow.registrar ? ' missing registrar' : ''}${!newRow.client_id ? ' missing client' : ''})`}
                         >
                           <Check className="h-4 w-4" />
@@ -447,7 +447,7 @@ const Domains = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => removeNewRow(newRow.tempId!)}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          className="border-red-300 text-red-600 hover:bg-red-50 flex-shrink-0"
                           title="Cancel and remove this row"
                         >
                           <X className="h-4 w-4" />
