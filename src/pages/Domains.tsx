@@ -305,9 +305,9 @@ const Domains = () => {
                       <TableHead className="w-[280px]">Domain</TableHead>
                       <TableHead className="w-[280px]">Client</TableHead>
                       <TableHead className="w-[200px]">Registrar</TableHead>
-                      <TableHead className="w-[220px]">Expiry & Cost</TableHead>
-                      <TableHead className="w-[200px]">Status</TableHead>
-                      <TableHead className="w-[180px]">Actions</TableHead>
+                      <TableHead className="w-[300px]">Expiry & Cost</TableHead>
+                      <TableHead className="w-[280px]">Status</TableHead>
+                      <TableHead className="w-[20px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                 <TableBody>
@@ -332,54 +332,54 @@ const Domains = () => {
                           placeholder="Enter registrar..."
                         />
                       </TableCell>
-                       <TableCell className="w-[220px]">
-                        <div className="space-y-1">
-                          <Input
-                            type="date"
-                            value={domain.expiry_date}
-                            onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
-                            className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">$</span>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={domain.renewal_cost}
-                              onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
-                              className="border-none p-1 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-xs"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                      </TableCell>
-                       <TableCell className="w-[200px]">
-                        <div className="space-y-2">
-                          <Select 
-                            value={domain.status} 
-                            onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
-                          >
-                            <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
-                              <Badge className={getStatusColor(domain.status)}>
-                                {domain.status}
-                              </Badge>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="expired">Expired</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={domain.client_managed}
-                              onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
-                            />
-                            <span className="text-xs text-gray-600">Client Managed</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                       <TableCell className="w-[180px]">
+                       <TableCell className="w-[300px]">
+                         <div className="space-y-1">
+                           <Input
+                             type="date"
+                             value={domain.expiry_date}
+                             onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
+                             className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
+                           />
+                           <div className="flex items-center gap-2">
+                             <span className="text-xs text-gray-500">$</span>
+                             <Input
+                               type="number"
+                               step="0.01"
+                               value={domain.renewal_cost}
+                               onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
+                               className="border-none p-1 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-xs"
+                               placeholder="0.00"
+                             />
+                           </div>
+                         </div>
+                       </TableCell>
+                        <TableCell className="w-[280px]">
+                         <div className="space-y-2">
+                           <Select 
+                             value={domain.status} 
+                             onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
+                           >
+                             <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
+                               <Badge className={getStatusColor(domain.status)}>
+                                 {domain.status}
+                               </Badge>
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="active">Active</SelectItem>
+                               <SelectItem value="expired">Expired</SelectItem>
+                               <SelectItem value="pending">Pending</SelectItem>
+                             </SelectContent>
+                           </Select>
+                           <div className="flex items-center gap-2">
+                             <Checkbox
+                               checked={domain.client_managed}
+                               onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
+                             />
+                             <span className="text-xs text-gray-600">Client Managed</span>
+                           </div>
+                         </div>
+                       </TableCell>
+                        <TableCell className="w-[20px]">
                         <div title="Delete domain">
                           <Trash2 
                             className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
@@ -424,54 +424,54 @@ const Domains = () => {
                           placeholder="Enter registrar..."
                         />
                       </TableCell>
-                       <TableCell className="w-[220px]">
-                        <div className="space-y-1">
-                          <Input
-                            type="date"
-                            value={newRow.expiry_date || ''}
-                            onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'expiry_date', e.target.value)}
-                            className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-sm"
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">$</span>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={newRow.renewal_cost || ''}
-                              onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'renewal_cost', e.target.value)}
-                              className="border-dashed border-2 border-blue-300 p-1 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-xs"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="w-[200px]">
-                        <div className="space-y-2">
-                          <Select 
-                            value={newRow.status || 'active'} 
-                            onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
-                          >
-                            <SelectTrigger className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500">
-                              <Badge className={getStatusColor(newRow.status || 'active')}>
-                                {newRow.status || 'active'}
-                              </Badge>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="expired">Expired</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={newRow.client_managed || false}
-                              onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
-                            />
-                            <span className="text-xs text-gray-600">Client Managed</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="w-[180px]">
+                       <TableCell className="w-[300px]">
+                         <div className="space-y-1">
+                           <Input
+                             type="date"
+                             value={newRow.expiry_date || ''}
+                             onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'expiry_date', e.target.value)}
+                             className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-sm"
+                           />
+                           <div className="flex items-center gap-2">
+                             <span className="text-xs text-gray-500">$</span>
+                             <Input
+                               type="number"
+                               step="0.01"
+                               value={newRow.renewal_cost || ''}
+                               onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'renewal_cost', e.target.value)}
+                               className="border-dashed border-2 border-blue-300 p-1 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-xs"
+                               placeholder="0.00"
+                             />
+                           </div>
+                         </div>
+                       </TableCell>
+                       <TableCell className="w-[280px]">
+                         <div className="space-y-2">
+                           <Select 
+                             value={newRow.status || 'active'} 
+                             onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
+                           >
+                             <SelectTrigger className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500">
+                               <Badge className={getStatusColor(newRow.status || 'active')}>
+                                 {newRow.status || 'active'}
+                               </Badge>
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="active">Active</SelectItem>
+                               <SelectItem value="expired">Expired</SelectItem>
+                               <SelectItem value="pending">Pending</SelectItem>
+                             </SelectContent>
+                           </Select>
+                           <div className="flex items-center gap-2">
+                             <Checkbox
+                               checked={newRow.client_managed || false}
+                               onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
+                             />
+                             <span className="text-xs text-gray-600">Client Managed</span>
+                           </div>
+                         </div>
+                       </TableCell>
+                       <TableCell className="w-[20px]">
                         <div className="flex gap-2">
                           <div title="Save domain">
                             <Check 
