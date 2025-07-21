@@ -129,22 +129,22 @@ const Domains = () => {
   }
 
   return (
-    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 space-y-6 max-w-none">
+      <div className="flex items-center justify-between max-w-none">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Domain Management</h1>
           <p className="text-gray-600 mt-2">Manage all your client domains in one place</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
             All Domains
           </CardTitle>
           <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search domains, clients, or registrars..."
@@ -174,18 +174,18 @@ const Domains = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Registrar</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Renewal Cost</TableHead>
-                  <TableHead>Client Managed</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="min-w-[250px]">Domain</TableHead>
+                  <TableHead className="min-w-[200px]">Client</TableHead>
+                  <TableHead className="min-w-[150px]">Registrar</TableHead>
+                  <TableHead className="min-w-[140px]">Expiry Date</TableHead>
+                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="min-w-[120px]">Renewal Cost</TableHead>
+                  <TableHead className="min-w-[130px]">Client Managed</TableHead>
+                  <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -195,15 +195,19 @@ const Domains = () => {
                       <Input
                         value={domain.name}
                         onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
-                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[240px] text-sm"
+                        placeholder="Enter domain name..."
                       />
                     </TableCell>
-                    <TableCell>{domain.clients?.company}</TableCell>
+                    <TableCell>
+                      <div className="min-w-[190px] text-sm font-medium">{domain.clients?.company}</div>
+                    </TableCell>
                     <TableCell>
                       <Input
                         value={domain.registrar}
                         onChange={(e) => handleFieldUpdate(domain.id, 'registrar', e.target.value)}
-                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[140px] text-sm"
+                        placeholder="Enter registrar..."
                       />
                     </TableCell>
                     <TableCell>
@@ -211,7 +215,7 @@ const Domains = () => {
                         type="date"
                         value={domain.expiry_date}
                         onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
-                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[130px] text-sm"
                       />
                     </TableCell>
                     <TableCell>
@@ -219,7 +223,7 @@ const Domains = () => {
                         value={domain.status} 
                         onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
                       >
-                        <SelectTrigger className="border-none p-0 h-auto bg-transparent focus-visible:ring-0">
+                        <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[90px]">
                           <Badge className={getStatusColor(domain.status)}>
                             {domain.status}
                           </Badge>
@@ -237,7 +241,8 @@ const Domains = () => {
                         step="0.01"
                         value={domain.renewal_cost}
                         onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
-                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[110px] text-sm"
+                        placeholder="0.00"
                       />
                     </TableCell>
                     <TableCell>
