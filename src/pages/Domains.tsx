@@ -39,8 +39,6 @@ const Domains = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('expiry_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
-  const [editValue, setEditValue] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -77,7 +75,6 @@ const Domains = () => {
         title: "Success",
         description: "Domain updated successfully",
       });
-      setEditingCell(null);
     },
     onError: (error) => {
       toast({
@@ -110,31 +107,19 @@ const Domains = () => {
     }
   });
 
-  const startEdit = (id: string, field: string, currentValue: any) => {
-    setEditingCell({ id, field });
-    setEditValue(currentValue?.toString() || '');
-  };
-
-  const saveEdit = () => {
-    if (!editingCell) return;
-
-    let processedValue: any = editValue;
-    if (editingCell.field === 'renewal_cost') {
-      processedValue = parseFloat(editValue);
-    } else if (editingCell.field === 'client_managed') {
-      processedValue = editValue === 'true';
+  const handleFieldUpdate = (id: string, field: string, value: any) => {
+    let processedValue: any = value;
+    if (field === 'renewal_cost') {
+      processedValue = parseFloat(value) || 0;
+    } else if (field === 'client_managed') {
+      processedValue = Boolean(value);
     }
 
     updateDomainMutation.mutate({
-      id: editingCell.id,
-      field: editingCell.field,
+      id,
+      field,
       value: processedValue,
     });
-  };
-
-  const cancelEdit = () => {
-    setEditingCell(null);
-    setEditValue('');
   };
 
   if (isLoading) {
@@ -211,175 +196,59 @@ const Domains = () => {
                 {sortedDomains.map((domain) => (
                   <TableRow key={domain.id}>
                     <TableCell className="font-medium">
-                      {editingCell?.id === domain.id && editingCell?.field === 'name' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEdit();
-                            }}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          {domain.name}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'name', domain.name)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                      <Input
+                        value={domain.name}
+                        onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
+                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                      />
                     </TableCell>
                     <TableCell>{domain.clients?.company}</TableCell>
                     <TableCell>
-                      {editingCell?.id === domain.id && editingCell?.field === 'registrar' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEdit();
-                            }}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          {domain.registrar}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'registrar', domain.registrar)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                      <Input
+                        value={domain.registrar}
+                        onChange={(e) => handleFieldUpdate(domain.id, 'registrar', e.target.value)}
+                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                      />
                     </TableCell>
                     <TableCell>
-                      {editingCell?.id === domain.id && editingCell?.field === 'expiry_date' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            type="date"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEdit();
-                            }}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          {format(new Date(domain.expiry_date), 'MMM dd, yyyy')}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'expiry_date', domain.expiry_date)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                      <Input
+                        type="date"
+                        value={domain.expiry_date}
+                        onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
+                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                      />
                     </TableCell>
                     <TableCell>
-                      {editingCell?.id === domain.id && editingCell?.field === 'status' ? (
-                        <div className="flex gap-2">
-                          <Select value={editValue} onValueChange={setEditValue}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="expired">Expired</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
+                      <Select 
+                        value={domain.status} 
+                        onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
+                      >
+                        <SelectTrigger className="border-none p-0 h-auto bg-transparent focus-visible:ring-0">
                           <Badge className={getStatusColor(domain.status)}>
                             {domain.status}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'status', domain.status)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
-                      {editingCell?.id === domain.id && editingCell?.field === 'renewal_cost' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEdit();
-                            }}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          ${domain.renewal_cost}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'renewal_cost', domain.renewal_cost)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={domain.renewal_cost}
+                        onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
+                        className="border-none p-0 h-auto bg-transparent focus-visible:ring-0"
+                      />
                     </TableCell>
                     <TableCell>
-                      {editingCell?.id === domain.id && editingCell?.field === 'client_managed' ? (
-                        <div className="flex gap-2 items-center">
-                          <Checkbox
-                            checked={editValue === 'true'}
-                            onCheckedChange={(checked) => setEditValue(checked ? 'true' : 'false')}
-                          />
-                          <Button size="sm" onClick={saveEdit}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Checkbox checked={domain.client_managed} disabled />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEdit(domain.id, 'client_managed', domain.client_managed)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                      <Checkbox
+                        checked={domain.client_managed}
+                        onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
