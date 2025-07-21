@@ -290,7 +290,7 @@ const Domains = () => {
                       <Input
                         value={domain.name}
                         onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
-                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[240px] text-sm"
+                        className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[210px] text-sm"
                         placeholder="Enter domain name..."
                       />
                     </TableCell>
@@ -318,7 +318,7 @@ const Domains = () => {
                         value={domain.status} 
                         onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
                       >
-                        <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[70px]">
+                        <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary min-w-[90px]">
                           <Badge className={getStatusColor(domain.status)}>
                             {domain.status}
                           </Badge>
