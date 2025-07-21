@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Search, Calendar, Building2 } from 'lucide-react';
+import { Search, Building2, Plus, Check, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,7 @@ const Domains = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('expiry_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [newRows, setNewRows] = useState<Array<Partial<Domain & { tempId: string }>>>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -118,6 +119,93 @@ const Domains = () => {
     });
   };
 
+  const addNewRow = () => {
+    const tempId = `temp-${Date.now()}`;
+    setNewRows(prev => [...prev, {
+      tempId,
+      name: '',
+      registrar: '',
+      expiry_date: new Date().toISOString().split('T')[0],
+      status: 'active' as const,
+      renewal_cost: 0,
+      client_managed: false,
+    }]);
+  };
+
+  const handleNewRowUpdate = (tempId: string, field: string, value: any) => {
+    setNewRows(prev => prev.map(row => 
+      row.tempId === tempId 
+        ? { ...row, [field]: value }
+        : row
+    ));
+  };
+
+  const createDomainMutation = useMutation({
+    mutationFn: async (domainData: Omit<Domain, 'id' | 'clients'> & { client_id: string }) => {
+      const { data, error } = await supabase
+        .from('domains')
+        .insert([domainData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-domains'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create domain",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveNewRow = async (tempId: string) => {
+    const newRow = newRows.find(row => row.tempId === tempId);
+    if (!newRow || !newRow.name || !newRow.registrar) {
+      toast({
+        title: "Error",
+        description: "Please fill in domain name and registrar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For now, we'll need a way to select client - let's use the first available client
+    const { data: clients } = await supabase
+      .from('clients')
+      .select('id')
+      .limit(1);
+
+    if (!clients?.length) {
+      toast({
+        title: "Error",
+        description: "No clients available. Please create a client first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createDomainMutation.mutate({
+      name: newRow.name,
+      registrar: newRow.registrar,
+      expiry_date: newRow.expiry_date || new Date().toISOString().split('T')[0],
+      status: newRow.status || 'active',
+      renewal_cost: newRow.renewal_cost || 0,
+      client_managed: newRow.client_managed || false,
+      client_id: clients[0].id,
+    });
+
+    setNewRows(prev => prev.filter(row => row.tempId !== tempId));
+  };
+
+  const removeNewRow = (tempId: string) => {
+    setNewRows(prev => prev.filter(row => row.tempId !== tempId));
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
@@ -170,6 +258,13 @@ const Domains = () => {
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
             >
               {sortOrder === 'asc' ? '↑' : '↓'}
+            </Button>
+            <Button
+              onClick={addNewRow}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Line
             </Button>
           </div>
         </CardHeader>
@@ -262,11 +357,93 @@ const Domains = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {newRows.map((newRow) => (
+                  <TableRow key={newRow.tempId} className="bg-blue-50/50">
+                    <TableCell className="font-medium">
+                      <Input
+                        value={newRow.name || ''}
+                        onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'name', e.target.value)}
+                        className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[240px] text-sm"
+                        placeholder="Enter domain name..."
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-[190px] text-sm text-gray-500 italic">Auto-assigned</div>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={newRow.registrar || ''}
+                        onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'registrar', e.target.value)}
+                        className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[140px] text-sm"
+                        placeholder="Enter registrar..."
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="date"
+                        value={newRow.expiry_date || ''}
+                        onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'expiry_date', e.target.value)}
+                        className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[130px] text-sm"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={newRow.status || 'active'} 
+                        onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
+                      >
+                        <SelectTrigger className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[90px]">
+                          <Badge className={getStatusColor(newRow.status || 'active')}>
+                            {newRow.status || 'active'}
+                          </Badge>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newRow.renewal_cost || ''}
+                        onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'renewal_cost', e.target.value)}
+                        className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[110px] text-sm"
+                        placeholder="0.00"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={newRow.client_managed || false}
+                        onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          onClick={() => saveNewRow(newRow.tempId!)}
+                          disabled={!newRow.name || !newRow.registrar}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeNewRow(newRow.tempId!)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
-            {sortedDomains.length === 0 && (
+            {sortedDomains.length === 0 && newRows.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                {searchTerm ? 'No domains found matching your search.' : 'No domains registered yet.'}
+                {searchTerm ? 'No domains found matching your search.' : 'No domains registered yet. Click "Add New Line" to get started.'}
               </div>
             )}
           </div>
