@@ -61,6 +61,19 @@ const Domains = () => {
     },
   });
 
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, company')
+        .order('company');
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const updateDomainMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
       const { error } = await supabase
@@ -129,6 +142,7 @@ const Domains = () => {
       status: 'active' as const,
       renewal_cost: 0,
       client_managed: false,
+      client_id: clients.length > 0 ? clients[0].id : '',
     }]);
   };
 
@@ -165,25 +179,10 @@ const Domains = () => {
 
   const saveNewRow = async (tempId: string) => {
     const newRow = newRows.find(row => row.tempId === tempId);
-    if (!newRow || !newRow.name || !newRow.registrar) {
+    if (!newRow || !newRow.name || !newRow.registrar || !newRow.client_id) {
       toast({
         title: "Error",
-        description: "Please fill in domain name and registrar",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // For now, we'll need a way to select client - let's use the first available client
-    const { data: clients } = await supabase
-      .from('clients')
-      .select('id')
-      .limit(1);
-
-    if (!clients?.length) {
-      toast({
-        title: "Error",
-        description: "No clients available. Please create a client first.",
+        description: "Please fill in domain name, registrar, and select a client",
         variant: "destructive",
       });
       return;
@@ -196,7 +195,7 @@ const Domains = () => {
       status: newRow.status || 'active',
       renewal_cost: newRow.renewal_cost || 0,
       client_managed: newRow.client_managed || false,
-      client_id: clients[0].id,
+      client_id: newRow.client_id,
     });
 
     setNewRows(prev => prev.filter(row => row.tempId !== tempId));
@@ -368,7 +367,21 @@ const Domains = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="min-w-[190px] text-sm text-gray-500 italic">Auto-assigned</div>
+                      <Select 
+                        value={newRow.client_id || ''} 
+                        onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'client_id', value)}
+                      >
+                        <SelectTrigger className="border-dashed border-2 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-primary min-w-[190px]">
+                          <SelectValue placeholder="Select client..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.company}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Input
@@ -424,7 +437,8 @@ const Domains = () => {
                         <Button
                           size="sm"
                           onClick={() => saveNewRow(newRow.tempId!)}
-                          disabled={!newRow.name || !newRow.registrar}
+                          disabled={!newRow.name || !newRow.registrar || !newRow.client_id}
+                          className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <Check className="h-3 w-3" />
                         </Button>
