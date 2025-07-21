@@ -300,20 +300,20 @@ const Domains = () => {
           <div className="rounded-md border">
             <div className="overflow-x-auto">
               <Table className="min-w-[1400px]">
-                 <TableHeader>
-                   <TableRow>
-                     <TableHead className="w-[350px]">Domain</TableHead>
-                     <TableHead className="w-[250px]">Client</TableHead>
-                     <TableHead className="w-[200px]">Registrar</TableHead>
-                     <TableHead className="w-[220px]">Expiry & Cost</TableHead>
-                     <TableHead className="w-[200px]">Status</TableHead>
-                     <TableHead className="w-[180px]">Actions</TableHead>
-                   </TableRow>
-                 </TableHeader>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[280px]">Domain</TableHead>
+                      <TableHead className="w-[280px]">Client</TableHead>
+                      <TableHead className="w-[200px]">Registrar</TableHead>
+                      <TableHead className="w-[220px]">Expiry & Cost</TableHead>
+                      <TableHead className="w-[200px]">Status</TableHead>
+                      <TableHead className="w-[180px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {sortedDomains.map((domain) => (
                     <TableRow key={domain.id}>
-                       <TableCell className="w-[350px]">
+                       <TableCell className="w-[280px]">
                         <Input
                           value={domain.name}
                           onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
@@ -321,7 +321,7 @@ const Domains = () => {
                           placeholder="Enter domain name..."
                         />
                       </TableCell>
-                       <TableCell className="w-[250px]">
+                       <TableCell className="w-[280px]">
                         <div className="text-sm font-medium">{domain.clients?.company}</div>
                       </TableCell>
                        <TableCell className="w-[200px]">
@@ -391,7 +391,7 @@ const Domains = () => {
                   ))}
                   {newRows.map((newRow) => (
                     <TableRow key={newRow.tempId} className="bg-blue-50/50">
-                      <TableCell className="w-[350px]">
+                      <TableCell className="w-[280px]">
                         <Input
                           value={newRow.name || ''}
                           onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'name', e.target.value)}
@@ -399,7 +399,7 @@ const Domains = () => {
                           placeholder="Enter domain name..."
                         />
                       </TableCell>
-                       <TableCell className="w-[250px]">
+                       <TableCell className="w-[280px]">
                         <Select 
                           value={newRow.client_id || ''} 
                           onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'client_id', value)}
