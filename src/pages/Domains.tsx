@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Building2, Plus, Check, X } from 'lucide-react';
+import { Search, Building2, Plus, Check, X, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +71,31 @@ const Domains = () => {
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  const deleteDomainMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('domains')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-domains'] });
+      toast({
+        title: "Success",
+        description: "Domain deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete domain",
+        variant: "destructive",
+      });
     },
   });
 
@@ -346,12 +371,16 @@ const Domains = () => {
                       />
                     </TableCell>
                     <TableCell className="min-w-[140px] w-[140px]">
-                      <div className="flex gap-2">
-                        {domain.client_managed && (
-                          <Badge variant="secondary" className="text-xs">
-                            Client Managed
-                          </Badge>
-                        )}
+                      <div className="flex gap-1 justify-start">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteDomainMutation.mutate(domain.id)}
+                          className="border-red-300 text-red-600 hover:bg-red-50 flex-shrink-0"
+                          title="Delete domain"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
