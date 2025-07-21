@@ -299,21 +299,21 @@ const Domains = () => {
         <CardContent>
           <div className="rounded-md border">
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[280px]">Domain</TableHead>
-                    <TableHead className="w-[200px]">Client</TableHead>
-                    <TableHead className="w-[160px]">Registrar</TableHead>
-                    <TableHead className="w-[180px]">Expiry & Cost</TableHead>
-                    <TableHead className="w-[140px]">Status</TableHead>
-                    <TableHead className="w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <Table className="min-w-[1400px]">
+                 <TableHeader>
+                   <TableRow>
+                     <TableHead className="w-[350px]">Domain</TableHead>
+                     <TableHead className="w-[250px]">Client</TableHead>
+                     <TableHead className="w-[200px]">Registrar</TableHead>
+                     <TableHead className="w-[220px]">Expiry & Cost</TableHead>
+                     <TableHead className="w-[200px]">Status</TableHead>
+                     <TableHead className="w-[180px]">Actions</TableHead>
+                   </TableRow>
+                 </TableHeader>
                 <TableBody>
                   {sortedDomains.map((domain) => (
                     <TableRow key={domain.id}>
-                      <TableCell className="w-[280px]">
+                       <TableCell className="w-[350px]">
                         <Input
                           value={domain.name}
                           onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
@@ -321,10 +321,10 @@ const Domains = () => {
                           placeholder="Enter domain name..."
                         />
                       </TableCell>
-                      <TableCell className="w-[200px]">
+                       <TableCell className="w-[250px]">
                         <div className="text-sm font-medium">{domain.clients?.company}</div>
                       </TableCell>
-                      <TableCell className="w-[160px]">
+                       <TableCell className="w-[200px]">
                         <Input
                           value={domain.registrar}
                           onChange={(e) => handleFieldUpdate(domain.id, 'registrar', e.target.value)}
@@ -332,7 +332,7 @@ const Domains = () => {
                           placeholder="Enter registrar..."
                         />
                       </TableCell>
-                      <TableCell className="w-[180px]">
+                       <TableCell className="w-[220px]">
                         <div className="space-y-1">
                           <Input
                             type="date"
@@ -353,7 +353,7 @@ const Domains = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="w-[140px]">
+                       <TableCell className="w-[200px]">
                         <div className="space-y-2">
                           <Select 
                             value={domain.status} 
@@ -379,7 +379,7 @@ const Domains = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="w-[120px]">
+                       <TableCell className="w-[180px]">
                         <div title="Delete domain">
                           <Trash2 
                             className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
@@ -391,7 +391,7 @@ const Domains = () => {
                   ))}
                   {newRows.map((newRow) => (
                     <TableRow key={newRow.tempId} className="bg-blue-50/50">
-                      <TableCell className="w-[280px]">
+                      <TableCell className="w-[350px]">
                         <Input
                           value={newRow.name || ''}
                           onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'name', e.target.value)}
@@ -399,7 +399,7 @@ const Domains = () => {
                           placeholder="Enter domain name..."
                         />
                       </TableCell>
-                      <TableCell className="w-[200px]">
+                       <TableCell className="w-[250px]">
                         <Select 
                           value={newRow.client_id || ''} 
                           onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'client_id', value)}
@@ -416,7 +416,7 @@ const Domains = () => {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="w-[160px]">
+                      <TableCell className="w-[200px]">
                         <Input
                           value={newRow.registrar || ''}
                           onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'registrar', e.target.value)}
@@ -424,7 +424,7 @@ const Domains = () => {
                           placeholder="Enter registrar..."
                         />
                       </TableCell>
-                      <TableCell className="w-[180px]">
+                       <TableCell className="w-[220px]">
                         <div className="space-y-1">
                           <Input
                             type="date"
@@ -445,7 +445,7 @@ const Domains = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="w-[140px]">
+                      <TableCell className="w-[200px]">
                         <div className="space-y-2">
                           <Select 
                             value={newRow.status || 'active'} 
@@ -471,7 +471,7 @@ const Domains = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="w-[120px]">
+                      <TableCell className="w-[180px]">
                         <div className="flex gap-2">
                           <div title="Save domain">
                             <Check 
