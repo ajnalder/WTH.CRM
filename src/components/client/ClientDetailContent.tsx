@@ -29,7 +29,7 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
     case 'hosting':
       return <HostingTab {...props} onAddHosting={props.addHosting} />;
     case 'contacts':
-      return <ContactsTab {...props} onAddContact={props.addContact} />;
+      return <ContactsTab {...props} onAddContact={props.addContact} onUpdateContact={props.updateContact} onDeleteContact={props.deleteContact} />;
     case 'invoices':
       return <InvoicesTab client={client} />;
     default:
