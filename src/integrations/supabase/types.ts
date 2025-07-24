@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_sends: {
+        Row: {
+          campaign_id: string
+          clicked_at: string | null
+          contact_id: string
+          created_at: string
+          delivered_at: string | null
+          email_address: string
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          clicked_at?: string | null
+          contact_id: string
+          created_at?: string
+          delivered_at?: string | null
+          email_address: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicked_at?: string | null
+          contact_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          email_address?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       checklist_templates: {
         Row: {
           created_at: string
@@ -190,33 +232,39 @@ export type Database = {
           client_id: string
           created_at: string
           email: string
+          email_subscribed: boolean
           id: string
           is_primary: boolean
           name: string
           phone: string | null
           role: string | null
+          unsubscribed_at: string | null
           updated_at: string
         }
         Insert: {
           client_id: string
           created_at?: string
           email: string
+          email_subscribed?: boolean
           id?: string
           is_primary?: boolean
           name: string
           phone?: string | null
           role?: string | null
+          unsubscribed_at?: string | null
           updated_at?: string
         }
         Update: {
           client_id?: string
           created_at?: string
           email?: string
+          email_subscribed?: boolean
           id?: string
           is_primary?: boolean
           name?: string
           phone?: string | null
           role?: string | null
+          unsubscribed_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -276,6 +324,60 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          clicked_count: number | null
+          content_html: string
+          content_json: Json | null
+          created_at: string
+          delivered_count: number | null
+          id: string
+          name: string
+          opened_count: number | null
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clicked_count?: number | null
+          content_html: string
+          content_json?: Json | null
+          created_at?: string
+          delivered_count?: number | null
+          id?: string
+          name: string
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clicked_count?: number | null
+          content_html?: string
+          content_json?: Json | null
+          created_at?: string
+          delivered_count?: number | null
+          id?: string
+          name?: string
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           created_at: string
@@ -316,6 +418,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_templates: {
+        Row: {
+          content_html: string
+          content_json: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_html: string
+          content_json?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_html?: string
+          content_json?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       hosting: {
         Row: {

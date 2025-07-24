@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 import SiteLaunch from "./pages/SiteLaunch";
 import Ideas from "./pages/Ideas";
 import Domains from "./pages/Domains";
+import EmailMarketing from "./pages/EmailMarketing";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/invoices/new" element={<ProtectedRoute><PageWithSidebar><NewInvoice /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/invoices/:id" element={<ProtectedRoute><PageWithSidebar><InvoiceDetail /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/invoices/:id/edit" element={<ProtectedRoute><PageWithSidebar><InvoiceDetail editMode /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/email-marketing" element={<ProtectedRoute><PageWithSidebar><EmailMarketing /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><PageWithSidebar><Calendar /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/day-planner" element={<ProtectedRoute><PageWithSidebar><DayPlanner /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/site-launch" element={<ProtectedRoute><PageWithSidebar><SiteLaunch /></PageWithSidebar></ProtectedRoute>} />

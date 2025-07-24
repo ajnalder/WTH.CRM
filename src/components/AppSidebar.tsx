@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare, Building2, LogOut, ClipboardList, Receipt, Rocket, Lightbulb, Globe } from 'lucide-react';
+import { Home, Folder, Users, Calendar, Settings, BarChart3, CheckSquare, Building2, LogOut, ClipboardList, Receipt, Rocket, Lightbulb, Globe, Mail } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -28,6 +28,7 @@ const navigationItems = [
   { icon: Building2, label: 'Clients', path: '/clients' },
   { icon: Globe, label: 'Domains', path: '/domains' },
   { icon: Receipt, label: 'Invoices', path: '/invoices' },
+  { icon: Mail, label: 'Email Marketing', path: '/email-marketing' },
   { icon: Lightbulb, label: 'Ideas', path: '/ideas' },
   { icon: Rocket, label: 'Site Launch', path: '/site-launch' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
