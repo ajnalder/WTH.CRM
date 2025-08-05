@@ -12,6 +12,9 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
+import { DraggableEmailComponent } from './DraggableEmailComponent';
+import { ImageUploadDialog } from './ImageUploadDialog';
 import { 
   Type, 
   Image, 
@@ -21,7 +24,8 @@ import {
   Italic,
   Link,
   Save,
-  Eye
+  Eye,
+  Upload
 } from 'lucide-react';
 
 interface EmailBuilderDialogProps {
@@ -43,6 +47,7 @@ interface EmailComponent {
     padding?: string;
     margin?: string;
     lineHeight?: string;
+    alt?: string;
   };
 }
 
@@ -68,6 +73,7 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
 
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
 
   const addComponent = (type: EmailComponent['type']) => {
     const newComponent: EmailComponent = {
@@ -77,6 +83,54 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
       styles: getDefaultStyles(type)
     };
     setComponents([...components, newComponent]);
+    setSelectedComponent(newComponent.id);
+  };
+
+  const duplicateComponent = (componentId: string) => {
+    const originalComponent = components.find(c => c.id === componentId);
+    if (!originalComponent) return;
+
+    const duplicatedComponent: EmailComponent = {
+      ...originalComponent,
+      id: `component-${Date.now()}`,
+    };
+    
+    const originalIndex = components.findIndex(c => c.id === componentId);
+    setComponents(prev => [
+      ...prev.slice(0, originalIndex + 1),
+      duplicatedComponent,
+      ...prev.slice(originalIndex + 1),
+    ]);
+    setSelectedComponent(duplicatedComponent.id);
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(components);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setComponents(items);
+  };
+
+  const handleImageSelect = (imageUrl: string, altText?: string) => {
+    if (selectedComponent) {
+      updateComponent(selectedComponent, { 
+        content: imageUrl,
+        styles: { ...components.find(c => c.id === selectedComponent)?.styles, alt: altText } 
+      });
+    } else {
+      // Add new image component
+      const newComponent: EmailComponent = {
+        id: `component-${Date.now()}`,
+        type: 'image',
+        content: imageUrl,
+        styles: { ...getDefaultStyles('image'), alt: altText },
+      };
+      setComponents(prev => [...prev, newComponent]);
+      setSelectedComponent(newComponent.id);
+    }
   };
 
   const getDefaultContent = (type: EmailComponent['type']): string => {
@@ -106,6 +160,8 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
         };
       case 'footer': 
         return { fontSize: '12px', textAlign: 'center' as const, color: '#999999' };
+      case 'image':
+        return { textAlign: 'center' as const };
       default: 
         return {};
     }
@@ -129,6 +185,7 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
       <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
         ${components.map(comp => {
           const styles = Object.entries(comp.styles || {})
+            .filter(([key]) => key !== 'alt')
             .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
             .join('; ');
 
@@ -138,7 +195,7 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
             case 'text':
               return `<p style="${styles}">${comp.content}</p>`;
             case 'image':
-              return `<img src="${comp.content}" style="max-width: 100%; ${styles}" alt="Email Image" />`;
+              return `<img src="${comp.content}" style="max-width: 100%; ${styles}" alt="${comp.styles?.alt || 'Email Image'}" />`;
             case 'button':
               return `<div style="text-align: center; margin: 20px 0;"><a href="#" style="display: inline-block; text-decoration: none; border-radius: 4px; ${styles}">${comp.content}</a></div>`;
             case 'divider':
@@ -192,7 +249,7 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => addComponent('image')}
+                  onClick={() => setImageDialogOpen(true)}
                   className="justify-start gap-2"
                 >
                   <Image size={16} />
@@ -226,6 +283,18 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
                   Footer
                 </Button>
               </div>
+              
+              <div className="mt-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setImageDialogOpen(true)}
+                  className="w-full justify-start gap-2"
+                >
+                  <Upload size={16} />
+                  Upload Image
+                </Button>
+              </div>
             </div>
 
             <Separator />
@@ -251,16 +320,29 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
                   )}
                 </div>
 
+                {selectedComp.type === 'image' && (
+                  <div>
+                    <Label>Alt Text</Label>
+                    <Input
+                      value={selectedComp.styles?.alt || ''}
+                      onChange={(e) => updateComponent(selectedComp.id, { 
+                        styles: { ...selectedComp.styles, alt: e.target.value }
+                      })}
+                      placeholder="Describe the image..."
+                    />
+                  </div>
+                )}
+
                 <div>
                   <Label>Text Align</Label>
                   <div className="flex gap-1 mt-1">
-                    {['left', 'center', 'right'].map((align) => (
+                    {(['left', 'center', 'right'] as const).map((align) => (
                       <Button
                         key={align}
                         variant={selectedComp.styles?.textAlign === align ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => updateComponent(selectedComp.id, { 
-                          styles: { ...selectedComp.styles, textAlign: align as any }
+                          styles: { ...selectedComp.styles, textAlign: align }
                         })}
                       >
                         <AlignLeft size={14} />
@@ -317,31 +399,38 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
                 {previewMode ? (
                   <div dangerouslySetInnerHTML={{ __html: generateHTML() }} />
                 ) : (
-                  <div className="max-w-[600px] mx-auto space-y-4">
-                    {components.map((comp, index) => (
-                      <div
-                        key={comp.id}
-                        className={`border rounded p-3 cursor-pointer transition-colors ${
-                          selectedComponent === comp.id 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={() => setSelectedComponent(comp.id)}
-                      >
-                        <div className="text-xs text-gray-500 mb-1">
-                          {comp.type.charAt(0).toUpperCase() + comp.type.slice(1)}
-                        </div>
-                        <div style={comp.styles}>
-                          {comp.type === 'image' ? (
-                            <img src={comp.content} alt="Preview" className="max-w-full h-20 object-cover" />
-                          ) : comp.type === 'divider' ? (
-                            <hr className="border-gray-300" />
-                          ) : (
-                            comp.content
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="max-w-[600px] mx-auto">
+                    <DragDropContext onDragEnd={onDragEnd}>
+                      <Droppable droppableId="email-components">
+                        {(provided) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="space-y-4 min-h-96"
+                          >
+                            {components.length === 0 ? (
+                              <div className="text-center py-12 text-gray-500">
+                                <Image className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                                <p>Start building your email by adding components from the sidebar</p>
+                              </div>
+                            ) : (
+                              components.map((component, index) => (
+                                <DraggableEmailComponent
+                                  key={component.id}
+                                  component={component}
+                                  index={index}
+                                  isSelected={selectedComponent === component.id}
+                                  onSelect={() => setSelectedComponent(component.id)}
+                                  onDelete={() => removeComponent(component.id)}
+                                  onDuplicate={() => duplicateComponent(component.id)}
+                                />
+                              ))
+                            )}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
                   </div>
                 )}
               </CardContent>
@@ -349,6 +438,12 @@ export const EmailBuilderDialog: React.FC<EmailBuilderDialogProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onSelectImage={handleImageSelect}
+      />
     </Dialog>
   );
 };
