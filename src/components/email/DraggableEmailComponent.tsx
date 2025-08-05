@@ -117,15 +117,9 @@ export const DraggableEmailComponent: React.FC<DraggableEmailComponentProps> = (
           {/* Drag Handle */}
           <div
             {...provided.dragHandleProps}
-            className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
+            className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10 h-6 w-6 flex items-center justify-center bg-white/90 hover:bg-white shadow-sm rounded border"
           >
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-            >
-              <GripVertical className="h-3 w-3" />
-            </Button>
+            <GripVertical className="h-3 w-3" />
           </div>
 
           {/* Action Buttons */}
