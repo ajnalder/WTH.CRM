@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ interface AddDomainDialogProps {
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
     client_managed: boolean;
+    notes?: string;
   };
   setNewDomain: (domain: {
     name: string;
@@ -38,6 +40,7 @@ interface AddDomainDialogProps {
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
     client_managed: boolean;
+    notes?: string;
   }) => void;
   onAddDomain: () => void;
 }
@@ -126,6 +129,16 @@ const AddDomainDialog = ({
             <Label htmlFor="client_managed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Client manages this domain (I'm not responsible for renewal)
             </Label>
+          </div>
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={newDomain.notes || ''}
+              onChange={(e) => setNewDomain({...newDomain, notes: e.target.value})}
+              placeholder="Add any additional notes about this domain..."
+              rows={3}
+            />
           </div>
           <Button onClick={onAddDomain} className="w-full">Add Domain</Button>
         </div>

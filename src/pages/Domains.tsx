@@ -20,6 +20,7 @@ interface Domain {
   status: 'active' | 'expired' | 'pending';
   renewal_cost: number;
   client_managed: boolean;
+  notes?: string;
   client_id: string;
   clients?: {
     company: string;
@@ -150,7 +151,8 @@ const Domains = () => {
   const filteredDomains = domains.filter(domain =>
     domain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     domain.registrar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    domain.clients?.company.toLowerCase().includes(searchTerm.toLowerCase())
+    domain.clients?.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    domain.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortedDomains = [...filteredDomains].sort((a, b) => {
@@ -194,6 +196,7 @@ const Domains = () => {
       status: 'active' as const,
       renewal_cost: 0,
       client_managed: false,
+      notes: '',
       client_id: clients.length > 0 ? clients[0].id : '',
     }]);
   };
@@ -224,6 +227,7 @@ const Domains = () => {
       status: newRow.status || 'active',
       renewal_cost: newRow.renewal_cost || 0,
       client_managed: newRow.client_managed || false,
+      notes: newRow.notes || '',
       client_id: newRow.client_id,
     });
 
@@ -299,7 +303,7 @@ const Domains = () => {
         <CardContent>
           <div className="rounded-md border">
             <div className="overflow-x-auto">
-              <Table className="min-w-[1400px]">
+              <Table className="min-w-[1700px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[280px]">Domain</TableHead>
@@ -307,6 +311,7 @@ const Domains = () => {
                       <TableHead className="w-[200px]">Registrar</TableHead>
                       <TableHead className="w-[300px]">Expiry & Cost</TableHead>
                       <TableHead className="w-[280px]">Status</TableHead>
+                      <TableHead className="w-[300px]">Notes</TableHead>
                       <TableHead className="w-[20px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -369,33 +374,41 @@ const Domains = () => {
                            </div>
                          </div>
                        </TableCell>
-                        <TableCell className="w-[280px]">
-                         <div className="space-y-2">
-                           <Select 
-                             value={domain.status} 
-                             onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
-                           >
-                             <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
-                               <Badge className={getStatusColor(domain.status)}>
-                                 {domain.status}
-                               </Badge>
-                             </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="active">Active</SelectItem>
-                               <SelectItem value="expired">Expired</SelectItem>
-                               <SelectItem value="pending">Pending</SelectItem>
-                             </SelectContent>
-                           </Select>
-                           <div className="flex items-center gap-2">
-                             <Checkbox
-                               checked={domain.client_managed}
-                               onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
-                             />
-                             <span className="text-xs text-gray-600">Client Managed</span>
-                           </div>
-                         </div>
-                       </TableCell>
-                        <TableCell className="w-[20px]">
+                         <TableCell className="w-[280px]">
+                          <div className="space-y-2">
+                            <Select 
+                              value={domain.status} 
+                              onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
+                            >
+                              <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
+                                <Badge className={getStatusColor(domain.status)}>
+                                  {domain.status}
+                                </Badge>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="expired">Expired</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={domain.client_managed}
+                                onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
+                              />
+                              <span className="text-xs text-gray-600">Client Managed</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[300px]">
+                          <textarea
+                            value={domain.notes || ''}
+                            onChange={(e) => handleFieldUpdate(domain.id, 'notes', e.target.value)}
+                            className="border-none p-2 h-20 w-full bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm resize-none"
+                            placeholder="Add notes..."
+                          />
+                        </TableCell>
+                         <TableCell className="w-[20px]">
                         <div title="Delete domain">
                           <Trash2 
                             className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
@@ -461,33 +474,41 @@ const Domains = () => {
                            </div>
                          </div>
                        </TableCell>
-                       <TableCell className="w-[280px]">
-                         <div className="space-y-2">
-                           <Select 
-                             value={newRow.status || 'active'} 
-                             onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
-                           >
-                             <SelectTrigger className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500">
-                               <Badge className={getStatusColor(newRow.status || 'active')}>
-                                 {newRow.status || 'active'}
-                               </Badge>
-                             </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="active">Active</SelectItem>
-                               <SelectItem value="expired">Expired</SelectItem>
-                               <SelectItem value="pending">Pending</SelectItem>
-                             </SelectContent>
-                           </Select>
-                           <div className="flex items-center gap-2">
-                             <Checkbox
-                               checked={newRow.client_managed || false}
-                               onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
-                             />
-                             <span className="text-xs text-gray-600">Client Managed</span>
-                           </div>
-                         </div>
-                       </TableCell>
-                       <TableCell className="w-[20px]">
+                        <TableCell className="w-[280px]">
+                          <div className="space-y-2">
+                            <Select 
+                              value={newRow.status || 'active'} 
+                              onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
+                            >
+                              <SelectTrigger className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500">
+                                <Badge className={getStatusColor(newRow.status || 'active')}>
+                                  {newRow.status || 'active'}
+                                </Badge>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="expired">Expired</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={newRow.client_managed || false}
+                                onCheckedChange={(checked) => handleNewRowUpdate(newRow.tempId!, 'client_managed', checked)}
+                              />
+                              <span className="text-xs text-gray-600">Client Managed</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[300px]">
+                          <textarea
+                            value={newRow.notes || ''}
+                            onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'notes', e.target.value)}
+                            className="border-dashed border-2 border-blue-300 p-2 h-20 w-full bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-sm resize-none"
+                            placeholder="Add notes..."
+                          />
+                        </TableCell>
+                        <TableCell className="w-[20px]">
                         <div className="flex gap-2">
                           <div title="Save domain">
                             <Check 

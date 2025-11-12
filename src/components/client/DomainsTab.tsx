@@ -81,13 +81,16 @@ const DomainsTab = ({
         {domains.map((domain) => (
           <Card key={domain.id}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Globe size={20} className="text-blue-500" />
                   <div>
                     <h3 className="font-semibold">{domain.name}</h3>
                     <p className="text-sm text-gray-600">Registered with {domain.registrar}</p>
                     <p className="text-sm text-gray-600">Annual renewal: ${domain.renewal_cost}</p>
+                    {domain.notes && (
+                      <p className="text-sm text-gray-500 mt-1 italic">{domain.notes}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">

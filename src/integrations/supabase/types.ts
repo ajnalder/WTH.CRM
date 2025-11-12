@@ -285,6 +285,7 @@ export type Database = {
           expiry_date: string
           id: string
           name: string
+          notes: string | null
           registrar: string
           renewal_cost: number
           status: string
@@ -297,6 +298,7 @@ export type Database = {
           expiry_date: string
           id?: string
           name: string
+          notes?: string | null
           registrar: string
           renewal_cost?: number
           status?: string
@@ -309,6 +311,7 @@ export type Database = {
           expiry_date?: string
           id?: string
           name?: string
+          notes?: string | null
           registrar?: string
           renewal_cost?: number
           status?: string

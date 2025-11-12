@@ -22,6 +22,7 @@ export interface ClientDetailContextProps {
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
     client_managed: boolean;
+    notes?: string;
   };
   setNewDomain: React.Dispatch<React.SetStateAction<{
     name: string;
@@ -30,6 +31,7 @@ export interface ClientDetailContextProps {
     status: 'active' | 'expired' | 'pending';
     renewal_cost: number;
     client_managed: boolean;
+    notes?: string;
   }>>;
   newHosting: {
     provider: string;
@@ -81,6 +83,7 @@ export interface NewDomainForm {
   status: 'active' | 'expired' | 'pending';
   renewal_cost: number;
   client_managed: boolean;
+  notes?: string;
 }
 
 export interface NewHostingForm {

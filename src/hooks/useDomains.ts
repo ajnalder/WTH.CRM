@@ -13,6 +13,7 @@ export interface Domain {
   status: 'active' | 'expired' | 'pending';
   renewal_cost: number;
   client_managed: boolean;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ export interface CreateDomainData {
   status: 'active' | 'expired' | 'pending';
   renewal_cost: number;
   client_managed: boolean;
+  notes?: string;
 }
 
 export const useDomains = (clientId: string) => {

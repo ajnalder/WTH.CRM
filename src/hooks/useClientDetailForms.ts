@@ -9,7 +9,8 @@ export const useClientDetailForms = () => {
     expiry_date: '',
     status: 'active',
     renewal_cost: 0,
-    client_managed: false
+    client_managed: false,
+    notes: ''
   });
 
   const [newHosting, setNewHosting] = useState<NewHostingForm>({
@@ -37,7 +38,8 @@ export const useClientDetailForms = () => {
       expiry_date: '',
       status: 'active',
       renewal_cost: 0,
-      client_managed: false
+      client_managed: false,
+      notes: ''
     });
   };
 
