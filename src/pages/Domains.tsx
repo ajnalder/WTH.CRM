@@ -187,7 +187,7 @@ const Domains = () => {
 
   const addNewRow = () => {
     const tempId = `temp-${Date.now()}`;
-    setNewRows(prev => [...prev, {
+    setNewRows(prev => [{
       tempId,
       name: '',
       registrar: '',
@@ -197,7 +197,7 @@ const Domains = () => {
       client_managed: false,
       notes: '',
       client_id: clients.length > 0 ? clients[0].id : '',
-    }]);
+    }, ...prev]);
   };
 
   const handleNewRowUpdate = (tempId: string, field: string, value: any) => {
@@ -315,107 +315,6 @@ const Domains = () => {
                     </TableRow>
                   </TableHeader>
                 <TableBody>
-                  {sortedDomains.map((domain) => (
-                    <TableRow key={domain.id}>
-                       <TableCell className="w-[280px]">
-                        <Input
-                          value={domain.name}
-                          onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
-                          className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
-                          placeholder="Enter domain name..."
-                        />
-                      </TableCell>
-                       <TableCell className="w-[280px]">
-                        <Select 
-                          value={domain.client_id} 
-                          onValueChange={(value) => handleFieldUpdate(domain.id, 'client_id', value)}
-                        >
-                          <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
-                            <SelectValue>
-                              {domain.clients?.company}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {clients.map((client) => (
-                              <SelectItem key={client.id} value={client.id}>
-                                {client.company}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                       <TableCell className="w-[200px]">
-                        <Input
-                          value={domain.registrar}
-                          onChange={(e) => handleFieldUpdate(domain.id, 'registrar', e.target.value)}
-                          className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
-                          placeholder="Enter registrar..."
-                        />
-                      </TableCell>
-                       <TableCell className="w-[300px]">
-                         <div className="space-y-1">
-                           <Input
-                             type="date"
-                             value={domain.expiry_date}
-                             onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
-                             className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
-                           />
-                           <div className="flex items-center gap-2">
-                             <span className="text-xs text-gray-500">$</span>
-                             <Input
-                               type="number"
-                               step="0.01"
-                               value={domain.renewal_cost}
-                               onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
-                               className="border-none p-1 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-xs"
-                               placeholder="0.00"
-                             />
-                           </div>
-                         </div>
-                       </TableCell>
-                          <TableCell className="w-[280px]">
-                          <div className="space-y-2">
-                            <Select 
-                              value={domain.platform} 
-                              onValueChange={(value) => handleFieldUpdate(domain.id, 'platform', value)}
-                            >
-                              <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
-                                <Badge className={getPlatformColor(domain.platform)}>
-                                  {domain.platform}
-                                </Badge>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Webflow">Webflow</SelectItem>
-                                <SelectItem value="Shopify">Shopify</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={domain.client_managed}
-                                onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
-                              />
-                              <span className="text-xs text-gray-600">Client Managed</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="w-[300px]">
-                          <textarea
-                            value={domain.notes || ''}
-                            onChange={(e) => handleFieldUpdate(domain.id, 'notes', e.target.value)}
-                            className="border-none p-2 h-20 w-full bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm resize-none"
-                            placeholder="Add notes..."
-                          />
-                        </TableCell>
-                         <TableCell className="w-[20px]">
-                        <div title="Delete domain">
-                          <Trash2 
-                            className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
-                            onClick={() => deleteDomainMutation.mutate(domain.id)}
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
                   {newRows.map((newRow) => (
                     <TableRow key={newRow.tempId} className="bg-blue-50/50">
                       <TableCell className="w-[280px]">
@@ -519,6 +418,107 @@ const Domains = () => {
                               onClick={() => removeNewRow(newRow.tempId!)}
                             />
                           </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {sortedDomains.map((domain) => (
+                    <TableRow key={domain.id}>
+                       <TableCell className="w-[280px]">
+                        <Input
+                          value={domain.name}
+                          onChange={(e) => handleFieldUpdate(domain.id, 'name', e.target.value)}
+                          className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
+                          placeholder="Enter domain name..."
+                        />
+                      </TableCell>
+                       <TableCell className="w-[280px]">
+                        <Select 
+                          value={domain.client_id} 
+                          onValueChange={(value) => handleFieldUpdate(domain.id, 'client_id', value)}
+                        >
+                          <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
+                            <SelectValue>
+                              {domain.clients?.company}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clients.map((client) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.company}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                       <TableCell className="w-[200px]">
+                        <Input
+                          value={domain.registrar}
+                          onChange={(e) => handleFieldUpdate(domain.id, 'registrar', e.target.value)}
+                          className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
+                          placeholder="Enter registrar..."
+                        />
+                      </TableCell>
+                       <TableCell className="w-[300px]">
+                         <div className="space-y-1">
+                           <Input
+                             type="date"
+                             value={domain.expiry_date}
+                             onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
+                             className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
+                           />
+                           <div className="flex items-center gap-2">
+                             <span className="text-xs text-gray-500">$</span>
+                             <Input
+                               type="number"
+                               step="0.01"
+                               value={domain.renewal_cost}
+                               onChange={(e) => handleFieldUpdate(domain.id, 'renewal_cost', e.target.value)}
+                               className="border-none p-1 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-xs"
+                               placeholder="0.00"
+                             />
+                           </div>
+                         </div>
+                       </TableCell>
+                          <TableCell className="w-[280px]">
+                          <div className="space-y-2">
+                            <Select 
+                              value={domain.platform} 
+                              onValueChange={(value) => handleFieldUpdate(domain.id, 'platform', value)}
+                            >
+                              <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
+                                <Badge className={getPlatformColor(domain.platform)}>
+                                  {domain.platform}
+                                </Badge>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Webflow">Webflow</SelectItem>
+                                <SelectItem value="Shopify">Shopify</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={domain.client_managed}
+                                onCheckedChange={(checked) => handleFieldUpdate(domain.id, 'client_managed', checked)}
+                              />
+                              <span className="text-xs text-gray-600">Client Managed</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[300px]">
+                          <textarea
+                            value={domain.notes || ''}
+                            onChange={(e) => handleFieldUpdate(domain.id, 'notes', e.target.value)}
+                            className="border-none p-2 h-20 w-full bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm resize-none"
+                            placeholder="Add notes..."
+                          />
+                        </TableCell>
+                         <TableCell className="w-[20px]">
+                        <div title="Delete domain">
+                          <Trash2 
+                            className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
+                            onClick={() => deleteDomainMutation.mutate(domain.id)}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
