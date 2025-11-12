@@ -28,14 +28,12 @@ interface DomainsTabProps {
   isLoading?: boolean;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active':
+const getPlatformColor = (platform: string) => {
+  switch (platform) {
+    case 'Webflow':
+      return 'bg-blue-100 text-blue-800';
+    case 'Shopify':
       return 'bg-green-100 text-green-800';
-    case 'expired':
-      return 'bg-red-100 text-red-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -95,8 +93,8 @@ const DomainsTab = ({
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="text-right">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(domain.status)}`}>
-                      {domain.status}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlatformColor(domain.platform)}`}>
+                      {domain.platform}
                     </span>
                     <p className="text-sm text-gray-600 mt-1">Expires: {new Date(domain.expiry_date).toLocaleDateString()}</p>
                     {domain.client_managed && (

@@ -28,7 +28,7 @@ interface AddDomainDialogProps {
     name: string;
     registrar: string;
     expiry_date: string;
-    status: 'active' | 'expired' | 'pending';
+    platform: 'Webflow' | 'Shopify';
     renewal_cost: number;
     client_managed: boolean;
     notes?: string;
@@ -37,7 +37,7 @@ interface AddDomainDialogProps {
     name: string;
     registrar: string;
     expiry_date: string;
-    status: 'active' | 'expired' | 'pending';
+    platform: 'Webflow' | 'Shopify';
     renewal_cost: number;
     client_managed: boolean;
     notes?: string;
@@ -103,15 +103,14 @@ const AddDomainDialog = ({
             />
           </div>
           <div>
-            <Label htmlFor="status">Status</Label>
-            <Select value={newDomain.status} onValueChange={(value: 'active' | 'expired' | 'pending') => setNewDomain({...newDomain, status: value})}>
+            <Label htmlFor="platform">Platform</Label>
+            <Select value={newDomain.platform} onValueChange={(value: 'Webflow' | 'Shopify') => setNewDomain({...newDomain, platform: value})}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="Webflow">Webflow</SelectItem>
+                <SelectItem value="Shopify">Shopify</SelectItem>
               </SelectContent>
             </Select>
           </div>

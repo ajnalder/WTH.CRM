@@ -17,7 +17,7 @@ interface Domain {
   name: string;
   registrar: string;
   expiry_date: string;
-  status: 'active' | 'expired' | 'pending';
+  platform: 'Webflow' | 'Shopify';
   renewal_cost: number;
   client_managed: boolean;
   notes?: string;
@@ -27,11 +27,10 @@ interface Domain {
   };
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active': return 'bg-green-100 text-green-800';
-    case 'expired': return 'bg-red-100 text-red-800';
-    case 'pending': return 'bg-yellow-100 text-yellow-800';
+const getPlatformColor = (platform: string) => {
+  switch (platform) {
+    case 'Webflow': return 'bg-blue-100 text-blue-800';
+    case 'Shopify': return 'bg-green-100 text-green-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
@@ -193,7 +192,7 @@ const Domains = () => {
       name: '',
       registrar: '',
       expiry_date: new Date().toISOString().split('T')[0],
-      status: 'active' as const,
+      platform: 'Webflow' as const,
       renewal_cost: 0,
       client_managed: false,
       notes: '',
@@ -224,7 +223,7 @@ const Domains = () => {
       name: newRow.name,
       registrar: newRow.registrar,
       expiry_date: newRow.expiry_date || new Date().toISOString().split('T')[0],
-      status: newRow.status || 'active',
+      platform: newRow.platform || 'Webflow',
       renewal_cost: newRow.renewal_cost || 0,
       client_managed: newRow.client_managed || false,
       notes: newRow.notes || '',
@@ -310,7 +309,7 @@ const Domains = () => {
                       <TableHead className="w-[280px]">Client</TableHead>
                       <TableHead className="w-[200px]">Registrar</TableHead>
                       <TableHead className="w-[300px]">Expiry & Cost</TableHead>
-                      <TableHead className="w-[280px]">Status</TableHead>
+                      <TableHead className="w-[280px]">Platform</TableHead>
                       <TableHead className="w-[300px]">Notes</TableHead>
                       <TableHead className="w-[20px]">Actions</TableHead>
                     </TableRow>
@@ -374,21 +373,20 @@ const Domains = () => {
                            </div>
                          </div>
                        </TableCell>
-                         <TableCell className="w-[280px]">
+                          <TableCell className="w-[280px]">
                           <div className="space-y-2">
                             <Select 
-                              value={domain.status} 
-                              onValueChange={(value) => handleFieldUpdate(domain.id, 'status', value)}
+                              value={domain.platform} 
+                              onValueChange={(value) => handleFieldUpdate(domain.id, 'platform', value)}
                             >
                               <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
-                                <Badge className={getStatusColor(domain.status)}>
-                                  {domain.status}
+                                <Badge className={getPlatformColor(domain.platform)}>
+                                  {domain.platform}
                                 </Badge>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="expired">Expired</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="Webflow">Webflow</SelectItem>
+                                <SelectItem value="Shopify">Shopify</SelectItem>
                               </SelectContent>
                             </Select>
                             <div className="flex items-center gap-2">
@@ -473,22 +471,21 @@ const Domains = () => {
                              />
                            </div>
                          </div>
-                       </TableCell>
+                        </TableCell>
                         <TableCell className="w-[280px]">
                           <div className="space-y-2">
                             <Select 
-                              value={newRow.status || 'active'} 
-                              onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'status', value)}
+                              value={newRow.platform || 'Webflow'} 
+                              onValueChange={(value) => handleNewRowUpdate(newRow.tempId!, 'platform', value)}
                             >
                               <SelectTrigger className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500">
-                                <Badge className={getStatusColor(newRow.status || 'active')}>
-                                  {newRow.status || 'active'}
+                                <Badge className={getPlatformColor(newRow.platform || 'Webflow')}>
+                                  {newRow.platform || 'Webflow'}
                                 </Badge>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="expired">Expired</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="Webflow">Webflow</SelectItem>
+                                <SelectItem value="Shopify">Shopify</SelectItem>
                               </SelectContent>
                             </Select>
                             <div className="flex items-center gap-2">

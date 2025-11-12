@@ -286,9 +286,9 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          platform: string
           registrar: string
           renewal_cost: number
-          status: string
           updated_at: string
         }
         Insert: {
@@ -299,9 +299,9 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          platform?: string
           registrar: string
           renewal_cost?: number
-          status?: string
           updated_at?: string
         }
         Update: {
@@ -312,9 +312,9 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          platform?: string
           registrar?: string
           renewal_cost?: number
-          status?: string
           updated_at?: string
         }
         Relationships: [

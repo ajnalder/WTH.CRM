@@ -19,7 +19,7 @@ export interface ClientDetailContextProps {
     name: string;
     registrar: string;
     expiry_date: string;
-    status: 'active' | 'expired' | 'pending';
+    platform: 'Webflow' | 'Shopify';
     renewal_cost: number;
     client_managed: boolean;
     notes?: string;
@@ -28,7 +28,7 @@ export interface ClientDetailContextProps {
     name: string;
     registrar: string;
     expiry_date: string;
-    status: 'active' | 'expired' | 'pending';
+    platform: 'Webflow' | 'Shopify';
     renewal_cost: number;
     client_managed: boolean;
     notes?: string;
@@ -80,7 +80,7 @@ export interface NewDomainForm {
   name: string;
   registrar: string;
   expiry_date: string;
-  status: 'active' | 'expired' | 'pending';
+  platform: 'Webflow' | 'Shopify';
   renewal_cost: number;
   client_managed: boolean;
   notes?: string;

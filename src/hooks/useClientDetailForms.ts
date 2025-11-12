@@ -7,7 +7,7 @@ export const useClientDetailForms = () => {
     name: '',
     registrar: '',
     expiry_date: '',
-    status: 'active',
+    platform: 'Webflow',
     renewal_cost: 0,
     client_managed: false,
     notes: ''
@@ -36,7 +36,7 @@ export const useClientDetailForms = () => {
       name: '',
       registrar: '',
       expiry_date: '',
-      status: 'active',
+      platform: 'Webflow',
       renewal_cost: 0,
       client_managed: false,
       notes: ''
