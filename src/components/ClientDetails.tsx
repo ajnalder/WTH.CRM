@@ -21,7 +21,7 @@ interface Client {
   id: string;
   company: string;
   phone: string;
-  industry: string;
+  description: string;
   status: string;
   projects_count: number;
   total_value: number;
@@ -43,22 +43,9 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
   const [formData, setFormData] = useState({
     company: '',
     phone: '',
-    industry: '',
+    description: '',
     status: '',
   });
-
-  const industries = [
-    'Technology',
-    'Healthcare',
-    'Finance',
-    'Education',
-    'E-commerce',
-    'Manufacturing',
-    'Consulting',
-    'Real Estate',
-    'Non-profit',
-    'Other'
-  ];
 
   const statuses = [
     { value: 'active', label: 'Active' },
@@ -71,18 +58,16 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
       setFormData({
         company: client.company,
         phone: client.phone,
-        industry: client.industry,
+        description: client.description,
         status: client.status,
       });
     }
   }, [client]);
 
   useEffect(() => {
-    // Set editing state when dialog opens if startInEditMode is true
     if (isOpen && startInEditMode) {
       setIsEditing(true);
     } else if (!isOpen) {
-      // Only reset editing state when dialog closes
       setIsEditing(false);
     }
   }, [isOpen, startInEditMode]);
@@ -94,7 +79,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
         ...client,
         company: formData.company,
         phone: formData.phone,
-        industry: formData.industry,
+        description: formData.description,
         status: formData.status,
       };
       onUpdateClient(updatedClient);
@@ -112,12 +97,11 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
   };
 
   const handleCancel = () => {
-    // Reset form data to original client data
     if (client) {
       setFormData({
         company: client.company,
         phone: client.phone,
-        industry: client.industry,
+        description: client.description,
         status: client.status,
       });
     }
@@ -144,7 +128,7 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900">{client.company}</h3>
-              <p className="text-gray-600">{client.industry}</p>
+              <p className="text-gray-600">{client.description}</p>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                 <div className="flex items-center">
                   <Calendar size={12} className="mr-1" />
@@ -201,23 +185,15 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Select 
-                value={formData.industry} 
-                onValueChange={(value) => handleInputChange('industry', value)}
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="e.g., Local bakery chain, SaaS startup"
                 disabled={!isEditing}
-              >
-                <SelectTrigger className={!isEditing ? 'bg-gray-50' : ''}>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  {industries.map((industry) => (
-                    <SelectItem key={industry} value={industry}>
-                      {industry}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className={!isEditing ? 'bg-gray-50' : ''}
+              />
             </div>
 
             <div className="space-y-2">

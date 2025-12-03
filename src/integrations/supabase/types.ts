@@ -139,9 +139,9 @@ export type Database = {
           avatar: string | null
           company: string
           created_at: string
+          description: string | null
           gradient: string | null
           id: string
-          industry: string | null
           joined_date: string
           phone: string | null
           projects_count: number | null
@@ -154,9 +154,9 @@ export type Database = {
           avatar?: string | null
           company: string
           created_at?: string
+          description?: string | null
           gradient?: string | null
           id?: string
-          industry?: string | null
           joined_date?: string
           phone?: string | null
           projects_count?: number | null
@@ -169,9 +169,9 @@ export type Database = {
           avatar?: string | null
           company?: string
           created_at?: string
+          description?: string | null
           gradient?: string | null
           id?: string
-          industry?: string | null
           joined_date?: string
           phone?: string | null
           projects_count?: number | null

@@ -88,7 +88,7 @@ const ClientCard = ({ client }: { client: Client }) => {
             {getStatusText(client.status)}
           </span>
         </div>
-        <p className="text-sm text-gray-600 mb-2">{client.industry}</p>
+        <p className="text-sm text-gray-600 mb-2">{client.description}</p>
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <div className="flex items-center">
             <Mail size={12} className="mr-1" />
