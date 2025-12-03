@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useClientMutations } from '@/hooks/useClientMutations';
 import { toProperCase } from '@/utils/textFormatting';
 
 interface ClientFormData {
   company: string;
   phone: string;
-  industry: string;
+  description: string;
 }
 
 interface VoiceClientDialogProps {
@@ -44,7 +37,6 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     reset,
     formState: { errors }
@@ -52,29 +44,16 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
     defaultValues: {
       company: '',
       phone: '',
-      industry: ''
+      description: ''
     }
   });
-
-  const industries = [
-    'Technology',
-    'Healthcare',
-    'Finance',
-    'Education',
-    'E-commerce',
-    'Manufacturing',
-    'Consulting',
-    'Real Estate',
-    'Non-profit',
-    'Other'
-  ];
 
   // Pre-fill form with voice command data and format it properly
   useEffect(() => {
     if (open && prefilledData) {
       if (prefilledData.company) setValue('company', toProperCase(prefilledData.company));
       if (prefilledData.phone) setValue('phone', prefilledData.phone);
-      if (prefilledData.industry) setValue('industry', prefilledData.industry);
+      if (prefilledData.description) setValue('description', prefilledData.description);
     }
   }, [open, prefilledData, setValue]);
 
@@ -82,7 +61,7 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
     createClient({
       company: data.company.trim(),
       phone: data.phone.trim(),
-      industry: data.industry || 'Other'
+      description: data.description.trim()
     });
     
     onOpenChange(false);
@@ -122,19 +101,12 @@ export const VoiceClientDialog: React.FC<VoiceClientDialogProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="industry">Industry</Label>
-            <Select onValueChange={(value) => setValue('industry', value)} value={watch('industry')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select industry" />
-              </SelectTrigger>
-              <SelectContent>
-                {industries.map((industry) => (
-                  <SelectItem key={industry} value={industry}>
-                    {industry}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              placeholder="e.g., Local bakery chain, SaaS startup"
+              {...register('description')}
+            />
           </div>
           
           <DialogFooter>

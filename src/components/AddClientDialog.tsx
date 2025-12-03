@@ -10,13 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { useClientMutations } from '@/hooks/useClientMutations';
 
@@ -26,21 +19,8 @@ export const AddClientDialog = () => {
   const [formData, setFormData] = useState({
     company: '',
     phone: '',
-    industry: '',
+    description: '',
   });
-
-  const industries = [
-    'Technology',
-    'Healthcare',
-    'Finance',
-    'Education',
-    'E-commerce',
-    'Manufacturing',
-    'Consulting',
-    'Real Estate',
-    'Non-profit',
-    'Other'
-  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +28,9 @@ export const AddClientDialog = () => {
       createClient({
         company: formData.company.trim(),
         phone: formData.phone.trim(),
-        industry: formData.industry || 'Other'
+        description: formData.description.trim()
       });
-      setFormData({ company: '', phone: '', industry: '' });
+      setFormData({ company: '', phone: '', description: '' });
       setIsOpen(false);
     }
   };
@@ -94,19 +74,13 @@ export const AddClientDialog = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="industry">Industry</Label>
-            <Select onValueChange={(value) => handleInputChange('industry', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select industry" />
-              </SelectTrigger>
-              <SelectContent>
-                {industries.map((industry) => (
-                  <SelectItem key={industry} value={industry}>
-                    {industry}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="e.g., Local bakery chain, SaaS startup"
+            />
           </div>
           
           <div className="flex justify-end space-x-2 pt-4">

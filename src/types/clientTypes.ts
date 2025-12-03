@@ -4,7 +4,7 @@ export interface Client {
   user_id: string;
   company: string;
   phone: string | null;
-  industry: string | null;
+  description: string | null;
   status: 'active' | 'pending' | 'inactive';
   projects_count: number;
   total_value: number;
@@ -18,5 +18,5 @@ export interface Client {
 export interface CreateClientData {
   company: string;
   phone: string;
-  industry: string;
+  description: string;
 }

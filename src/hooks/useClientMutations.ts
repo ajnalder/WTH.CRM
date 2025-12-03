@@ -53,7 +53,7 @@ export const useClientMutations = () => {
         .insert({
           phone: clientData.phone,
           company: clientData.company,
-          industry: clientData.industry,
+          description: clientData.description,
           avatar,
           gradient: selectedGradient,
           user_id: user.id,

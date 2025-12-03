@@ -45,8 +45,8 @@ const ClientOverviewTab = ({ client }: ClientOverviewTabProps) => {
                 <p className="text-gray-900">{client.company}</p>
               </div>
               <div>
-                <Label>Industry</Label>
-                <p className="text-gray-900">{client.industry}</p>
+                <Label>Description</Label>
+                <p className="text-gray-900">{client.description || 'No description'}</p>
               </div>
             </div>
           </CardContent>
