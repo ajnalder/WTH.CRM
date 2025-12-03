@@ -1,17 +1,12 @@
 
 import React from 'react';
-import { Folder, CheckSquare, Users, Clock } from 'lucide-react';
+import { Folder, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import type { TaskWithClient } from '@/hooks/useTasks';
-import type { Client } from '@/hooks/useClients';
 
 interface Project {
   id: string;
   status: string;
-}
-
-interface TeamMember {
-  id: string;
-  hours_this_week: number;
+  budget?: number | null;
 }
 
 interface TimeEntry {
@@ -20,60 +15,71 @@ interface TimeEntry {
   date: string;
 }
 
+interface Invoice {
+  id: string;
+  status: string;
+  total_amount: number;
+}
+
 interface StatsCardsProps {
   projects: Project[];
   tasks: TaskWithClient[];
-  teamMembers: TeamMember[];
-  clients: Client[];
   weeklyTimeEntries: TimeEntry[];
+  invoices: Invoice[];
 }
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ 
   projects, 
   tasks, 
-  teamMembers, 
-  clients,
-  weeklyTimeEntries 
+  weeklyTimeEntries,
+  invoices,
 }) => {
-  // Calculate active projects (In Progress or Planning)
-  const activeProjects = projects.filter(p => 
-    p.status === 'In Progress' || p.status === 'Planning'
-  ).length;
+  // Calculate current projects (In Progress, Planning, or Review)
+  const currentProjects = projects.filter(p => 
+    p.status === 'In Progress' || p.status === 'Planning' || p.status === 'Review'
+  );
   
-  // Calculate completed tasks (Done or Completed status)
-  const completedTasks = tasks.filter(t => 
-    t.status === 'Done' || t.status === 'Completed'
-  ).length;
+  // Calculate pipeline value (unpaid invoices - draft, sent, overdue)
+  const pipelineValue = invoices
+    .filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'overdue')
+    .reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0);
+  
+  // Calculate total project value (sum of budgets for current projects)
+  const totalProjectValue = currentProjects.reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
   
   // Calculate total hours this week from actual time entries
   const totalHours = weeklyTimeEntries.reduce((sum, entry) => {
     const hours = Number(entry.hours) || 0;
     return sum + hours;
   }, 0);
-  
-  // Calculate active clients
-  const activeClients = clients.filter(c => c.status === 'active').length;
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(1)}k`;
+    }
+    return `$${amount.toFixed(0)}`;
+  };
 
   const stats = [
     {
-      title: 'Active Projects',
-      value: activeProjects.toString(),
+      title: 'Current Projects',
+      value: currentProjects.length.toString(),
       change: `${projects.length} total`,
       icon: Folder,
       color: 'from-blue-500 to-blue-600',
     },
     {
-      title: 'Completed Tasks',
-      value: completedTasks.toString(),
-      change: `${tasks.length} total tasks`,
-      icon: CheckSquare,
+      title: 'Pipeline Value',
+      value: formatCurrency(pipelineValue),
+      change: `${invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').length} unpaid`,
+      icon: TrendingUp,
       color: 'from-green-500 to-green-600',
     },
     {
-      title: 'Active Clients',
-      value: activeClients.toString(),
-      change: `${clients.length} total clients`,
-      icon: Users,
+      title: 'Project Value',
+      value: formatCurrency(totalProjectValue),
+      change: `${currentProjects.length} active projects`,
+      icon: DollarSign,
       color: 'from-purple-500 to-purple-600',
     },
     {

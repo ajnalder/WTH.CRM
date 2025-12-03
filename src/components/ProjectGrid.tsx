@@ -5,7 +5,6 @@ import { ShadowBox } from '@/components/ui/shadow-box';
 import { transformProject } from '@/utils/projectUtils';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
-
 export const ProjectGrid: React.FC = () => {
   const { projects, isLoading } = useProjects();
   const { tasks } = useTasks();
@@ -14,7 +13,7 @@ export const ProjectGrid: React.FC = () => {
     return (
       <ShadowBox className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
+          <h2 className="text-xl font-bold text-gray-900">Current Projects</h2>
           <button className="text-blue-600 hover:text-blue-800 font-medium">View All</button>
         </div>
         <div className="text-center py-8 text-gray-500">
@@ -24,10 +23,12 @@ export const ProjectGrid: React.FC = () => {
     );
   }
   
-  // Show only the most recent 6 projects
-  const recentProjects = projects.slice(0, 6);
+  // Filter to show only current/active projects (In Progress, Planning, Review)
+  const currentProjects = projects
+    .filter(p => p.status === 'In Progress' || p.status === 'Planning' || p.status === 'Review')
+    .slice(0, 6);
   
-  const transformedProjects = recentProjects.map(project => {
+  const transformedProjects = currentProjects.map(project => {
     // Since the Project type doesn't include clients but the query returns client data,
     // we need to access it through the any type and provide fallback
     const projectWithClients = {
@@ -53,7 +54,7 @@ export const ProjectGrid: React.FC = () => {
   return (
     <ShadowBox className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
+        <h2 className="text-xl font-bold text-gray-900">Current Projects</h2>
         <button className="text-blue-600 hover:text-blue-800 font-medium">View All</button>
       </div>
       
@@ -64,8 +65,8 @@ export const ProjectGrid: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-gray-500">
-          <p>No projects found. Create your first project to get started!</p>
+      <div className="text-center py-8 text-gray-500">
+          <p>All caught up! No active projects at the moment.</p>
         </div>
       )}
     </ShadowBox>
