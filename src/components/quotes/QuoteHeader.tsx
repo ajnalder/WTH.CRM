@@ -124,7 +124,7 @@ export function QuoteHeader({
 
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col justify-between p-8 text-white">
-          {/* Top Section */}
+          {/* Top Section - Logo only */}
           <div className="flex items-start justify-between">
             {/* Logo */}
             <div>
@@ -134,14 +134,6 @@ export function QuoteHeader({
                 <div className="text-xl font-bold">{companyName || 'Company'}</div>
               )}
             </div>
-
-            {/* Prepared For */}
-            {contactName && (
-              <div className="text-right">
-                <div className="text-sm italic opacity-80">Prepared For</div>
-                <div className="text-xl font-bold">{contactName}</div>
-              </div>
-            )}
           </div>
 
           {/* Center Title */}
@@ -151,7 +143,7 @@ export function QuoteHeader({
             </h1>
           </div>
 
-          {/* Bottom Section */}
+          {/* Bottom Section - By and Prepared For */}
           <div className="flex items-end justify-between">
             {/* By */}
             <div>
@@ -159,11 +151,11 @@ export function QuoteHeader({
               <div className="text-lg font-semibold">{creatorName || 'Unknown'}</div>
             </div>
 
-            {/* Contact */}
-            {creatorEmail && (
+            {/* Prepared For */}
+            {contactName && (
               <div className="text-right">
-                <div className="text-sm opacity-80">Contact</div>
-                <div className="text-lg">{creatorEmail}</div>
+                <div className="text-sm italic opacity-80">Prepared For</div>
+                <div className="text-lg font-semibold">{contactName}</div>
               </div>
             )}
           </div>
