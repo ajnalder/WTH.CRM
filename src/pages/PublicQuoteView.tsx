@@ -259,7 +259,7 @@ export default function PublicQuoteView() {
                 <div className="grid grid-cols-2 gap-8 mb-6">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">From</div>
-                    <div className="font-semibold">Andrew Lissaman</div>
+                    <div className="font-semibold">{settings?.owner_name || 'Your Name'}</div>
                     <div className="text-sm text-muted-foreground">{settings?.company_name || 'What the Heck'}</div>
                   </div>
                   <div>

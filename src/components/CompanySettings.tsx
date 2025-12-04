@@ -12,6 +12,7 @@ export const CompanySettings: React.FC = () => {
   const { settings, updateSettings, uploadLogo, isLoading, isUpdating } = useCompanySettings();
   const [formData, setFormData] = useState({
     company_name: settings?.company_name || 'What the Heck',
+    owner_name: settings?.owner_name || '',
     address_line1: settings?.address_line1 || '8 King Street',
     address_line2: settings?.address_line2 || 'Te Puke 3119',
     address_line3: settings?.address_line3 || 'NEW ZEALAND',
@@ -89,6 +90,16 @@ export const CompanySettings: React.FC = () => {
               id="company_name"
               value={formData.company_name}
               onChange={(e) => handleInputChange('company_name', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="owner_name">Owner/Contact Name</Label>
+            <Input
+              id="owner_name"
+              value={formData.owner_name}
+              onChange={(e) => handleInputChange('owner_name', e.target.value)}
+              placeholder="Your name for client-facing documents"
             />
           </div>
 
