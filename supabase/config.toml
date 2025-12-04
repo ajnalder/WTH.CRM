@@ -1,1 +1,22 @@
 project_id = "jnehwoaockudqsdqwfwl"
+
+[functions.parse-voice-command]
+verify_jwt = false
+
+[functions.send-email-campaign]
+verify_jwt = false
+
+[functions.send-invoice-email]
+verify_jwt = false
+
+[functions.xero-oauth-callback]
+verify_jwt = false
+
+[functions.xero-oauth]
+verify_jwt = false
+
+[functions.xero-sync]
+verify_jwt = false
+
+[functions.send-quote-notification]
+verify_jwt = false

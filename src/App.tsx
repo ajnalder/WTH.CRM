@@ -20,6 +20,9 @@ import DayPlanner from "./pages/DayPlanner";
 import Invoices from "./pages/Invoices";
 import NewInvoice from "./pages/NewInvoice";
 import InvoiceDetail from "./pages/InvoiceDetail";
+import Quotes from "./pages/Quotes";
+import QuoteBuilder from "./pages/QuoteBuilder";
+import PublicQuoteView from "./pages/PublicQuoteView";
 import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
@@ -40,6 +43,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/quote/view/:token" element={<PublicQuoteView />} />
             <Route path="/" element={<ProtectedRoute><PageWithSidebar><Index /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><PageWithSidebar><Projects /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><PageWithSidebar><ProjectDetail /></PageWithSidebar></ProtectedRoute>} />
@@ -49,6 +53,9 @@ const App = () => (
             <Route path="/clients" element={<ProtectedRoute><PageWithSidebar><Clients /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><PageWithSidebar><ClientDetail /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/domains" element={<ProtectedRoute><PageWithSidebar><Domains /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/quotes" element={<ProtectedRoute><PageWithSidebar><Quotes /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/quotes/new" element={<ProtectedRoute><PageWithSidebar><QuoteBuilder /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/quotes/:id" element={<ProtectedRoute><PageWithSidebar><QuoteBuilder /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><PageWithSidebar><Invoices /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/invoices/new" element={<ProtectedRoute><PageWithSidebar><NewInvoice /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/invoices/:id" element={<ProtectedRoute><PageWithSidebar><InvoiceDetail /></PageWithSidebar></ProtectedRoute>} />
