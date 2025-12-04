@@ -28,6 +28,13 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ invoice, companySe
         </div>
         
         <div className="text-right text-sm">
+          {companySettings?.logo_base64 && (
+            <img 
+              src={companySettings.logo_base64} 
+              alt="Company Logo" 
+              className="h-10 ml-auto mb-2 object-contain"
+            />
+          )}
           <div className="font-semibold text-gray-900">{companySettings?.company_name || 'What the Heck'}</div>
           <div className="text-gray-600">{companySettings?.address_line1 || '8 King Street'}</div>
           <div className="text-gray-600">{companySettings?.address_line2 || 'Te Puke 3119'}</div>

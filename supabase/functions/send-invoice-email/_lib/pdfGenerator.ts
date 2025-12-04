@@ -18,6 +18,29 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     return new Date(dateString).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  // Company logo on right (if available)
+  const rightAlign = pageWidth - marginRight;
+  let logoBottomY = marginTop;
+  
+  if (companySettings?.logo_base64) {
+    try {
+      const logoWidth = 30;
+      const logoHeight = 12;
+      pdf.addImage(
+        companySettings.logo_base64,
+        'PNG',
+        rightAlign - logoWidth,
+        marginTop,
+        logoWidth,
+        logoHeight
+      );
+      logoBottomY = marginTop + logoHeight + 2;
+    } catch (e) {
+      console.error('Failed to add logo to PDF:', e);
+      logoBottomY = marginTop;
+    }
+  }
+
   // TAX INVOICE title
   pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
@@ -30,16 +53,15 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
     pdf.text(client.company, marginLeft, marginTop + 20);
   }
 
-  // Company address on right
-  const rightAlign = pageWidth - marginRight;
+  // Company address on right (below logo)
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(companySettings?.company_name || 'What the Heck', rightAlign, marginTop + 10, { align: 'right' });
+  pdf.text(companySettings?.company_name || 'What the Heck', rightAlign, logoBottomY + 4, { align: 'right' });
   
   pdf.setFont('helvetica', 'normal');
-  pdf.text(companySettings?.address_line1 || '8 King Street', rightAlign, marginTop + 16, { align: 'right' });
-  pdf.text(companySettings?.address_line2 || 'Te Puke 3119', rightAlign, marginTop + 22, { align: 'right' });
-  pdf.text(companySettings?.address_line3 || 'NEW ZEALAND', rightAlign, marginTop + 28, { align: 'right' });
+  pdf.text(companySettings?.address_line1 || '8 King Street', rightAlign, logoBottomY + 10, { align: 'right' });
+  pdf.text(companySettings?.address_line2 || 'Te Puke 3119', rightAlign, logoBottomY + 16, { align: 'right' });
+  pdf.text(companySettings?.address_line3 || 'NEW ZEALAND', rightAlign, logoBottomY + 22, { align: 'right' });
 
   // Dark line separator
   let yPos = marginTop + 38;
