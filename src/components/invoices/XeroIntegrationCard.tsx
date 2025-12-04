@@ -3,11 +3,19 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ExternalLink, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { useXeroIntegration } from '@/hooks/useXeroIntegration';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface XeroAccount {
+  code: string;
+  name: string;
+  type: string;
+}
 
 export const XeroIntegrationCard: React.FC = () => {
   const { 
@@ -18,7 +26,10 @@ export const XeroIntegrationCard: React.FC = () => {
   } = useXeroIntegration();
   
   const { settings, updateSettings } = useCompanySettings();
+  const { toast } = useToast();
   const [accountCode, setAccountCode] = useState('');
+  const [accounts, setAccounts] = useState<XeroAccount[]>([]);
+  const [isFetchingAccounts, setIsFetchingAccounts] = useState(false);
 
   useEffect(() => {
     checkConnectionStatus();
@@ -30,10 +41,40 @@ export const XeroIntegrationCard: React.FC = () => {
     }
   }, [settings]);
 
-  const handleAccountCodeSave = () => {
-    if (accountCode !== settings?.xero_account_code) {
-      updateSettings({ xero_account_code: accountCode });
+  const fetchAccounts = async () => {
+    setIsFetchingAccounts(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('xero-sync', {
+        body: { action: 'fetch_accounts' }
+      });
+
+      if (response.error) throw response.error;
+      
+      if (response.data?.accounts) {
+        setAccounts(response.data.accounts);
+        toast({
+          title: "Accounts loaded",
+          description: `Found ${response.data.accounts.length} sales accounts`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching accounts:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch Xero accounts",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingAccounts(false);
     }
+  };
+
+  const handleAccountSelect = (code: string) => {
+    setAccountCode(code);
+    updateSettings({ xero_account_code: code });
   };
 
   return (
@@ -92,27 +133,39 @@ export const XeroIntegrationCard: React.FC = () => {
             </div>
             
             <div className="pt-2 border-t">
-              <Label htmlFor="xero-account-code" className="text-sm font-medium">
+              <Label className="text-sm font-medium">
                 Sales Account Code
               </Label>
               <p className="text-xs text-muted-foreground mb-2">
-                The Xero account code for invoice line items (e.g., 200, 400)
+                The Xero account for invoice line items
               </p>
               <div className="flex gap-2">
-                <Input
-                  id="xero-account-code"
-                  value={accountCode}
-                  onChange={(e) => setAccountCode(e.target.value)}
-                  placeholder="200"
-                  className="w-32"
-                />
+                {accounts.length > 0 ? (
+                  <Select value={accountCode} onValueChange={handleAccountSelect}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((acc) => (
+                        <SelectItem key={acc.code} value={acc.code}>
+                          {acc.code} - {acc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex-1 text-sm text-muted-foreground border rounded-md px-3 py-2">
+                    {accountCode || 'No account selected'}
+                  </div>
+                )}
                 <Button 
                   variant="outline" 
-                  size="sm"
-                  onClick={handleAccountCodeSave}
-                  disabled={accountCode === settings?.xero_account_code}
+                  size="icon"
+                  onClick={fetchAccounts}
+                  disabled={isFetchingAccounts}
+                  title="Fetch accounts from Xero"
                 >
-                  Save
+                  <RefreshCw size={16} className={isFetchingAccounts ? 'animate-spin' : ''} />
                 </Button>
               </div>
             </div>
