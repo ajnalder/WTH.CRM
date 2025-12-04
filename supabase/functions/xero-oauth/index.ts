@@ -38,12 +38,13 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid authentication token');
     }
 
-    const { action, frontend_origin } = await req.json();
+    // Parse body once and destructure all needed values
+    const body = await req.json();
+    const { action, frontend_origin, code, state } = body;
 
     if (action === 'get_auth_url') {
-      // Use a fixed redirect URI that you'll configure in your Xero app
       const redirectUri = 'https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/xero-oauth-callback';
-      const state = crypto.randomUUID();
+      const newState = crypto.randomUUID();
       const scopes = [
         'openid',
         'profile',
@@ -59,16 +60,15 @@ const handler = async (req: Request): Promise<Response> => {
       authUrl.searchParams.set('client_id', xeroClientId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('scope', scopes);
-      authUrl.searchParams.set('state', state);
+      authUrl.searchParams.set('state', newState);
 
-      console.log('Generating Xero auth URL with state:', state, 'frontend_origin:', frontend_origin);
+      console.log('Generating Xero auth URL with state:', newState, 'frontend_origin:', frontend_origin);
 
-      // Store state for validation along with frontend origin for callback redirect
       await supabase
         .from('xero_oauth_states')
         .upsert({
           user_id: user.id,
-          state,
+          state: newState,
           frontend_origin: frontend_origin || 'https://jnehwoaockudqsdqwfwl.lovable.app',
           created_at: new Date().toISOString()
         });
@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (action === 'exchange_code') {
-      const { code, state } = await req.json();
+      console.log('Exchanging code for tokens, state:', state);
 
       // Validate state
       const { data: stateRecord } = await supabase
@@ -93,7 +93,6 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Invalid state parameter');
       }
 
-      // Exchange code for tokens using the same redirect URI
       const redirectUri = 'https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/xero-oauth-callback';
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
@@ -110,10 +109,12 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
+        console.error('Token exchange failed:', errorText);
         throw new Error(`Failed to exchange code for tokens: ${errorText}`);
       }
 
       const tokens: XeroTokenResponse = await tokenResponse.json();
+      console.log('Token exchange successful');
 
       // Get tenant connections
       const connectionsResponse = await fetch('https://api.xero.com/connections', {
@@ -128,6 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       const connections = await connectionsResponse.json();
+      console.log('Xero connections:', connections);
 
       // Store tokens and tenant info
       await supabase
