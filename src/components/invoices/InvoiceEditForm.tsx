@@ -12,6 +12,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useContacts } from '@/hooks/useContacts';
 import { InvoiceItemsManager } from './InvoiceItemsManager';
+import { XeroSyncButton } from './XeroSyncButton';
 
 interface InvoiceEditFormProps {
   invoice: Invoice;
@@ -87,6 +88,7 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
           <Badge className={getStatusColor(formData.status)}>
             {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
           </Badge>
+          <XeroSyncButton invoiceId={invoice.id} />
           <Button onClick={handleSubmit}>
             <Save size={16} className="mr-2" />
             Save Changes
