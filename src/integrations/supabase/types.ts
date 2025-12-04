@@ -1038,6 +1038,9 @@ export type Database = {
           accepted_at: string | null
           accepted_by_name: string | null
           client_id: string
+          contact_email: string | null
+          contact_name: string | null
+          cover_image_url: string | null
           created_at: string
           creator_name: string | null
           deposit_percentage: number
@@ -1057,6 +1060,9 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_name?: string | null
           client_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           creator_name?: string | null
           deposit_percentage?: number
@@ -1076,6 +1082,9 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_name?: string | null
           client_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           creator_name?: string | null
           deposit_percentage?: number

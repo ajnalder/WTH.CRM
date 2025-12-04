@@ -14,6 +14,9 @@ export interface Quote {
   viewed_at?: string;
   public_token: string;
   creator_name?: string;
+  contact_name?: string;
+  contact_email?: string;
+  cover_image_url?: string;
   created_at: string;
   updated_at: string;
   clients?: {
