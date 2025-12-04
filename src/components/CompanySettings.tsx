@@ -68,7 +68,7 @@ export const CompanySettings: React.FC = () => {
           <div>
             <Label htmlFor="logo">Logo (Light Background)</Label>
             <p className="text-sm text-muted-foreground mb-2">Used on invoices and light backgrounds</p>
-            <div className="mt-2 flex items-center gap-4">
+            <div className="mt-2 space-y-3">
               {settings?.logo_base64 && (
                 <img 
                   src={settings.logo_base64} 
@@ -86,11 +86,12 @@ export const CompanySettings: React.FC = () => {
                 />
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => document.getElementById('logo')?.click()}
                   disabled={isUpdating}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Logo
+                  {settings?.logo_base64 ? 'Change Logo' : 'Upload Logo'}
                 </Button>
               </div>
             </div>
@@ -100,7 +101,7 @@ export const CompanySettings: React.FC = () => {
           <div>
             <Label htmlFor="logo_inverse">Logo (Dark Background)</Label>
             <p className="text-sm text-muted-foreground mb-2">Used on quotes and dark backgrounds - typically a white/light version</p>
-            <div className="mt-2 flex items-center gap-4">
+            <div className="mt-2 space-y-3">
               {settings?.logo_inverse_base64 && (
                 <img 
                   src={settings.logo_inverse_base64} 
@@ -118,11 +119,12 @@ export const CompanySettings: React.FC = () => {
                 />
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => document.getElementById('logo_inverse')?.click()}
                   disabled={isUpdating}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Inverse Logo
+                  {settings?.logo_inverse_base64 ? 'Change Inverse Logo' : 'Upload Inverse Logo'}
                 </Button>
               </div>
             </div>
