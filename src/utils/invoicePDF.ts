@@ -32,8 +32,15 @@ export const generateInvoicePDF = async (
   
   if (companySettings?.logo_base64) {
     try {
-      const logoWidth = 50;
-      const logoHeight = 15;
+      // Get natural dimensions to preserve aspect ratio
+      const img = new Image();
+      img.src = companySettings.logo_base64;
+      await new Promise((resolve) => { img.onload = resolve; });
+      
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      const logoWidth = 50; // Fixed width in mm
+      const logoHeight = logoWidth / aspectRatio; // Maintain natural ratio
+      
       pdf.addImage(
         companySettings.logo_base64,
         'PNG',
