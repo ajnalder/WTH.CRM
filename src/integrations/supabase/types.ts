@@ -194,6 +194,7 @@ export type Database = {
           gst_number: string | null
           id: string
           logo_base64: string | null
+          owner_name: string | null
           updated_at: string
           user_id: string
         }
@@ -208,6 +209,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           logo_base64?: string | null
+          owner_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -222,6 +224,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           logo_base64?: string | null
+          owner_name?: string | null
           updated_at?: string
           user_id?: string
         }

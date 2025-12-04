@@ -15,6 +15,7 @@ export interface CompanySettings {
   gst_number?: string;
   bank_details?: string;
   bank_account?: string;
+  owner_name?: string;
   created_at: string;
   updated_at: string;
 }
