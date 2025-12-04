@@ -208,23 +208,38 @@ const handler = async (req: Request): Promise<Response> => {
         }))
       };
 
+      console.log('Creating invoice in Xero:', JSON.stringify(xeroInvoice, null, 2));
+
       const invoiceResponse = await fetch(`https://api.xero.com/api.xro/2.0/Invoices`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Xero-tenant-id': tokenRecord.tenant_id,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ Invoices: [xeroInvoice] })
       });
 
+      console.log('Invoice response status:', invoiceResponse.status);
+      const invoiceResponseText = await invoiceResponse.text();
+      console.log('Invoice response body (first 500 chars):', invoiceResponseText.substring(0, 500));
+
       if (!invoiceResponse.ok) {
-        const errorText = await invoiceResponse.text();
-        throw new Error(`Xero API error: ${errorText}`);
+        throw new Error(`Xero Invoice API error: ${invoiceResponse.status} - ${invoiceResponseText.substring(0, 500)}`);
       }
 
-      const invoiceResult = await invoiceResponse.json();
-      const xeroInvoiceId = invoiceResult.Invoices[0].InvoiceID;
+      let invoiceResult;
+      try {
+        invoiceResult = JSON.parse(invoiceResponseText);
+      } catch (parseError) {
+        throw new Error(`Invalid JSON from Xero Invoice API: ${invoiceResponseText.substring(0, 500)}`);
+      }
+
+      const xeroInvoiceId = invoiceResult.Invoices?.[0]?.InvoiceID;
+      if (!xeroInvoiceId) {
+        throw new Error('Failed to get invoice ID from Xero response');
+      }
 
       // Update local invoice with Xero ID
       await supabase
