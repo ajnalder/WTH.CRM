@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import { useXeroIntegration } from '@/hooks/useXeroIntegration';
@@ -15,7 +15,11 @@ export const XeroSyncButton: React.FC<XeroSyncButtonProps> = ({
   variant = 'outline',
   size = 'sm'
 }) => {
-  const { connectionStatus, isSyncing, syncInvoiceToXero } = useXeroIntegration();
+  const { connectionStatus, isSyncing, syncInvoiceToXero, checkConnectionStatus } = useXeroIntegration();
+
+  useEffect(() => {
+    checkConnectionStatus();
+  }, []);
 
   if (!connectionStatus.isConnected) {
     return null;
