@@ -165,11 +165,59 @@ const handler = async (req: Request): Promise<Response> => {
         .eq('user_id', user.id)
         .single();
 
-      const isConnected = !!tokenRecord && new Date(tokenRecord.expires_at) > new Date();
+      if (!tokenRecord) {
+        return new Response(JSON.stringify({ 
+          is_connected: false,
+          tenant_name: null 
+        }), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+
+      // Check if token is expired and needs refresh
+      let isConnected = new Date(tokenRecord.expires_at) > new Date();
+      
+      if (!isConnected && tokenRecord.refresh_token) {
+        console.log('Token expired, attempting refresh...');
+        try {
+          const refreshResponse = await fetch('https://identity.xero.com/connect/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': `Basic ${btoa(`${xeroClientId}:${xeroClientSecret}`)}`
+            },
+            body: new URLSearchParams({
+              grant_type: 'refresh_token',
+              refresh_token: tokenRecord.refresh_token
+            })
+          });
+
+          if (refreshResponse.ok) {
+            const newTokens = await refreshResponse.json();
+            
+            await supabase
+              .from('xero_tokens')
+              .update({
+                access_token: newTokens.access_token,
+                refresh_token: newTokens.refresh_token,
+                expires_at: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', user.id);
+
+            console.log('Token refreshed successfully');
+            isConnected = true;
+          } else {
+            console.log('Token refresh failed, user needs to reconnect');
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing token:', refreshError);
+        }
+      }
 
       return new Response(JSON.stringify({ 
         is_connected: isConnected,
-        tenant_name: tokenRecord?.tenant_name 
+        tenant_name: tokenRecord.tenant_name 
       }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
