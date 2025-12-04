@@ -78,7 +78,47 @@ const handler = async (req: Request): Promise<Response> => {
         .eq('user_id', user.id);
     }
 
-  if (action === 'sync_invoice') {
+    // Fetch available accounts from Xero
+    if (action === 'fetch_accounts') {
+      console.log('Fetching accounts from Xero...');
+      
+      const accountsResponse = await fetch(
+        `https://api.xero.com/api.xro/2.0/Accounts?where=Type=="REVENUE"||Type=="SALES"`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Xero-tenant-id': tokenRecord.tenant_id,
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!accountsResponse.ok) {
+        const errorText = await accountsResponse.text();
+        console.error('Failed to fetch accounts:', errorText);
+        throw new Error(`Failed to fetch Xero accounts: ${accountsResponse.status}`);
+      }
+
+      const accountsResult = await accountsResponse.json();
+      const accounts = accountsResult.Accounts
+        ?.filter((acc: any) => acc.Status === 'ACTIVE')
+        .map((acc: any) => ({
+          code: acc.Code,
+          name: acc.Name,
+          type: acc.Type
+        })) || [];
+
+      console.log('Found accounts:', accounts.length);
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        accounts 
+      }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    if (action === 'sync_invoice') {
       // Get invoice details from database
       const { data: invoice } = await supabase
         .from('invoices')
