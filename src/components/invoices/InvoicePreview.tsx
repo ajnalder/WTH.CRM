@@ -6,7 +6,6 @@ import { Client } from '@/hooks/useClients';
 import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { InvoiceHeader } from './InvoiceHeader';
-import { InvoiceClientInfo } from './InvoiceClientInfo';
 import { InvoiceItemsTablePreview } from './InvoiceItemsTablePreview';
 import { InvoiceTotalsPreview } from './InvoiceTotalsPreview';
 import { InvoiceActions } from './InvoiceActions';
@@ -24,21 +23,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
   const { items, isLoading: itemsLoading } = useInvoiceItems(invoice.id);
   const { settings: companySettings, isLoading: settingsLoading } = useCompanySettings();
 
-  console.log('InvoicePreview rendering:', { 
-    invoiceId: invoice.id, 
-    itemsLoading, 
-    settingsLoading,
-    itemsCount: items?.length || 0,
-    hasClient: !!client 
-  });
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Upon receipt';
+    return new Date(dateString).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   const handlePrint = () => {
-    console.log('Print button clicked');
     window.print();
   };
 
   const handleDownloadPDF = async () => {
-    console.log('Download PDF button clicked');
     try {
       await generateInvoicePDF(invoice, client, items, companySettings);
     } catch (error) {
@@ -47,7 +41,6 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
   };
 
   if (itemsLoading || settingsLoading) {
-    console.log('Loading invoice items or company settings');
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <Skeleton className="h-16 w-full" />
@@ -67,24 +60,14 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
 
       <Card className="print:shadow-none print:border-none invoice-content">
         <CardContent className="p-8">
-          <InvoiceHeader invoice={invoice} companySettings={companySettings} />
-          
-          {client ? (
-            <InvoiceClientInfo client={client} />
-          ) : (
+          <InvoiceHeader invoice={invoice} companySettings={companySettings} client={client} />
+
+          {!client && (
             <Alert className="mb-8">
               <AlertDescription>
                 Client information not available for this invoice.
               </AlertDescription>
             </Alert>
-          )}
-
-          {/* Project Description */}
-          {invoice.description && (
-            <div className="mb-8">
-              <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-              <p className="text-sm text-gray-600">{invoice.description}</p>
-            </div>
           )}
 
           {items && items.length > 0 ? (
@@ -99,9 +82,19 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
           
           <InvoiceTotalsPreview invoice={invoice} />
 
-          {/* Footer */}
-          <div className="mt-12 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
-            <p>Thank you for your business!</p>
+          {/* Due Date */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-sm">
+              <span className="font-semibold text-gray-900">Due Date: </span>
+              <span className="text-gray-900">{formatDate(invoice.due_date)}</span>
+            </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="mt-6 text-sm">
+            <div className="font-semibold text-gray-900 mb-2">Payment Details</div>
+            <div className="text-gray-700">{companySettings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited'}</div>
+            <div className="text-gray-700">{companySettings?.bank_account || '06-0556-0955531-00'}</div>
           </div>
         </CardContent>
       </Card>

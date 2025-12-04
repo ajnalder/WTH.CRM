@@ -9,7 +9,6 @@ export const generateInvoicePDF = async (
   items: InvoiceItem[],
   companySettings?: CompanySettings | null
 ) => {
-  // Create A4 PDF with reduced margins
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -18,186 +17,153 @@ export const generateInvoicePDF = async (
   
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const marginLeft = 10;
-  const marginRight = 10;
-  const marginTop = 10;
-  
-  // Add logo with proper aspect ratio
-  try {
-    if (companySettings?.logo_base64) {
-      // Use stored logo from company settings
-      const logoWidth = 60;
-      const logoHeight = 9.8; // Maintain 6.1:1 aspect ratio (60/6.1 ≈ 9.8)
-      pdf.addImage(companySettings.logo_base64, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
-    } else {
-      // Fallback to loading from public folder
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        logoImg.onload = () => {
-          const logoWidth = 60;
-          const logoHeight = 9.8;
-          pdf.addImage(logoImg, 'PNG', marginLeft, marginTop, logoWidth, logoHeight);
-          resolve(null);
-        };
-        logoImg.onerror = (error) => {
-          console.warn('Could not load logo for PDF, using text fallback:', error);
-          resolve(null);
-        };
-        logoImg.src = `${window.location.origin}/lovable-uploads/66b04964-07c1-4620-a5a5-98c5bdae7fc7.png`;
-      });
-    }
-  } catch (error) {
-    console.warn('Could not load logo for PDF, using text fallback:', error);
-    // Add text fallback if logo fails to load
-    pdf.setFontSize(18);
+  const marginLeft = 15;
+  const marginRight = 15;
+  const marginTop = 15;
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return new Date().toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  // TAX INVOICE title
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('TAX INVOICE', marginLeft, marginTop + 10);
+
+  // Client company name under title
+  if (client) {
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(companySettings?.company_name || 'What the Heck', marginLeft, marginTop + 15);
+    pdf.text(client.company, marginLeft, marginTop + 20);
   }
 
-  // Header with invoice title
-  pdf.setFontSize(24);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Tax Invoice - ' + invoice.invoice_number, marginLeft, marginTop + 45);
-  
-  // Business details on right side
+  // Company address on right
   const rightAlign = pageWidth - marginRight;
-  pdf.setFontSize(14);
+  pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
   pdf.text(companySettings?.company_name || 'What the Heck', rightAlign, marginTop + 10, { align: 'right' });
   
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(11);
-  pdf.text(companySettings?.address_line1 || '8 King Street', rightAlign, marginTop + 20, { align: 'right' });
-  pdf.text(companySettings?.address_line2 || 'Te Puke 3119', rightAlign, marginTop + 28, { align: 'right' });
-  pdf.text(companySettings?.address_line3 || 'NEW ZEALAND', rightAlign, marginTop + 36, { align: 'right' });
-  
-  // GST Number
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(11);
-  pdf.text('GST Number', rightAlign, marginTop + 52, { align: 'right' });
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(companySettings?.gst_number || '125-651-445', rightAlign, marginTop + 60, { align: 'right' });
-  
-  // Invoice Date - positioned under GST Number
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Invoice Date', rightAlign, marginTop + 76, { align: 'right' });
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(invoice.issued_date ? new Date(invoice.issued_date).toLocaleDateString() : new Date().toLocaleDateString(), rightAlign, marginTop + 84, { align: 'right' });
-  
-  // Client info (Bill To)
-  let yPos = marginTop + 65;
-  if (client) {
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(12);
-    pdf.text('Bill To:', marginLeft, yPos);
-    
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    yPos += 10;
-    pdf.text(client.company, marginLeft, yPos);
-    
-    if (client.phone) {
-      yPos += 8;
-      pdf.text(client.phone, marginLeft, yPos);
-    }
-  }
+  pdf.text(companySettings?.address_line1 || '8 King Street', rightAlign, marginTop + 16, { align: 'right' });
+  pdf.text(companySettings?.address_line2 || 'Te Puke 3119', rightAlign, marginTop + 22, { align: 'right' });
+  pdf.text(companySettings?.address_line3 || 'NEW ZEALAND', rightAlign, marginTop + 28, { align: 'right' });
 
-  // Project Description
-  if (invoice.description) {
-    yPos += 20;
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(12);
-    pdf.text('Description:', marginLeft, yPos);
-    
-    yPos += 10;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    // Handle long descriptions with proper text wrapping
-    const descriptionLines = pdf.splitTextToSize(invoice.description, pageWidth - marginLeft - marginRight - 10);
-    pdf.text(descriptionLines, marginLeft, yPos);
-    yPos += descriptionLines.length * 6;
-  }
-  
-  // Items table header
-  yPos += 30;
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(11);
-  pdf.text('Description', marginLeft, yPos);
-  pdf.text('Qty', pageWidth - 95, yPos, { align: 'center' });
-  pdf.text('Rate', pageWidth - 65, yPos, { align: 'center' });
-  pdf.text('Amount', pageWidth - marginRight, yPos, { align: 'right' });
-  
-  // Underline for table header
-  yPos += 2;
+  // Dark line separator
+  let yPos = marginTop + 38;
+  pdf.setDrawColor(150, 150, 150);
   pdf.setLineWidth(0.5);
   pdf.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+
+  // Invoice details row
+  yPos += 8;
+  const colWidth = (pageWidth - marginLeft - marginRight) / 4;
   
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Invoice Date', marginLeft, yPos);
+  pdf.text('Invoice Number', marginLeft + colWidth, yPos);
+  pdf.text('Reference', marginLeft + colWidth * 2, yPos);
+  pdf.text('GST Number', marginLeft + colWidth * 3, yPos);
+
+  yPos += 5;
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(formatDate(invoice.issued_date), marginLeft, yPos);
+  pdf.text(invoice.invoice_number, marginLeft + colWidth, yPos);
+  pdf.text(invoice.title || '-', marginLeft + colWidth * 2, yPos);
+  pdf.text(companySettings?.gst_number || '125-651-445', marginLeft + colWidth * 3, yPos);
+
+  // Items table
+  yPos += 20;
+  
+  // Dark line above header
+  pdf.setDrawColor(100, 100, 100);
+  pdf.setLineWidth(0.8);
+  pdf.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+  
+  yPos += 6;
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Description', marginLeft, yPos);
+  pdf.text('Quantity', pageWidth - 85, yPos, { align: 'right' });
+  pdf.text('Unit Price', pageWidth - 50, yPos, { align: 'right' });
+  pdf.text('Amount NZD', pageWidth - marginRight, yPos, { align: 'right' });
+  
+  // Light line below header
+  yPos += 3;
+  pdf.setDrawColor(200, 200, 200);
+  pdf.setLineWidth(0.3);
+  pdf.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+
   // Items
   pdf.setFont('helvetica', 'normal');
-  items.forEach((item) => {
-    yPos += 12;
+  items.forEach((item, index) => {
+    yPos += 8;
+    
+    // Alternating row background
+    if (index % 2 === 1) {
+      pdf.setFillColor(248, 248, 248);
+      pdf.rect(marginLeft, yPos - 5, pageWidth - marginLeft - marginRight, 8, 'F');
+    }
     
     // Handle long descriptions with text wrapping
-    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 160);
+    const descriptionLines = pdf.splitTextToSize(item.description, pageWidth - 120);
     pdf.text(descriptionLines, marginLeft, yPos);
     
-    pdf.text(item.quantity.toString(), pageWidth - 95, yPos, { align: 'center' });
-    pdf.text(`$${item.rate.toLocaleString()}`, pageWidth - 65, yPos, { align: 'center' });
-    pdf.text(`$${item.amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
+    pdf.text(item.quantity.toFixed(2), pageWidth - 85, yPos, { align: 'right' });
+    pdf.text(item.rate.toFixed(2), pageWidth - 50, yPos, { align: 'right' });
+    pdf.text(item.amount.toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
     
-    // Add extra space for multi-line descriptions
     if (descriptionLines.length > 1) {
-      yPos += (descriptionLines.length - 1) * 6;
+      yPos += (descriptionLines.length - 1) * 5;
     }
   });
-  
+
   // Totals section
-  yPos += 25;
+  yPos += 15;
   const totalsXPos = pageWidth - 80;
   
+  pdf.setFontSize(9);
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(11);
-  pdf.text('Subtotal:', totalsXPos, yPos);
-  pdf.text(`$${invoice.subtotal.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
+  pdf.text('Subtotal', totalsXPos, yPos);
+  pdf.text(invoice.subtotal.toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
+  
+  yPos += 6;
+  pdf.text(`TOTAL GST ${invoice.gst_rate}%`, totalsXPos, yPos);
+  pdf.text((invoice.gst_amount || 0).toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
+  
+  // Dark line before total
+  yPos += 5;
+  pdf.setDrawColor(100, 100, 100);
+  pdf.setLineWidth(0.8);
+  pdf.line(totalsXPos - 5, yPos, pageWidth - marginRight, yPos);
   
   yPos += 8;
-  pdf.text(`GST (${invoice.gst_rate}%):`, totalsXPos, yPos);
-  pdf.text(`$${invoice.gst_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
-  
-  yPos += 12;
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Total Amount:', totalsXPos, yPos);
-  pdf.text(`$${invoice.total_amount.toLocaleString()}`, pageWidth - marginRight, yPos, { align: 'right' });
-
-  // Payment options section
-  yPos += 30;
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(12);
-  pdf.text('PAYMENT OPTIONS:', marginLeft, yPos);
-  
-  yPos += 12;
-  pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(11);
+  pdf.text('TOTAL NZD', totalsXPos, yPos);
+  pdf.text(invoice.total_amount.toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
+
+  // Due Date
+  yPos += 20;
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Due Date: ', marginLeft, yPos);
+  pdf.setFont('helvetica', 'normal');
+  const dueDate = invoice.due_date ? formatDate(invoice.due_date) : 'Upon receipt';
+  pdf.text(dueDate, marginLeft + 22, yPos);
+
+  // Payment Details
+  yPos += 12;
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment Details', marginLeft, yPos);
+  
+  yPos += 6;
+  pdf.setFont('helvetica', 'normal');
   pdf.text(companySettings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited', marginLeft, yPos);
   
-  yPos += 8;
+  yPos += 5;
   pdf.text(companySettings?.bank_account || '06-0556-0955531-00', marginLeft, yPos);
-
-  // Due Date - moved down to payment section
-  yPos += 16;
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Due Date:', marginLeft, yPos);
-  pdf.setFont('helvetica', 'normal');
-  const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt';
-  pdf.text(dueDate, marginLeft + 25, yPos);
-
-  // Footer
-  yPos = pageHeight - 30;
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(10);
-  pdf.text('Thank you for your business!', pageWidth / 2, yPos, { align: 'center' });
   
   pdf.save(`Invoice-${invoice.invoice_number}.pdf`);
 };
