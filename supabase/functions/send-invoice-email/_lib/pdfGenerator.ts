@@ -24,8 +24,25 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   
   if (companySettings?.logo_base64) {
     try {
-      const logoWidth = 50;
-      const logoHeight = 15;
+      // Extract dimensions from base64 PNG to preserve aspect ratio
+      let logoWidth = 50;
+      let logoHeight = 15; // Default fallback
+      
+      const base64Data = companySettings.logo_base64.split(',')[1] || companySettings.logo_base64;
+      const binaryString = atob(base64Data);
+      
+      // PNG dimensions are at bytes 16-23 (width) and 20-23 (height)
+      if (binaryString.length > 24 && binaryString.substring(1, 4) === 'PNG') {
+        const width = (binaryString.charCodeAt(16) << 24) | (binaryString.charCodeAt(17) << 16) | 
+                      (binaryString.charCodeAt(18) << 8) | binaryString.charCodeAt(19);
+        const height = (binaryString.charCodeAt(20) << 24) | (binaryString.charCodeAt(21) << 16) | 
+                       (binaryString.charCodeAt(22) << 8) | binaryString.charCodeAt(23);
+        if (width > 0 && height > 0) {
+          const aspectRatio = width / height;
+          logoHeight = logoWidth / aspectRatio;
+        }
+      }
+      
       pdf.addImage(
         companySettings.logo_base64,
         'PNG',
