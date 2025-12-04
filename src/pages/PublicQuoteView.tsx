@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { useQuoteByToken, useQuoteCreator } from '@/hooks/useQuotes';
+import { useQuoteByToken } from '@/hooks/useQuotes';
 import { useQuoteBlocks } from '@/hooks/useQuoteBlocks';
 import { useQuoteItems } from '@/hooks/useQuoteItems';
 import { useQuoteEvents } from '@/hooks/useQuoteEvents';
@@ -16,7 +16,6 @@ import { format } from 'date-fns';
 export default function PublicQuoteView() {
   const { token } = useParams();
   const { data: quote, isLoading, refetch } = useQuoteByToken(token);
-  const { data: creator } = useQuoteCreator(quote?.user_id);
   const { blocks } = useQuoteBlocks(quote?.id);
   const { items, total } = useQuoteItems(quote?.id);
   const { logEvent } = useQuoteEvents();
@@ -260,7 +259,7 @@ export default function PublicQuoteView() {
                 <div className="grid grid-cols-2 gap-8 mb-6">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">From</div>
-                    <div className="font-semibold">{creator?.full_name || 'Unknown'}</div>
+                    <div className="font-semibold">{quote.creator_name || 'Unknown'}</div>
                     <div className="text-sm text-muted-foreground">{settings?.company_name || 'What the Heck'}</div>
                   </div>
                   <div>
