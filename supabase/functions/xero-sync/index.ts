@@ -103,25 +103,38 @@ const handler = async (req: Request): Promise<Response> => {
       };
 
       console.log('Creating contact in Xero:', contactData.Name);
+      console.log('Using tenant_id:', tokenRecord.tenant_id);
 
       const contactResponse = await fetch(`https://api.xero.com/api.xro/2.0/Contacts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Xero-tenant-id': tokenRecord.tenant_id,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ Contacts: [contactData] })
       });
 
+      console.log('Contact response status:', contactResponse.status);
+      console.log('Contact response content-type:', contactResponse.headers.get('content-type'));
+
+      const contactResponseText = await contactResponse.text();
+      console.log('Contact response body (first 500 chars):', contactResponseText.substring(0, 500));
+
       if (!contactResponse.ok) {
-        const errorText = await contactResponse.text();
-        console.error('Xero contact error:', contactResponse.status, errorText);
-        throw new Error(`Failed to create contact in Xero: ${contactResponse.status} - ${errorText.substring(0, 200)}`);
+        throw new Error(`Failed to create contact in Xero: ${contactResponse.status} - ${contactResponseText.substring(0, 200)}`);
       }
 
-      const contactResult = await contactResponse.json();
-      console.log('Contact created:', contactResult);
+      // Parse as JSON only if we have valid JSON
+      let contactResult;
+      try {
+        contactResult = JSON.parse(contactResponseText);
+      } catch (parseError) {
+        throw new Error(`Invalid JSON from Xero API: ${contactResponseText.substring(0, 200)}`);
+      }
+      
+      console.log('Contact created successfully');
       const xeroContactId = contactResult.Contacts?.[0]?.ContactID;
       
       if (!xeroContactId) {
