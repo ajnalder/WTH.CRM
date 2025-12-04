@@ -47,6 +47,8 @@ export const useQuotes = () => {
       valid_until?: string;
       deposit_percentage?: number;
       total_amount?: number;
+      contact_name?: string;
+      contact_email?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -54,7 +56,7 @@ export const useQuotes = () => {
       // Get the user's profile to store creator name
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, email')
         .eq('id', user.id)
         .single();
 
@@ -72,6 +74,8 @@ export const useQuotes = () => {
           user_id: user.id,
           quote_number: quoteNumber,
           creator_name: profile?.full_name || null,
+          contact_name: quoteData.contact_name,
+          contact_email: quoteData.contact_email,
         })
         .select()
         .single();

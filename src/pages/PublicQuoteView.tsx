@@ -10,6 +10,7 @@ import { useQuoteBlocks } from '@/hooks/useQuoteBlocks';
 import { useQuoteItems } from '@/hooks/useQuoteItems';
 import { useQuoteEvents } from '@/hooks/useQuoteEvents';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -111,44 +112,33 @@ export default function PublicQuoteView() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        {/* Quote Header with Cover Image */}
+        <QuoteHeader
+          clientName={quote.clients?.company || 'Client'}
+          contactName={quote.contact_name}
+          title={quote.title}
+          projectType={quote.project_type}
+          creatorName={quote.creator_name}
+          creatorEmail={quote.contact_email}
+          coverImageUrl={quote.cover_image_url}
+          logoBase64={settings?.logo_base64}
+          companyName={settings?.company_name}
+          editable={false}
+        />
+
+        {/* Quote Info Bar */}
+        <div className="flex items-center justify-between py-4 mt-4 text-sm text-muted-foreground">
           <div>
-            {settings?.logo_base64 ? (
-              <img src={settings.logo_base64} alt="Company Logo" className="h-12 mb-4" />
-            ) : (
-              <h2 className="text-xl font-bold">{settings?.company_name || 'Company'}</h2>
-            )}
-            <div className="text-sm text-muted-foreground">
-              {settings?.address_line1 && <div>{settings.address_line1}</div>}
-              {settings?.address_line2 && <div>{settings.address_line2}</div>}
-              {settings?.address_line3 && <div>{settings.address_line3}</div>}
-            </div>
+            <span className="font-medium">{quote.quote_number}</span>
+            <span className="mx-2">•</span>
+            <span>{format(new Date(quote.created_at), 'dd MMMM yyyy')}</span>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">Proposal</div>
-            <div className="text-muted-foreground">{quote.quote_number}</div>
-            <div className="text-sm text-muted-foreground mt-2">
-              Date: {format(new Date(quote.created_at), 'dd MMMM yyyy')}
+          {quote.valid_until && (
+            <div>
+              Valid until: {format(new Date(quote.valid_until), 'dd MMMM yyyy')}
             </div>
-            {quote.valid_until && (
-              <div className="text-sm text-muted-foreground">
-                Valid until: {format(new Date(quote.valid_until), 'dd MMMM yyyy')}
-              </div>
-            )}
-          </div>
+          )}
         </div>
-
-        {/* Client Info */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="text-sm text-muted-foreground mb-1">Prepared for</div>
-            <div className="text-xl font-semibold">{quote.clients?.company}</div>
-          </CardContent>
-        </Card>
-
-        {/* Title */}
-        <h1 className="text-3xl font-bold mb-8">{quote.title}</h1>
 
         {/* Content Blocks */}
         <div className="space-y-8 mb-8">
