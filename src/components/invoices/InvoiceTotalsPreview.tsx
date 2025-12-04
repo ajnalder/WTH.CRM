@@ -8,19 +8,19 @@ interface InvoiceTotalsPreviewProps {
 export const InvoiceTotalsPreview: React.FC<InvoiceTotalsPreviewProps> = ({ invoice }) => {
   return (
     <div className="flex justify-end">
-      <div className="w-80">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Subtotal:</span>
-            <span className="font-medium">${invoice.subtotal.toLocaleString()}</span>
+      <div className="w-72">
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between py-1">
+            <span className="text-gray-700">Subtotal</span>
+            <span className="text-gray-900">{invoice.subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">GST ({invoice.gst_rate}%):</span>
-            <span className="font-medium">${invoice.gst_amount.toLocaleString()}</span>
+          <div className="flex justify-between py-1">
+            <span className="text-gray-700">TOTAL GST {invoice.gst_rate}%</span>
+            <span className="text-gray-900">{(invoice.gst_amount || 0).toFixed(2)}</span>
           </div>
-          <div className="flex justify-between border-t border-gray-200 pt-2">
-            <span className="font-semibold text-gray-900">Total Amount:</span>
-            <span className="font-bold text-lg">${invoice.total_amount.toLocaleString()}</span>
+          <div className="flex justify-between border-t-2 border-gray-400 pt-2 mt-2">
+            <span className="font-bold text-gray-900">TOTAL NZD</span>
+            <span className="font-bold text-gray-900 text-lg">{invoice.total_amount.toFixed(2)}</span>
           </div>
         </div>
       </div>
