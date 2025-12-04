@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
         .eq('user_id', user.id);
     }
 
-    if (action === 'sync_invoice') {
+  if (action === 'sync_invoice') {
       // Get invoice details from database
       const { data: invoice } = await supabase
         .from('invoices')
@@ -94,6 +94,16 @@ const handler = async (req: Request): Promise<Response> => {
       if (!invoice) {
         throw new Error('Invoice not found');
       }
+
+      // Get user's company settings for account code
+      const { data: companySettings } = await supabase
+        .from('company_settings')
+        .select('xero_account_code')
+        .eq('user_id', user.id)
+        .single();
+
+      const accountCode = companySettings?.xero_account_code || '200';
+      console.log('Using Xero account code:', accountCode);
 
       // Create contact in Xero if needed
       const contactData = {
@@ -154,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
           Description: item.description,
           Quantity: item.quantity,
           UnitAmount: item.rate,
-          AccountCode: '200' // Default sales account
+          AccountCode: accountCode
         }))
       };
 
