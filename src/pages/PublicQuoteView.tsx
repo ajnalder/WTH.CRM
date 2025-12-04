@@ -122,6 +122,7 @@ export default function PublicQuoteView() {
           creatorEmail={quote.contact_email}
           coverImageUrl={quote.cover_image_url}
           logoBase64={settings?.logo_base64}
+          logoInverseBase64={settings?.logo_inverse_base64}
           companyName={settings?.company_name}
           editable={false}
         />

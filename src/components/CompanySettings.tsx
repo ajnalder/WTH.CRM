@@ -37,6 +37,18 @@ export const CompanySettings: React.FC = () => {
     }
   };
 
+  const handleInverseLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const logoBase64 = await uploadLogo(file);
+      updateSettings({ logo_inverse_base64: logoBase64 });
+    } catch (error) {
+      console.error('Error uploading inverse logo:', error);
+    }
+  };
+
   const handleSave = () => {
     updateSettings(formData);
   };
@@ -52,15 +64,16 @@ export const CompanySettings: React.FC = () => {
           <CardTitle>Company Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Logo Upload */}
+          {/* Logo Upload - Standard (for light backgrounds) */}
           <div>
-            <Label htmlFor="logo">Company Logo</Label>
+            <Label htmlFor="logo">Logo (Light Background)</Label>
+            <p className="text-sm text-muted-foreground mb-2">Used on invoices and light backgrounds</p>
             <div className="mt-2 flex items-center gap-4">
               {settings?.logo_base64 && (
                 <img 
                   src={settings.logo_base64} 
                   alt="Company Logo" 
-                  className="h-16 w-auto border rounded"
+                  className="h-16 w-auto border rounded bg-white p-2"
                 />
               )}
               <div>
@@ -78,6 +91,38 @@ export const CompanySettings: React.FC = () => {
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Logo
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Inverse Logo Upload (for dark backgrounds) */}
+          <div>
+            <Label htmlFor="logo_inverse">Logo (Dark Background)</Label>
+            <p className="text-sm text-muted-foreground mb-2">Used on quotes and dark backgrounds - typically a white/light version</p>
+            <div className="mt-2 flex items-center gap-4">
+              {settings?.logo_inverse_base64 && (
+                <img 
+                  src={settings.logo_inverse_base64} 
+                  alt="Company Logo (Inverse)" 
+                  className="h-16 w-auto border rounded bg-gray-800 p-2"
+                />
+              )}
+              <div>
+                <input
+                  type="file"
+                  id="logo_inverse"
+                  accept="image/*"
+                  onChange={handleInverseLogoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('logo_inverse')?.click()}
+                  disabled={isUpdating}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Inverse Logo
                 </Button>
               </div>
             </div>

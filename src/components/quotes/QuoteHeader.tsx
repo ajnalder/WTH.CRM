@@ -13,6 +13,7 @@ interface QuoteHeaderProps {
   creatorEmail?: string | null;
   coverImageUrl?: string | null;
   logoBase64?: string | null;
+  logoInverseBase64?: string | null;
   companyName?: string | null;
   onCoverImageChange?: (url: string | null) => void;
   editable?: boolean;
@@ -27,6 +28,7 @@ export function QuoteHeader({
   creatorEmail,
   coverImageUrl,
   logoBase64,
+  logoInverseBase64,
   companyName,
   onCoverImageChange,
   editable = false,
@@ -126,10 +128,14 @@ export function QuoteHeader({
         <div className="relative z-10 h-full flex flex-col justify-between p-8 text-white">
           {/* Top Section - Logo only */}
           <div className="flex items-start justify-between">
-            {/* Logo */}
+            {/* Logo - prefer inverse logo for dark backgrounds */}
             <div>
-              {logoBase64 ? (
-                <img src={logoBase64} alt="Company Logo" className="h-10" />
+              {(logoInverseBase64 || logoBase64) ? (
+                <img 
+                  src={logoInverseBase64 || logoBase64} 
+                  alt="Company Logo" 
+                  className="h-10" 
+                />
               ) : (
                 <div className="text-xl font-bold">{companyName || 'Company'}</div>
               )}

@@ -9,6 +9,7 @@ export interface CompanySettings {
   user_id: string;
   company_name: string;
   logo_base64?: string;
+  logo_inverse_base64?: string;
   address_line1?: string;
   address_line2?: string;
   address_line3?: string;

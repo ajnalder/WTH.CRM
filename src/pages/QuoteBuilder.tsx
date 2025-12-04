@@ -234,6 +234,7 @@ export default function QuoteBuilder() {
           creatorEmail={settings?.owner_name ? undefined : undefined}
           coverImageUrl={quoteData.cover_image_url}
           logoBase64={settings?.logo_base64}
+          logoInverseBase64={settings?.logo_inverse_base64}
           companyName={settings?.company_name}
           onCoverImageChange={handleCoverImageChange}
           editable={true}
