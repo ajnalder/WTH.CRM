@@ -51,6 +51,13 @@ export const useQuotes = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Get the user's profile to store creator name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
       const quoteNumber = await generateNextQuoteNumber();
       
       const { data, error } = await supabase
@@ -64,6 +71,7 @@ export const useQuotes = () => {
           total_amount: quoteData.total_amount ?? 0,
           user_id: user.id,
           quote_number: quoteNumber,
+          creator_name: profile?.full_name || null,
         })
         .select()
         .single();
@@ -168,22 +176,5 @@ export const useQuoteByToken = (token: string | undefined) => {
       return data as Quote;
     },
     enabled: !!token,
-  });
-};
-
-export const useQuoteCreator = (userId: string | undefined) => {
-  return useQuery({
-    queryKey: ['quote-creator', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .eq('id', userId)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!userId,
   });
 };

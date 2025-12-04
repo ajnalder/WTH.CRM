@@ -13,6 +13,7 @@ export interface Quote {
   accepted_by_name?: string;
   viewed_at?: string;
   public_token: string;
+  creator_name?: string;
   created_at: string;
   updated_at: string;
   clients?: {

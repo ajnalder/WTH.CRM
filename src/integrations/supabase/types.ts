@@ -1039,6 +1039,7 @@ export type Database = {
           accepted_by_name: string | null
           client_id: string
           created_at: string
+          creator_name: string | null
           deposit_percentage: number
           id: string
           project_type: string | null
@@ -1057,6 +1058,7 @@ export type Database = {
           accepted_by_name?: string | null
           client_id: string
           created_at?: string
+          creator_name?: string | null
           deposit_percentage?: number
           id?: string
           project_type?: string | null
@@ -1075,6 +1077,7 @@ export type Database = {
           accepted_by_name?: string | null
           client_id?: string
           created_at?: string
+          creator_name?: string | null
           deposit_percentage?: number
           id?: string
           project_type?: string | null
