@@ -38,19 +38,20 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid authentication token');
     }
 
-    const { action } = await req.json();
+    const { action, frontend_origin } = await req.json();
 
     if (action === 'get_auth_url') {
       // Use a fixed redirect URI that you'll configure in your Xero app
       const redirectUri = 'https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/xero-oauth-callback';
       const state = crypto.randomUUID();
       const scopes = [
+        'openid',
+        'profile',
+        'email',
+        'offline_access',
         'accounting.transactions',
-        'accounting.transactions.read',
         'accounting.contacts',
-        'accounting.contacts.read',
-        'accounting.settings',
-        'accounting.settings.read'
+        'accounting.settings'
       ].join(' ');
       
       const authUrl = new URL('https://login.xero.com/identity/connect/authorize');
@@ -60,12 +61,15 @@ const handler = async (req: Request): Promise<Response> => {
       authUrl.searchParams.set('scope', scopes);
       authUrl.searchParams.set('state', state);
 
-      // Store state for validation
+      console.log('Generating Xero auth URL with state:', state, 'frontend_origin:', frontend_origin);
+
+      // Store state for validation along with frontend origin for callback redirect
       await supabase
         .from('xero_oauth_states')
         .upsert({
           user_id: user.id,
           state,
+          frontend_origin: frontend_origin || 'https://jnehwoaockudqsdqwfwl.lovable.app',
           created_at: new Date().toISOString()
         });
 

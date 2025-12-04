@@ -109,7 +109,10 @@ export const useXeroIntegration = () => {
       if (!session) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.functions.invoke('xero-oauth', {
-        body: { action: 'get_auth_url' },
+        body: { 
+          action: 'get_auth_url',
+          frontend_origin: window.location.origin
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -117,6 +120,7 @@ export const useXeroIntegration = () => {
 
       if (error) throw error;
 
+      console.log('Redirecting to Xero OAuth:', data.auth_url);
       // Redirect to Xero OAuth page
       window.location.href = data.auth_url;
 
