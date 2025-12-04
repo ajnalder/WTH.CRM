@@ -17,6 +17,7 @@ export interface CompanySettings {
   bank_details?: string;
   bank_account?: string;
   owner_name?: string;
+  xero_account_code?: string;
   created_at: string;
   updated_at: string;
 }

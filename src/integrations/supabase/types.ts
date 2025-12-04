@@ -198,6 +198,7 @@ export type Database = {
           owner_name: string | null
           updated_at: string
           user_id: string
+          xero_account_code: string | null
         }
         Insert: {
           address_line1?: string | null
@@ -214,6 +215,7 @@ export type Database = {
           owner_name?: string | null
           updated_at?: string
           user_id: string
+          xero_account_code?: string | null
         }
         Update: {
           address_line1?: string | null
@@ -230,6 +232,7 @@ export type Database = {
           owner_name?: string | null
           updated_at?: string
           user_id?: string
+          xero_account_code?: string | null
         }
         Relationships: []
       }
