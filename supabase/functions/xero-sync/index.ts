@@ -102,6 +102,8 @@ const handler = async (req: Request): Promise<Response> => {
         Phones: invoice.clients.phone ? [{ PhoneType: 'DEFAULT', PhoneNumber: invoice.clients.phone }] : []
       };
 
+      console.log('Creating contact in Xero:', contactData.Name);
+
       const contactResponse = await fetch(`https://api.xero.com/api.xro/2.0/Contacts`, {
         method: 'POST',
         headers: {
@@ -112,8 +114,19 @@ const handler = async (req: Request): Promise<Response> => {
         body: JSON.stringify({ Contacts: [contactData] })
       });
 
+      if (!contactResponse.ok) {
+        const errorText = await contactResponse.text();
+        console.error('Xero contact error:', contactResponse.status, errorText);
+        throw new Error(`Failed to create contact in Xero: ${contactResponse.status} - ${errorText.substring(0, 200)}`);
+      }
+
       const contactResult = await contactResponse.json();
-      const xeroContactId = contactResult.Contacts[0].ContactID;
+      console.log('Contact created:', contactResult);
+      const xeroContactId = contactResult.Contacts?.[0]?.ContactID;
+      
+      if (!xeroContactId) {
+        throw new Error('Failed to get contact ID from Xero response');
+      }
 
       // Create invoice in Xero
       const xeroInvoice = {
