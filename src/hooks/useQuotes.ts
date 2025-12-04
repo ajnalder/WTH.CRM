@@ -170,3 +170,20 @@ export const useQuoteByToken = (token: string | undefined) => {
     enabled: !!token,
   });
 };
+
+export const useQuoteCreator = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['quote-creator', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('id', userId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+};
