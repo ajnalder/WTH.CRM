@@ -877,6 +877,224 @@ export type Database = {
           },
         ]
       }
+      quote_blocks: {
+        Row: {
+          block_type: string
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          order_index: number
+          quote_id: string
+          title: string | null
+        }
+        Insert: {
+          block_type: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          order_index?: number
+          quote_id: string
+          title?: string | null
+        }
+        Update: {
+          block_type?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          order_index?: number
+          quote_id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_blocks_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          quote_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          quote_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          quote_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          is_optional: boolean
+          order_index: number
+          quantity: number
+          quote_id: string
+          rate: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          is_optional?: boolean
+          order_index?: number
+          quantity?: number
+          quote_id: string
+          rate?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          is_optional?: boolean
+          order_index?: number
+          quantity?: number
+          quote_id?: string
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_templates: {
+        Row: {
+          block_type: string
+          content: string | null
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          block_type: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          block_type?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_name: string | null
+          client_id: string
+          created_at: string
+          deposit_percentage: number
+          id: string
+          project_type: string | null
+          public_token: string
+          quote_number: string
+          status: string
+          title: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          client_id: string
+          created_at?: string
+          deposit_percentage?: number
+          id?: string
+          project_type?: string | null
+          public_token?: string
+          quote_number: string
+          status?: string
+          title: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          client_id?: string
+          created_at?: string
+          deposit_percentage?: number
+          id?: string
+          project_type?: string | null
+          public_token?: string
+          quote_number?: string
+          status?: string
+          title?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_files: {
         Row: {
           created_at: string
