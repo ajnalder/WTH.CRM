@@ -24,8 +24,8 @@ export const generateInvoicePDF = async (invoice: any, client: any, items: any[]
   
   if (companySettings?.logo_base64) {
     try {
-      const logoWidth = 30;
-      const logoHeight = 12;
+      const logoWidth = 50;
+      const logoHeight = 15;
       pdf.addImage(
         companySettings.logo_base64,
         'PNG',
