@@ -17,6 +17,7 @@ export interface Client {
   gradient: string | null;
   created_at: string;
   updated_at: string;
+  xero_contact_id: string | null;
 }
 
 export interface CreateClientData {

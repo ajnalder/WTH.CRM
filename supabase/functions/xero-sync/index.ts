@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid authentication token');
     }
 
-    const { action, invoice_id } = await req.json();
+    const { action, invoice_id, client_id, xero_contact_id } = await req.json();
 
     // Get user's Xero tokens
     const { data: tokenRecord } = await supabase
@@ -118,6 +118,97 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Fetch contacts from Xero
+    if (action === 'fetch_contacts') {
+      console.log('Fetching contacts from Xero...');
+      
+      const contactsResponse = await fetch(
+        `https://api.xero.com/api.xro/2.0/Contacts?where=ContactStatus=="ACTIVE"&order=Name`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Xero-tenant-id': tokenRecord.tenant_id,
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!contactsResponse.ok) {
+        const errorText = await contactsResponse.text();
+        console.error('Failed to fetch contacts:', errorText);
+        throw new Error(`Failed to fetch Xero contacts: ${contactsResponse.status}`);
+      }
+
+      const contactsResult = await contactsResponse.json();
+      const contacts = contactsResult.Contacts?.map((contact: any) => ({
+        contact_id: contact.ContactID,
+        name: contact.Name,
+        email: contact.EmailAddress || '',
+        phone: contact.Phones?.find((p: any) => p.PhoneNumber)?.PhoneNumber || ''
+      })) || [];
+
+      console.log('Found contacts:', contacts.length);
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        contacts 
+      }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    // Link a Xero contact to a CRM client
+    if (action === 'link_contact') {
+      if (!client_id || !xero_contact_id) {
+        throw new Error('client_id and xero_contact_id are required');
+      }
+
+      console.log('Linking Xero contact to client:', { client_id, xero_contact_id });
+
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update({ xero_contact_id })
+        .eq('id', client_id)
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw new Error(`Failed to link contact: ${updateError.message}`);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Contact linked successfully'
+      }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    // Unlink a Xero contact from a CRM client
+    if (action === 'unlink_contact') {
+      if (!client_id) {
+        throw new Error('client_id is required');
+      }
+
+      console.log('Unlinking Xero contact from client:', client_id);
+
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update({ xero_contact_id: null })
+        .eq('id', client_id)
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw new Error(`Failed to unlink contact: ${updateError.message}`);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Contact unlinked successfully'
+      }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
     if (action === 'sync_invoice') {
       // Get invoice details from database
       const { data: invoice } = await supabase
@@ -145,50 +236,64 @@ const handler = async (req: Request): Promise<Response> => {
       const accountCode = companySettings?.xero_account_code || '200';
       console.log('Using Xero account code:', accountCode);
 
-      // Create contact in Xero if needed
-      const contactData = {
-        Name: invoice.clients.company,
-        EmailAddress: invoice.clients.email || '',
-        Phones: invoice.clients.phone ? [{ PhoneType: 'DEFAULT', PhoneNumber: invoice.clients.phone }] : []
-      };
+      let xeroContactId = invoice.clients.xero_contact_id;
 
-      console.log('Creating contact in Xero:', contactData.Name);
-      console.log('Using tenant_id:', tokenRecord.tenant_id);
+      // If client already has a linked Xero contact, use it
+      if (xeroContactId) {
+        console.log('Using existing linked Xero contact:', xeroContactId);
+      } else {
+        // Create contact in Xero
+        const contactData = {
+          Name: invoice.clients.company,
+          EmailAddress: invoice.clients.email || '',
+          Phones: invoice.clients.phone ? [{ PhoneType: 'DEFAULT', PhoneNumber: invoice.clients.phone }] : []
+        };
 
-      const contactResponse = await fetch(`https://api.xero.com/api.xro/2.0/Contacts`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Xero-tenant-id': tokenRecord.tenant_id,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ Contacts: [contactData] })
-      });
+        console.log('Creating contact in Xero:', contactData.Name);
+        console.log('Using tenant_id:', tokenRecord.tenant_id);
 
-      console.log('Contact response status:', contactResponse.status);
-      console.log('Contact response content-type:', contactResponse.headers.get('content-type'));
+        const contactResponse = await fetch(`https://api.xero.com/api.xro/2.0/Contacts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Xero-tenant-id': tokenRecord.tenant_id,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ Contacts: [contactData] })
+        });
 
-      const contactResponseText = await contactResponse.text();
-      console.log('Contact response body (first 500 chars):', contactResponseText.substring(0, 500));
+        console.log('Contact response status:', contactResponse.status);
+        console.log('Contact response content-type:', contactResponse.headers.get('content-type'));
 
-      if (!contactResponse.ok) {
-        throw new Error(`Failed to create contact in Xero: ${contactResponse.status} - ${contactResponseText.substring(0, 200)}`);
-      }
+        const contactResponseText = await contactResponse.text();
+        console.log('Contact response body (first 500 chars):', contactResponseText.substring(0, 500));
 
-      // Parse as JSON only if we have valid JSON
-      let contactResult;
-      try {
-        contactResult = JSON.parse(contactResponseText);
-      } catch (parseError) {
-        throw new Error(`Invalid JSON from Xero API: ${contactResponseText.substring(0, 200)}`);
-      }
-      
-      console.log('Contact created successfully');
-      const xeroContactId = contactResult.Contacts?.[0]?.ContactID;
-      
-      if (!xeroContactId) {
-        throw new Error('Failed to get contact ID from Xero response');
+        if (!contactResponse.ok) {
+          throw new Error(`Failed to create contact in Xero: ${contactResponse.status} - ${contactResponseText.substring(0, 200)}`);
+        }
+
+        // Parse as JSON only if we have valid JSON
+        let contactResult;
+        try {
+          contactResult = JSON.parse(contactResponseText);
+        } catch (parseError) {
+          throw new Error(`Invalid JSON from Xero API: ${contactResponseText.substring(0, 200)}`);
+        }
+        
+        console.log('Contact created successfully');
+        xeroContactId = contactResult.Contacts?.[0]?.ContactID;
+        
+        if (!xeroContactId) {
+          throw new Error('Failed to get contact ID from Xero response');
+        }
+
+        // Auto-link the new Xero contact to the CRM client for future syncs
+        console.log('Auto-linking new Xero contact to client:', invoice.client_id);
+        await supabase
+          .from('clients')
+          .update({ xero_contact_id: xeroContactId })
+          .eq('id', invoice.client_id);
       }
 
       // Create invoice in Xero
