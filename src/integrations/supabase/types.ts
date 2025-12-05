@@ -1205,6 +1205,7 @@ export type Database = {
         Row: {
           assignee: string | null
           billable_amount: number | null
+          billing_description: string | null
           client_id: string | null
           created_at: string
           description: string | null
@@ -1223,6 +1224,7 @@ export type Database = {
         Insert: {
           assignee?: string | null
           billable_amount?: number | null
+          billing_description?: string | null
           client_id?: string | null
           created_at?: string
           description?: string | null
@@ -1241,6 +1243,7 @@ export type Database = {
         Update: {
           assignee?: string | null
           billable_amount?: number | null
+          billing_description?: string | null
           client_id?: string | null
           created_at?: string
           description?: string | null

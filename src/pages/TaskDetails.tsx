@@ -288,6 +288,7 @@ const TaskDetails = () => {
                   taskTitle={task.title}
                   taskDescription={task.description}
                   billableAmount={task.billable_amount}
+                  billingDescription={task.billing_description}
                   onBillableAmountChange={(amount) => {
                     updateTaskDetails({
                       title: task.title,
@@ -299,6 +300,19 @@ const TaskDetails = () => {
                       client_id: task.client_id,
                       project: task.project,
                       billable_amount: amount,
+                    });
+                  }}
+                  onBillingDescriptionChange={(billingDesc) => {
+                    updateTaskDetails({
+                      title: task.title,
+                      description: task.description || '',
+                      assignee: task.assignee,
+                      status: task.status,
+                      due_date: task.due_date,
+                      dropbox_url: task.dropbox_url,
+                      client_id: task.client_id,
+                      project: task.project,
+                      billing_description: billingDesc,
                     });
                   }}
                 />
