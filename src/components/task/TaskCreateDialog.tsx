@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, User, Tag, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useClients } from '@/hooks/useClients';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TaskCreateDialogProps {
   onTaskCreated?: () => void;
@@ -26,9 +28,11 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
   triggerVariant = "default"
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { createTask, isCreating } = useTasks();
   const { projects } = useProjects();
   const { teamMembers } = useTeamMembers();
+  const { clients } = useClients();
   
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,6 +46,16 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
     client_id: ''
   });
 
+  // Set default assignee to logged-in user when dialog opens
+  useEffect(() => {
+    if (open && user && teamMembers) {
+      const currentUserMember = teamMembers.find(m => m.id === user.id);
+      if (currentUserMember && !formData.assignee) {
+        setFormData(prev => ({ ...prev, assignee: user.id }));
+      }
+    }
+  }, [open, user, teamMembers]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,7 +66,8 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
       assignee: formData.assignee || null,
       due_date: formData.due_date || null,
       status: formData.status,
-      tags: formData.tags.length > 0 ? formData.tags : null
+      tags: formData.tags.length > 0 ? formData.tags : null,
+      client_id: formData.client_id || null
     };
 
     createTask(taskData, {
@@ -62,7 +77,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
           title: '',
           description: '',
           project: prefilledProject || '',
-          assignee: '',
+          assignee: user?.id || '',
           due_date: '',
           status: 'To Do',
           tags: [],
@@ -116,6 +131,22 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label>Client</Label>
+              <Select value={formData.client_id} onValueChange={(value) => setFormData(prev => ({ ...prev, client_id: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients?.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.company}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Project</Label>
               <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
                 <SelectTrigger>
@@ -125,6 +156,29 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                   {projects?.map((project) => (
                     <SelectItem key={project.id} value={project.name}>
                       {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Assignee</Label>
+              <Select value={formData.assignee} onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers?.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+                          {member.avatar}
+                        </div>
+                        {member.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -145,27 +199,6 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Assignee</Label>
-            <Select value={formData.assignee} onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                {teamMembers?.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 bg-gradient-to-r ${member.gradient} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
-                        {member.avatar}
-                      </div>
-                      {member.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
