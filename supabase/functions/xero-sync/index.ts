@@ -192,11 +192,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Create invoice in Xero
+      const invoiceDate = invoice.issued_date || new Date().toISOString().split('T')[0];
+      // Default due date to 30 days from invoice date if not specified (Xero requires a valid date)
+      const dueDate = invoice.due_date || (() => {
+        const date = new Date(invoiceDate);
+        date.setDate(date.getDate() + 30);
+        return date.toISOString().split('T')[0];
+      })();
+      
       const xeroInvoice = {
         Type: 'ACCREC',
         Contact: { ContactID: xeroContactId },
-        Date: invoice.issued_date || new Date().toISOString().split('T')[0],
-        DueDate: invoice.due_date,
+        Date: invoiceDate,
+        DueDate: dueDate,
         InvoiceNumber: invoice.invoice_number,
         Reference: invoice.title,
         Status: 'AUTHORISED',
