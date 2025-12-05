@@ -1,7 +1,5 @@
-
-import DOMPurify from 'dompurify';
-
-export const sanitizeHtml = (input: string): string => {
+export const sanitizeHtml = async (input: string): Promise<string> => {
+  const DOMPurify = (await import('dompurify')).default;
   return DOMPurify.sanitize(input, { 
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: []
