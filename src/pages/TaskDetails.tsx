@@ -25,6 +25,7 @@ import { TaskTimeManagement } from '@/components/task-details/TaskTimeManagement
 import { TaskTimeEntries } from '@/components/task-details/TaskTimeEntries';
 import { TaskFiles } from '@/components/task-details/TaskFiles';
 import { TaskNotes } from '@/components/task-details/TaskNotes';
+import { TaskBilling } from '@/components/task-details/TaskBilling';
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -276,6 +277,33 @@ const TaskDetails = () => {
                 onHoursChange={setTimerHours}
               />
             </div>
+
+            {/* Task Billing - only show if task has a client */}
+            {task.client_id && (
+              <div className="bg-card border rounded-lg">
+                <TaskBilling
+                  taskId={id!}
+                  clientId={task.client_id}
+                  clientName={task.client_name}
+                  taskTitle={task.title}
+                  taskDescription={task.description}
+                  billableAmount={task.billable_amount}
+                  onBillableAmountChange={(amount) => {
+                    updateTaskDetails({
+                      title: task.title,
+                      description: task.description || '',
+                      assignee: task.assignee,
+                      status: task.status,
+                      due_date: task.due_date,
+                      dropbox_url: task.dropbox_url,
+                      client_id: task.client_id,
+                      project: task.project,
+                      billable_amount: amount,
+                    });
+                  }}
+                />
+              </div>
+            )}
 
             <div className="bg-card border rounded-lg">
               <TaskFiles taskId={id!} />
