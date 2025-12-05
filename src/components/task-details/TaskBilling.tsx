@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskBillingProps {
@@ -33,6 +34,10 @@ export const TaskBilling = ({
   const [amount, setAmount] = useState(billableAmount?.toString() || '');
   const [description, setDescription] = useState(taskDescription || taskTitle);
   const [isCreating, setIsCreating] = useState(false);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  
+  // Hook for adding items - only called when we have an invoice ID
+  const { addItem } = useInvoiceItems(createdInvoiceId || '');
 
   const handleAmountChange = (value: string) => {
     setAmount(value);
@@ -68,13 +73,22 @@ export const TaskBilling = ({
       });
 
       if (invoice) {
-        // Navigate to invoice detail page for review
-        // The user can add line items there
+        const invoiceId = (invoice as { id: string }).id;
+        
+        // Add the line item to the invoice
+        await addItem({
+          invoice_id: invoiceId,
+          description: description,
+          quantity: 1,
+          rate: numAmount,
+          amount: numAmount,
+        });
+
         toast({
           title: "Invoice Created",
-          description: "Draft invoice created. Add the line item and send when ready.",
+          description: "Draft invoice created with line item. Review and send when ready.",
         });
-        navigate(`/invoices/${(invoice as { id: string }).id}`);
+        navigate(`/invoices/${invoiceId}`);
       }
     } catch (error) {
       console.error('Error creating invoice:', error);
