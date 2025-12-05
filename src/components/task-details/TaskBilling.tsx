@@ -17,7 +17,9 @@ interface TaskBillingProps {
   taskTitle: string;
   taskDescription?: string | null;
   billableAmount?: number | null;
+  billingDescription?: string | null;
   onBillableAmountChange: (amount: number | null) => void;
+  onBillingDescriptionChange: (description: string | null) => void;
 }
 
 export const TaskBilling = ({
@@ -27,13 +29,15 @@ export const TaskBilling = ({
   taskTitle,
   taskDescription,
   billableAmount,
+  billingDescription,
   onBillableAmountChange,
+  onBillingDescriptionChange,
 }: TaskBillingProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createInvoice } = useInvoices();
   const [amount, setAmount] = useState(billableAmount?.toString() || '');
-  const [description, setDescription] = useState(taskDescription || taskTitle);
+  const [description, setDescription] = useState(billingDescription || taskDescription || taskTitle);
   const [isCreating, setIsCreating] = useState(false);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   
@@ -161,6 +165,7 @@ export const TaskBilling = ({
             placeholder="Invoice line item description..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onBlur={() => onBillingDescriptionChange(description || null)}
             className="mt-1 min-h-[60px]"
             rows={2}
           />
