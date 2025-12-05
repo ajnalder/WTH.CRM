@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, FileText, Check, Mail } from 'lucide-react';
+import { Eye, Edit, FileText, Check, Mail, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -44,7 +44,7 @@ const getStatusColor = (status: string) => {
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
   const navigate = useNavigate();
-  const { updateInvoice } = useInvoices();
+  const { updateInvoice, deleteInvoice } = useInvoices();
 
   const handleMarkAsPaid = (invoiceId: string) => {
     updateInvoice({
@@ -54,6 +54,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
         paid_date: new Date().toISOString().split('T')[0]
       }
     });
+  };
+
+  const handleDelete = (invoiceId: string) => {
+    if (window.confirm('Are you sure you want to delete this invoice?')) {
+      deleteInvoice(invoiceId);
+    }
   };
 
   return (
@@ -140,6 +146,17 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                       title="Mark as Paid"
                     >
                       <Check size={14} />
+                    </Button>
+                  )}
+                  {(invoice.status === 'draft' || invoice.status === 'cancelled') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(invoice.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Delete Invoice"
+                    >
+                      <Trash2 size={14} />
                     </Button>
                   )}
                 </div>
