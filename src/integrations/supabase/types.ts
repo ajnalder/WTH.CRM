@@ -1204,6 +1204,7 @@ export type Database = {
       tasks: {
         Row: {
           assignee: string | null
+          billable_amount: number | null
           client_id: string | null
           created_at: string
           description: string | null
@@ -1221,6 +1222,7 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
+          billable_amount?: number | null
           client_id?: string | null
           created_at?: string
           description?: string | null
@@ -1238,6 +1240,7 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
+          billable_amount?: number | null
           client_id?: string | null
           created_at?: string
           description?: string | null
