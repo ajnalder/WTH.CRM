@@ -149,6 +149,7 @@ export type Database = {
           total_value: number | null
           updated_at: string
           user_id: string
+          xero_contact_id: string | null
         }
         Insert: {
           avatar?: string | null
@@ -164,6 +165,7 @@ export type Database = {
           total_value?: number | null
           updated_at?: string
           user_id: string
+          xero_contact_id?: string | null
         }
         Update: {
           avatar?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           total_value?: number | null
           updated_at?: string
           user_id?: string
+          xero_contact_id?: string | null
         }
         Relationships: []
       }
