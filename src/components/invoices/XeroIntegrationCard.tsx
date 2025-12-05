@@ -1,17 +1,18 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExternalLink, CheckCircle, AlertCircle, RefreshCw, Users, Link, Unlink } from 'lucide-react';
+import { ExternalLink, CheckCircle, AlertCircle, RefreshCw, Users, Unlink } from 'lucide-react';
 import { useXeroIntegration } from '@/hooks/useXeroIntegration';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useClients } from '@/hooks/useClients';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { XeroContactPicker } from './XeroContactPicker';
 
 interface XeroAccount {
   code: string;
@@ -340,26 +341,12 @@ export const XeroIntegrationCard: React.FC = () => {
                             Unlink
                           </Button>
                         ) : (
-                          <Select
-                            value=""
-                            onValueChange={(xeroContactId) => linkContact(client.id, xeroContactId)}
-                            disabled={isLinking || availableContacts.length === 0}
-                          >
-                            <SelectTrigger className="w-48">
-                              <SelectValue placeholder={
-                                availableContacts.length === 0 
-                                  ? "No contacts available" 
-                                  : "Link to Xero contact"
-                              } />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableContacts.map((contact) => (
-                                <SelectItem key={contact.contact_id} value={contact.contact_id}>
-                                  {contact.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <XeroContactPicker
+                            clientName={client.company}
+                            availableContacts={availableContacts}
+                            onSelect={(xeroContactId) => linkContact(client.id, xeroContactId)}
+                            disabled={isLinking}
+                          />
                         )}
                       </div>
                     );
