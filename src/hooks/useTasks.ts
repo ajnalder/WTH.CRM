@@ -46,12 +46,17 @@ export const useTasks = () => {
         `)
         .eq('user_id', user.id);
 
+      // Get clients to map client_id directly to client name
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, company')
+        .eq('user_id', user.id);
+
       if (projectsError) {
         console.error('Error fetching projects:', projectsError);
-        return (tasks || []).map(task => ({
-          ...task,
-          client_name: undefined
-        }));
+      }
+      if (clientsError) {
+        console.error('Error fetching clients:', clientsError);
       }
 
       // Create a map of project names to client company names
@@ -64,10 +69,18 @@ export const useTasks = () => {
         }
       });
 
-      // Add client information to tasks
+      // Create a map of client_id to company name
+      const clientIdMap = new Map();
+      clients?.forEach(client => {
+        clientIdMap.set(client.id, client.company);
+      });
+
+      // Add client information to tasks - prefer direct client_id, fallback to project's client
       const tasksWithClients: TaskWithClient[] = (tasks || []).map(task => ({
         ...task,
-        client_name: task.project ? projectClientMap.get(task.project) : undefined
+        client_name: task.client_id 
+          ? clientIdMap.get(task.client_id) 
+          : (task.project ? projectClientMap.get(task.project) : undefined)
       }));
 
       return tasksWithClients;
