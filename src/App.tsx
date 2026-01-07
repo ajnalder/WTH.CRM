@@ -12,7 +12,6 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Tasks from "./pages/Tasks";
 import TaskDetails from "./pages/TaskDetails";
-import Team from "./pages/Team";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import Calendar from "./pages/Calendar";
@@ -51,7 +50,6 @@ const App = () => (
             <Route path="/projects/:id" element={<ProtectedRoute><PageWithSidebar><ProjectDetail /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><PageWithSidebar><Tasks /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/tasks/:id" element={<ProtectedRoute><PageWithSidebar><TaskDetails /></PageWithSidebar></ProtectedRoute>} />
-            <Route path="/team" element={<ProtectedRoute><PageWithSidebar><Team /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><PageWithSidebar><Clients /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><PageWithSidebar><ClientDetail /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/domains" element={<ProtectedRoute><PageWithSidebar><Domains /></PageWithSidebar></ProtectedRoute>} />

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Clock } from 'lucide-react';
 import { type TeamMember } from '@/hooks/useTeamMembers';
 
@@ -22,6 +23,8 @@ const getStatusColor = (status: string) => {
 };
 
 export const TeamOverview = ({ members, onMemberClick }: TeamOverviewProps) => {
+  const navigate = useNavigate();
+
   if (members.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -74,8 +77,12 @@ export const TeamOverview = ({ members, onMemberClick }: TeamOverviewProps) => {
         ))}
       </div>
       
-      <button className="w-full mt-4 text-center text-sm text-blue-600 hover:text-blue-800 font-medium">
-        View All Team Members
+      <button
+        type="button"
+        onClick={() => navigate('/settings')}
+        className="w-full mt-4 text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+      >
+        Manage Team in Settings
       </button>
     </div>
   );
