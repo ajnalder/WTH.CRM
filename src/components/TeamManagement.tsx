@@ -2,16 +2,30 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useToast } from '@/hooks/use-toast';
+import { useTeamMembers, type TeamMember } from '@/hooks/useTeamMembers';
 import { CreateTeamMemberDialog } from '@/components/CreateTeamMemberDialog';
-import { Users, Shield, User } from 'lucide-react';
+import { TeamMemberDetails } from '@/components/TeamMemberDetails';
+import { Users, User } from 'lucide-react';
 
 export const TeamManagement: React.FC = () => {
-  const { teamMembers, isLoading } = useTeamMembers();
-  const { toast } = useToast();
+  const { teamMembers, isLoading, updateTeamMember } = useTeamMembers();
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const handleManageMember = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedMember(null);
+  };
+
+  const handleUpdateMember = (updatedMember: TeamMember) => {
+    updateTeamMember(updatedMember);
+    setSelectedMember(updatedMember);
+  };
 
   if (isLoading) {
     return (
@@ -70,7 +84,12 @@ export const TeamManagement: React.FC = () => {
                   <User className="h-4 w-4" />
                   {member.role}
                 </div>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => handleManageMember(member)}
+                >
                   Manage
                 </Button>
               </div>
@@ -83,6 +102,12 @@ export const TeamManagement: React.FC = () => {
             </div>
           )}
         </div>
+        <TeamMemberDetails
+          member={selectedMember}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+          onUpdateMember={handleUpdateMember}
+        />
       </CardContent>
     </Card>
   );

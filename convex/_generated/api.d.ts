@@ -18,6 +18,7 @@ import type * as emailTemplates from "../emailTemplates.js";
 import type * as invoiceItems from "../invoiceItems.js";
 import type * as invoicePayments from "../invoicePayments.js";
 import type * as invoices from "../invoices.js";
+import type * as profiles from "../profiles.js";
 import type * as projectTeamMembers from "../projectTeamMembers.js";
 import type * as projects from "../projects.js";
 import type * as quoteNotifications from "../quoteNotifications.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   invoiceItems: typeof invoiceItems;
   invoicePayments: typeof invoicePayments;
   invoices: typeof invoices;
+  profiles: typeof profiles;
   projectTeamMembers: typeof projectTeamMembers;
   projects: typeof projects;
   quoteNotifications: typeof quoteNotifications;

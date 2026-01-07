@@ -2,7 +2,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery as useConvexQuery } from 'convex/react';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 
 export interface TeamMember {
@@ -27,6 +27,7 @@ export const useTeamMembers = () => {
     api.projectTeamMembers.listAllForUser,
     user ? { userId: user.id } : undefined
   );
+  const updateProfile = useConvexMutation(api.profiles.updateTeamMember);
 
   const gradients = [
     'from-blue-400 to-blue-600',
@@ -59,10 +60,10 @@ export const useTeamMembers = () => {
         name,
         avatar: initials,
         gradient: gradients[index % gradients.length],
-        role: 'Team Member',
-        status: 'online',
-        current_task: undefined,
-        hours_this_week: 0,
+        role: profile.role || 'Team Member',
+        status: profile.status || 'online',
+        current_task: profile.current_task,
+        hours_this_week: profile.hours_this_week ?? 0,
       };
     }) || [];
 
@@ -82,8 +83,26 @@ export const useTeamMembers = () => {
   });
 
   const updateTeamMemberMutation = useMutation({
-    mutationFn: async (_updatedMember: TeamMember) => {
-      throw new Error('Updating team members is not supported yet in Convex.');
+    mutationFn: async (updatedMember: TeamMember) => {
+      await updateProfile({
+        memberUserId: updatedMember.id,
+        updates: {
+          full_name: updatedMember.name,
+          email: updatedMember.email,
+          role: updatedMember.role,
+          status: updatedMember.status,
+          current_task: updatedMember.current_task,
+          hours_this_week: updatedMember.hours_this_week,
+        },
+      });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to update team member.';
+      toast({
+        title: "Update unavailable",
+        description: message,
+        variant: "destructive",
+      });
     },
   });
 

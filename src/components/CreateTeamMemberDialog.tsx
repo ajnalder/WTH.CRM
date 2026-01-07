@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +17,7 @@ export const CreateTeamMemberDialog = () => {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState('Team Member');
   const [temporaryPassword, setTemporaryPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -116,16 +115,14 @@ export const CreateTeamMemberDialog = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrator</SelectItem>
-                <SelectItem value="user">Team Member</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="role">Title</Label>
+            <Input
+              id="role"
+              type="text"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="Enter a title"
+            />
           </div>
 
           <div className="space-y-2">

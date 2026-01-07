@@ -123,27 +123,19 @@ export const TeamMemberDetails = ({ member, isOpen, onClose, onUpdateMember }: T
 
           {/* Details */}
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="role">Role</Label>
-              {isEditing ? (
-                <Select value={editedMember.role} onValueChange={(value) => setEditedMember({ ...editedMember, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-                    <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-                    <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-                    <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
-                    <SelectItem value="Product Manager">Product Manager</SelectItem>
-                    <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
-                    <SelectItem value="QA Engineer">QA Engineer</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm text-gray-600 mt-1">{member.role}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="role">Title</Label>
+            {isEditing ? (
+              <Input
+                id="role"
+                value={editedMember.role}
+                onChange={(e) => setEditedMember({ ...editedMember, role: e.target.value })}
+                placeholder="Enter a title"
+              />
+            ) : (
+              <p className="text-sm text-gray-600 mt-1">{member.role}</p>
+            )}
+          </div>
 
             <div>
               <Label htmlFor="email" className="flex items-center gap-2">
