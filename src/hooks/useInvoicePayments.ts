@@ -1,58 +1,52 @@
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePayment } from '@/types/invoiceTypes';
 
 export const useInvoicePayments = (invoiceId: string) => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ['invoice-payments', invoiceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('invoice_payments')
-        .select('*')
-        .eq('invoice_id', invoiceId)
-        .order('payment_date', { ascending: false });
-      if (error) throw error;
-      return data as InvoicePayment[];
-    },
-    enabled: !!invoiceId,
-  });
+  const paymentsData = useConvexQuery(
+    api.invoicePayments.listByInvoice,
+    user && invoiceId ? { invoiceId, userId: user.id } : undefined
+  ) as InvoicePayment[] | undefined;
 
-  const addPayment = useMutation({
-    mutationFn: async (paymentData: Omit<InvoicePayment, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('invoice_payments')
-        .insert(paymentData)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  const payments = paymentsData ?? [];
+  const isLoading = paymentsData === undefined;
+
+  const addPaymentMutation = useConvexMutation(api.invoicePayments.create);
+
+  const addPayment = async (paymentData: Omit<InvoicePayment, 'id' | 'created_at'>) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      await addPaymentMutation({
+        invoiceId,
+        userId: user.id,
+        amount: paymentData.amount,
+        payment_method: paymentData.payment_method,
+        payment_date: paymentData.payment_date,
+        notes: paymentData.notes,
+      });
       toast({
         title: "Success",
         description: "Payment recorded successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to record payment",
         variant: "destructive",
       });
       console.error('Error recording payment:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
   return {
     payments,
     isLoading,
-    addPayment: addPayment.mutate,
+    addPayment,
   };
 };

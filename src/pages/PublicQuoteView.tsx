@@ -13,6 +13,8 @@ import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { useMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export default function PublicQuoteView() {
   const { token } = useParams();
@@ -21,6 +23,7 @@ export default function PublicQuoteView() {
   const { items, total } = useQuoteItems(quote?.id);
   const { logEvent } = useQuoteEvents();
   const { settings } = useCompanySettings();
+  const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
   
   const [clientName, setClientName] = useState('');
   const [isAccepting, setIsAccepting] = useState(false);
@@ -40,15 +43,18 @@ export default function PublicQuoteView() {
           .eq('id', quote.id)
           .then(() => {
             // Send notification
-            fetch(`https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/send-quote-notification`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ quote_id: quote.id, action: 'viewed' }),
-            });
+            sendQuoteNotification({
+              userId: quote.user_id,
+              quoteId: quote.id,
+              quoteNumber: quote.quote_number,
+              clientName: quote.clients?.company || 'Client',
+              totalAmount: quote.total_amount,
+              action: 'viewed',
+            }).catch((err) => console.error('Quote notification failed', err));
           });
       }
     }
-  }, [quote, hasLoggedView, logEvent]);
+  }, [quote, hasLoggedView, logEvent, sendQuoteNotification]);
 
   const handleAccept = async () => {
     if (!quote || !clientName.trim()) return;
@@ -67,14 +73,14 @@ export default function PublicQuoteView() {
         .eq('id', quote.id);
       
       // Send notification
-      await fetch(`https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/send-quote-notification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: quote.id,
-          action: 'accepted',
-          accepted_by_name: clientName.trim(),
-        }),
+      await sendQuoteNotification({
+        userId: quote.user_id,
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        clientName: quote.clients?.company || 'Client',
+        totalAmount: quote.total_amount,
+        action: 'accepted',
+        accepted_by_name: clientName.trim(),
       });
       
       refetch();

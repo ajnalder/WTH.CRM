@@ -1,6 +1,6 @@
-
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface EmailLog {
   id: string;
@@ -14,30 +14,15 @@ export interface EmailLog {
 }
 
 export const useEmailLogs = (invoiceId: string) => {
-  const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['email-logs', invoiceId],
-    queryFn: async () => {
-      console.log('Fetching email logs for invoice:', invoiceId);
-      
-      const { data, error } = await supabase
-        .from('email_logs')
-        .select('*')
-        .eq('invoice_id', invoiceId)
-        .order('sent_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching email logs:', error);
-        throw error;
-      }
-      
-      console.log('Email logs fetched:', data?.length || 0, 'records');
-      return data as EmailLog[];
-    },
-    enabled: !!invoiceId,
-  });
+  const { user } = useAuth();
+
+  const logsData = useConvexQuery(
+    api.emailLogs.listByInvoice,
+    user && invoiceId ? { invoiceId, userId: user.id } : undefined
+  ) as EmailLog[] | undefined;
 
   return {
-    logs,
-    isLoading,
+    logs: logsData ?? [],
+    isLoading: logsData === undefined,
   };
 };

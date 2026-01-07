@@ -1,7 +1,9 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 export interface Project {
   id: string;
@@ -59,212 +61,102 @@ export interface UpdateProjectData {
 
 export const useProjects = (clientId?: string) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const {
-    data: projects = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: clientId ? ['projects', clientId] : ['projects'],
-    queryFn: async () => {
-      console.log('Fetching projects', clientId ? `for client ${clientId}` : 'for all clients');
-      
-      let query = supabase
-        .from('projects')
-        .select(`
-          *,
-          clients!inner(
-            id,
-            company
-          ),
-          project_team_members(
-            user_id,
-            profiles!inner(
-              id,
-              full_name,
-              email,
-              avatar_url
-            )
-          )
-        `)
-        .order('created_at', { ascending: false });
+  const projectsData = useConvexQuery(
+    api.projects.list,
+    user ? { userId: user.id, clientId } : undefined
+  );
+  const isLoading = projectsData === undefined;
+  const projects = projectsData ?? [];
+  const error = null;
 
-      if (clientId) {
-        query = query.eq('client_id', clientId);
-      }
+  const createProjectMutation = useConvexMutation(api.projects.create);
+  const updateProjectMutation = useConvexMutation(api.projects.update);
+  const deleteProjectMutation = useConvexMutation(api.projects.remove);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching projects:', error);
-        throw error;
-      }
-
-      // Transform the data to flatten team members and include client name
-      const transformedData = data?.map((project, index) => {
-        const gradients = [
-          'from-blue-400 to-blue-600',
-          'from-green-400 to-green-600',
-          'from-purple-400 to-purple-600',
-          'from-red-400 to-red-600',
-          'from-yellow-400 to-yellow-600',
-          'from-pink-400 to-pink-600',
-          'from-indigo-400 to-indigo-600',
-          'from-teal-400 to-teal-600',
-        ];
-
-        const team_members = project.project_team_members?.map((ptm: any, idx: number) => {
-          const profile = ptm.profiles;
-          const name = profile?.full_name || profile?.email || 'Unknown User';
-          const initials = profile?.full_name 
-            ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-            : (profile?.email || 'UN').slice(0, 2).toUpperCase();
-
-          return {
-            id: profile?.id || '',
-            name,
-            role: 'Team Member',
-            email: profile?.email || '',
-            avatar: initials,
-            gradient: gradients[idx % gradients.length],
-          };
-        }) || [];
-
-        return {
-          ...project,
-          client_name: (project as any).clients?.company || 'Unknown Client',
-          team_members
-        };
-      }) || [];
-
-      console.log('Projects fetched:', transformedData);
-      return transformedData as Project[];
-    },
-  });
-
-  const createProjectMutation = useMutation({
-    mutationFn: async (projectData: CreateProjectData) => {
-      console.log('Creating project:', projectData);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([{
-          ...projectData,
-          user_id: user.id
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating project:', error);
-        throw error;
-      }
-
-      console.log('Project created:', data);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+  const createProject = async (projectData: CreateProjectData) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      console.log('createProject', { userId: user.id, projectData });
+      setIsCreating(true);
+      await createProjectMutation({
+        userId: user.id,
+        ...projectData,
+      });
       toast({
         title: "Success",
         description: "Project created successfully",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       console.error('Error creating project:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create project",
+        description: error?.message || "Failed to create project",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-  const updateProjectMutation = useMutation({
-    mutationFn: async ({ projectId, projectData }: { projectId: string; projectData: UpdateProjectData }) => {
-      console.log('Updating project:', projectId, projectData);
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .update({
-          ...projectData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', projectId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating project:', error);
-        throw error;
-      }
-
-      console.log('Project updated:', data);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+  const updateProject = async ({ projectId, projectData }: { projectId: string; projectData: UpdateProjectData }) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsUpdating(true);
+      await updateProjectMutation({ id: projectId, userId: user.id, updates: projectData });
       toast({
         title: "Success",
         description: "Project updated successfully",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       console.error('Error updating project:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update project",
+        description: error?.message || "Failed to update project",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
-  const deleteProjectMutation = useMutation({
-    mutationFn: async (projectId: string) => {
-      console.log('Deleting project:', projectId);
-      
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
-
-      if (error) {
-        console.error('Error deleting project:', error);
-        throw error;
-      }
-
-      console.log('Project deleted:', projectId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+  const deleteProject = async (projectId: string) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsDeleting(true);
+      await deleteProjectMutation({ id: projectId, userId: user.id });
       toast({
         title: "Success",
         description: "Project deleted successfully",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       console.error('Error deleting project:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete project",
+        description: error?.message || "Failed to delete project",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return {
     projects,
     isLoading,
     error,
-    createProject: createProjectMutation.mutate,
-    updateProject: updateProjectMutation.mutate,
-    deleteProject: deleteProjectMutation.mutate,
-    isCreating: createProjectMutation.isPending,
-    isUpdating: updateProjectMutation.isPending,
-    isDeleting: deleteProjectMutation.isPending,
+    createProject,
+    updateProject,
+    deleteProject,
+    isCreating,
+    isUpdating,
+    isDeleting,
   };
 };

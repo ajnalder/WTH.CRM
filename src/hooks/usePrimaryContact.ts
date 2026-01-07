@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PrimaryContact {
   id: string;
@@ -9,25 +10,18 @@ export interface PrimaryContact {
 }
 
 export const usePrimaryContact = (clientId: string | undefined) => {
-  return useQuery({
-    queryKey: ['primary-contact', clientId],
-    queryFn: async () => {
-      if (!clientId) return null;
-      
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('id, name, email, phone')
-        .eq('client_id', clientId)
-        .eq('is_primary', true)
-        .maybeSingle();
+  const { user } = useAuth();
 
-      if (error) {
-        console.error('Error fetching primary contact:', error);
-        return null;
-      }
+  const result = useConvexQuery(
+    api.contacts.list,
+    user && clientId ? { clientId, userId: user.id } : undefined
+  ) as PrimaryContact[] | undefined;
 
-      return data as PrimaryContact | null;
-    },
-    enabled: !!clientId,
-  });
+  const primary = result?.find((c) => c.is_primary) ?? null;
+
+  return {
+    data: primary,
+    isLoading: result === undefined,
+    error: null,
+  };
 };

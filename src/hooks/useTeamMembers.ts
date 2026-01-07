@@ -1,15 +1,15 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery as useConvexQuery } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export interface TeamMember {
   id: string;
-  email: string;
-  full_name: string;
+  email?: string;
+  full_name?: string;
   avatar_url?: string;
-  // Add computed fields for UI compatibility
   name: string;
   avatar: string;
   gradient: string;
@@ -22,72 +22,49 @@ export interface TeamMember {
 export const useTeamMembers = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const teamMembersQuery = useQuery({
-    queryKey: ['team_members'],
-    queryFn: async (): Promise<TeamMember[]> => {
-      console.log('useTeamMembers: Starting to fetch team members from profiles table...');
+  const teamMembersData = useConvexQuery(
+    api.projectTeamMembers.listAllForUser,
+    user ? { userId: user.id } : undefined
+  );
 
-      try {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('full_name');
+  const gradients = [
+    'from-blue-400 to-blue-600',
+    'from-green-400 to-green-600',
+    'from-purple-400 to-purple-600',
+    'from-red-400 to-red-600',
+    'from-yellow-400 to-yellow-600',
+    'from-pink-400 to-pink-600',
+    'from-indigo-400 to-indigo-600',
+    'from-teal-400 to-teal-600',
+  ];
 
-        if (error) {
-          console.error('useTeamMembers: Error fetching team members:', error);
-          throw error;
-        }
+  const teamMembers: TeamMember[] =
+    (teamMembersData || []).map((member, index) => {
+      const profile: any = (member as any).profile || {};
+      const name = profile.full_name || profile.email || member.user_id;
+      const initials =
+        (profile.full_name || member.user_id || 'UN')
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'UN';
 
-        console.log(`useTeamMembers: Found ${profiles?.length || 0} profiles in database`);
-
-        // Transform profiles into team members format for UI compatibility
-        const teamMembers: TeamMember[] = (profiles || []).map((profile, index) => {
-          const gradients = [
-            'from-blue-400 to-blue-600',
-            'from-green-400 to-green-600',
-            'from-purple-400 to-purple-600',
-            'from-red-400 to-red-600',
-            'from-yellow-400 to-yellow-600',
-            'from-pink-400 to-pink-600',
-            'from-indigo-400 to-indigo-600',
-            'from-teal-400 to-teal-600',
-          ];
-
-          const initials = profile.full_name 
-            ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-            : profile.email?.slice(0, 2).toUpperCase() || 'UN';
-
-          const teamMember = {
-            id: profile.id,
-            email: profile.email || '',
-            full_name: profile.full_name || '',
-            avatar_url: profile.avatar_url,
-            name: profile.full_name || profile.email || 'Unknown User',
-            avatar: initials,
-            gradient: gradients[index % gradients.length],
-            role: 'Team Member', // Default role for now
-            status: 'online', // Default status
-            current_task: undefined,
-            hours_this_week: 0,
-          };
-
-          console.log(`useTeamMembers: Processed team member:`, teamMember.name);
-          return teamMember;
-        });
-
-        console.log(`useTeamMembers: Successfully processed ${teamMembers.length} team members for display`);
-        return teamMembers;
-      } catch (error) {
-        console.error('useTeamMembers: Error in teamMembersQuery:', error);
-        throw error;
-      }
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+      return {
+        id: member.user_id,
+        email: profile.email,
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+        name,
+        avatar: initials,
+        gradient: gradients[index % gradients.length],
+        role: 'Team Member',
+        status: 'online',
+        current_task: undefined,
+        hours_this_week: 0,
+      };
+    }) || [];
 
   // For now, createTeamMember is not needed since users are created through auth
   // But we'll keep the interface for compatibility
@@ -105,52 +82,16 @@ export const useTeamMembers = () => {
   });
 
   const updateTeamMemberMutation = useMutation({
-    mutationFn: async (updatedMember: TeamMember) => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Only update the profile fields that are actually stored
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updatedMember.name,
-          email: updatedMember.email,
-          avatar_url: updatedMember.avatar_url,
-        })
-        .eq('id', updatedMember.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating team member:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['team_members'] });
-      toast({
-        title: "Success",
-        description: "Team member updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update team member error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update team member",
-        variant: "destructive",
-      });
+    mutationFn: async (_updatedMember: TeamMember) => {
+      throw new Error('Updating team members is not supported yet in Convex.');
     },
   });
 
   return {
-    teamMembers: teamMembersQuery.data || [],
-    isLoading: teamMembersQuery.isLoading,
-    error: teamMembersQuery.error,
-    refetch: teamMembersQuery.refetch,
+    teamMembers,
+    isLoading: teamMembersData === undefined && !!user,
+    error: null,
+    refetch: () => {},
     createTeamMember: createTeamMemberMutation.mutate,
     updateTeamMember: updateTeamMemberMutation.mutate,
     isCreating: createTeamMemberMutation.isPending,

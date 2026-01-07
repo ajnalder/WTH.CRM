@@ -1,204 +1,92 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 import type { TaskWithClient } from '@/hooks/useTasks';
 
 export const useTask = (taskId: string) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const taskQuery = useQuery({
-    queryKey: ['task', taskId],
-    queryFn: async (): Promise<TaskWithClient> => {
-      console.log('useTask - Fetching task with ID:', taskId);
-      
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('id', taskId)
-        .maybeSingle();
+  const taskData = useConvexQuery(
+    api.tasks.getById,
+    user && taskId ? { id: taskId, userId: user.id } : undefined
+  ) as TaskWithClient | null | undefined;
 
-      if (error) {
-        console.error('useTask - Error fetching task:', error);
-        throw error;
-      }
+  const updateTaskMutation = useConvexMutation(api.tasks.update);
 
-      if (!task) {
-        console.error('useTask - Task not found for ID:', taskId);
-        throw new Error('Task not found');
-      }
+  const isLoading = taskData === undefined;
+  const task = taskData ?? null;
 
-      console.log('useTask - Fetched task:', task);
-
-      // Get projects to map project names to client names
-      const { data: projects, error: projectsError } = await supabase
-        .from('projects')
-        .select(`
-          name,
-          clients (
-            company
-          )
-        `);
-
-      if (projectsError) {
-        console.error('useTask - Error fetching projects:', projectsError);
-        return {
-          ...task,
-          client_name: undefined
-        };
-      }
-
-      // Create a map of project names to client company names
-      const projectClientMap = new Map();
-      projects?.forEach(project => {
-        if (project.clients && Array.isArray(project.clients) && project.clients[0]) {
-          projectClientMap.set(project.name, project.clients[0].company);
-        } else if (project.clients && !Array.isArray(project.clients)) {
-          projectClientMap.set(project.name, project.clients.company);
-        }
-      });
-
-      // Add client information to task
-      const taskWithClient: TaskWithClient = {
-        ...task,
-        client_name: task.project ? projectClientMap.get(task.project) : undefined
-      };
-
-      console.log('useTask - Final task with client info:', taskWithClient);
-      return taskWithClient;
-    },
-    enabled: !!taskId,
+  const normalize = (updates: Partial<TaskWithClient>) => ({
+    ...updates,
+    description: updates.description ?? undefined,
+    assignee: updates.assignee ?? undefined,
+    due_date: updates.due_date ?? undefined,
+    dropbox_url: updates.dropbox_url ?? undefined,
+    client_id: updates.client_id ?? undefined,
+    project: updates.project ?? undefined,
+    billable_amount: updates.billable_amount ?? undefined,
+    billing_description: updates.billing_description ?? undefined,
+    tags: updates.tags ?? undefined,
   });
 
-  const updateTaskDetails = useMutation({
-    mutationFn: async (updateData: { 
-      title: string; 
-      description: string; 
-      assignee: string | null; 
-      status: string; 
-      due_date: string | null; 
-      dropbox_url: string | null;
-      client_id: string | null;
-      project: string | null;
-      billable_amount?: number | null;
-      billing_description?: string | null;
-    }) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          title: updateData.title,
-          description: updateData.description || null,
-          assignee: updateData.assignee,
-          status: updateData.status,
-          due_date: updateData.due_date,
-          dropbox_url: updateData.dropbox_url,
-          client_id: updateData.client_id,
-          project: updateData.project,
-          billable_amount: updateData.billable_amount,
-          billing_description: updateData.billing_description
-        })
-        .eq('id', taskId)
-        .select()
-        .single();
+  const updateTaskDetails = async (updateData: {
+    title: string;
+    description: string;
+    assignee: string | null;
+    status: string;
+    due_date: string | null;
+    dropbox_url: string | null;
+    client_id: string | null;
+    project: string | null;
+    billable_amount?: number | null;
+    billing_description?: string | null;
+  }) => {
+    if (!user) throw new Error('User not authenticated');
+    await updateTaskMutation({
+      id: taskId,
+      userId: user.id,
+      updates: normalize(updateData),
+    });
+    toast({
+      title: "Success",
+      description: "Task updated successfully",
+    });
+  };
 
-      if (error) {
-        console.error('Error updating task details:', error);
-        throw error;
-      }
+  const updateTaskStatus = async (status: string) => {
+    if (!user) throw new Error('User not authenticated');
+    await updateTaskMutation({
+      id: taskId,
+      userId: user.id,
+      updates: { status },
+    });
+    toast({
+      title: "Success",
+      description: "Task status updated successfully",
+    });
+  };
 
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Success",
-        description: "Task updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update task details error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskStatus = useMutation({
-    mutationFn: async (status: string) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', taskId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task status:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Success",
-        description: "Task status updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Update task status error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskNotes = useMutation({
-    mutationFn: async (notes: string) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ notes })
-        .eq('id', taskId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task notes:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-    },
-    onError: (error) => {
-      console.error('Update task notes error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save notes",
-        variant: "destructive",
-      });
-    },
-  });
+  const updateTaskNotes = async (notes: string) => {
+    if (!user) throw new Error('User not authenticated');
+    await updateTaskMutation({
+      id: taskId,
+      userId: user.id,
+      updates: { notes: notes ?? undefined },
+    });
+  };
 
   return {
-    task: taskQuery.data,
-    isLoading: taskQuery.isLoading,
-    error: taskQuery.error,
-    updateTaskDetails: updateTaskDetails.mutate,
-    isUpdatingDetails: updateTaskDetails.isPending,
-    updateTaskStatus: updateTaskStatus.mutate,
-    isUpdatingStatus: updateTaskStatus.isPending,
-    updateTaskNotes: updateTaskNotes.mutate,
-    isUpdatingNotes: updateTaskNotes.isPending,
+    task,
+    isLoading,
+    error: null,
+    updateTaskDetails,
+    isUpdatingDetails: updateTaskMutation.isPending,
+    updateTaskStatus,
+    isUpdatingStatus: updateTaskMutation.isPending,
+    updateTaskNotes,
+    isUpdatingNotes: updateTaskMutation.isPending,
   };
 };

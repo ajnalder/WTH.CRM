@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useInvoices } from '@/hooks/useInvoices';
-import { supabase } from '@/integrations/supabase/client';
 
 interface InvoiceFormData {
   client_id: string;
@@ -13,7 +12,7 @@ interface InvoiceFormData {
 }
 
 export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
-  const { createInvoice } = useInvoices();
+  const { createInvoice, invoices } = useInvoices();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState('');
   
@@ -28,48 +27,27 @@ export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
     ...initialData,
   });
 
-  // Generate next invoice number
-  const generateNextInvoiceNumber = async () => {
-    try {
-      const { data: latestInvoice } = await supabase
-        .from('invoices')
-        .select('invoice_number')
-        .like('invoice_number', 'INV-%')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      let nextNumber = 5057; // Starting number
-
-      if (latestInvoice?.invoice_number) {
-        const currentNumber = parseInt(latestInvoice.invoice_number.replace('INV-', ''));
-        if (!isNaN(currentNumber) && currentNumber >= 5057) {
-          nextNumber = currentNumber + 1;
-        }
-      }
-
-      return `INV-${nextNumber}`;
-    } catch (error) {
-      console.log('No existing invoices found, starting from INV-5057');
-      return 'INV-5057';
-    }
-  };
-
-  // Load next invoice number on component mount
+  // Compute next invoice number from existing invoices
   useEffect(() => {
-    const loadNextInvoiceNumber = async () => {
-      const number = await generateNextInvoiceNumber();
-      setNextInvoiceNumber(number);
-      if (!formData.invoice_number && !initialData?.invoice_number) {
-        setFormData(prev => ({
-          ...prev,
-          invoice_number: number
-        }));
-      }
-    };
+    let nextNumber = 5057;
+    invoices
+      .filter((inv) => inv.invoice_number?.startsWith('INV-'))
+      .forEach((inv) => {
+        const current = parseInt(inv.invoice_number.replace('INV-', ''));
+        if (!isNaN(current) && current >= nextNumber) {
+          nextNumber = current + 1;
+        }
+      });
 
-    loadNextInvoiceNumber();
-  }, []);
+    const numberString = `INV-${nextNumber}`;
+    setNextInvoiceNumber(numberString);
+    if (!formData.invoice_number && !initialData?.invoice_number) {
+      setFormData(prev => ({
+        ...prev,
+        invoice_number: numberString
+      }));
+    }
+  }, [invoices, initialData?.invoice_number, formData.invoice_number]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -109,7 +87,7 @@ export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
     
     try {
       // Use the form's invoice number or generate a new one if empty
-      const invoiceNumber = formData.invoice_number || await generateNextInvoiceNumber();
+      const invoiceNumber = formData.invoice_number || nextInvoiceNumber;
       
       const result = await new Promise((resolve, reject) => {
         createInvoice({

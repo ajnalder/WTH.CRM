@@ -8,23 +8,24 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Building2, Plus, Check, X, Trash2 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Domain {
   id: string;
   name: string;
   registrar: string;
-  expiry_date: string;
+  renewal_date: string;
   platform: 'Webflow' | 'Shopify';
   renewal_cost: number;
   client_managed: boolean;
   notes?: string;
   client_id: string;
-  clients?: {
-    company: string;
-  };
+  client_company?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const getPlatformColor = (platform: string) => {
@@ -37,120 +38,33 @@ const getPlatformColor = (platform: string) => {
 
 const Domains = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('expiry_date');
+  const [sortBy, setSortBy] = useState('renewal_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [newRows, setNewRows] = useState<Array<Partial<Domain & { tempId: string }>>>([]);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: domains = [], isLoading } = useQuery({
-    queryKey: ['all-domains'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('domains')
-        .select(`
-          *,
-          clients!inner (
-            company
-          )
-        `)
-        .order(sortBy, { ascending: sortOrder === 'asc' });
+  const domainsData = useConvexQuery(
+    api.domains.listByUser,
+    user ? { userId: user.id } : undefined
+  ) as Domain[] | undefined;
+  const domains = domainsData ?? [];
+  const isLoading = domainsData === undefined;
 
-      if (error) throw error;
-      return data as Domain[];
-    },
-  });
+  const clientsData = useConvexQuery(
+    api.clients.list,
+    user ? { userId: user.id } : undefined
+  ) as Array<{ id: string; company: string }> | undefined;
+  const clients = clientsData ?? [];
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, company')
-        .order('company');
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const deleteDomainMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('domains')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-domains'] });
-      toast({
-        title: "Success",
-        description: "Domain deleted successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete domain",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateDomainMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
-      const { error } = await supabase
-        .from('domains')
-        .update({ [field]: value })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-domains'] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update domain",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const createDomainMutation = useMutation({
-    mutationFn: async (domainData: Omit<Domain, 'id' | 'clients'> & { client_id: string }) => {
-      const { data, error } = await supabase
-        .from('domains')
-        .insert([domainData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-domains'] });
-      toast({
-        title: "Success",
-        description: "Domain created successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create domain",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteDomainMutation = useConvexMutation(api.domains.remove);
+  const updateDomainMutation = useConvexMutation(api.domains.update);
+  const createDomainMutation = useConvexMutation(api.domains.create);
 
   const filteredDomains = domains.filter(domain =>
     domain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     domain.registrar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    domain.clients?.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    domain.client_company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     domain.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -158,9 +72,9 @@ const Domains = () => {
     let aValue = a[sortBy as keyof Domain];
     let bValue = b[sortBy as keyof Domain];
 
-    if (sortBy === 'clients.company') {
-      aValue = a.clients?.company || '';
-      bValue = b.clients?.company || '';
+    if (sortBy === 'client_company') {
+      aValue = a.client_company || '';
+      bValue = b.client_company || '';
     }
 
     if (sortOrder === 'asc') {
@@ -171,6 +85,15 @@ const Domains = () => {
   });
 
   const handleFieldUpdate = (id: string, field: string, value: any) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be signed in to update domains.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     let processedValue: any = value;
     if (field === 'renewal_cost') {
       processedValue = parseFloat(value) || 0;
@@ -178,10 +101,16 @@ const Domains = () => {
       processedValue = Boolean(value);
     }
 
-    updateDomainMutation.mutate({
+    updateDomainMutation({
       id,
-      field,
-      value: processedValue,
+      userId: user.id,
+      updates: { [field]: processedValue } as any,
+    }).catch((error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update domain",
+        variant: "destructive",
+      });
     });
   };
 
@@ -191,7 +120,7 @@ const Domains = () => {
       tempId,
       name: '',
       registrar: '',
-      expiry_date: new Date().toISOString().split('T')[0],
+      renewal_date: new Date().toISOString().split('T')[0],
       platform: 'Webflow' as const,
       renewal_cost: 0,
       client_managed: false,
@@ -219,16 +148,38 @@ const Domains = () => {
       return;
     }
 
-    createDomainMutation.mutate({
-      name: newRow.name,
-      registrar: newRow.registrar,
-      expiry_date: newRow.expiry_date || new Date().toISOString().split('T')[0],
-      platform: newRow.platform || 'Webflow',
-      renewal_cost: newRow.renewal_cost || 0,
-      client_managed: newRow.client_managed || false,
-      notes: newRow.notes || '',
-      client_id: newRow.client_id,
-    });
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be signed in to add domains.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createDomainMutation({
+        userId: user.id,
+        name: newRow.name,
+        registrar: newRow.registrar,
+        renewal_date: newRow.renewal_date || new Date().toISOString().split('T')[0],
+        platform: (newRow.platform as Domain['platform']) || 'Webflow',
+        renewal_cost: Number(newRow.renewal_cost) || 0,
+        client_managed: Boolean(newRow.client_managed),
+        notes: newRow.notes || undefined,
+        client_id: newRow.client_id,
+      });
+      toast({
+        title: "Success",
+        description: "Domain created successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to create domain",
+        variant: "destructive",
+      });
+    }
 
     setNewRows(prev => prev.filter(row => row.tempId !== tempId));
   };
@@ -278,8 +229,8 @@ const Domains = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="name">Domain Name</SelectItem>
-                <SelectItem value="expiry_date">Expiry Date</SelectItem>
-                <SelectItem value="clients.company">Client</SelectItem>
+                <SelectItem value="renewal_date">Expiry Date</SelectItem>
+                <SelectItem value="client_company">Client</SelectItem>
                 <SelectItem value="registrar">Registrar</SelectItem>
                 <SelectItem value="renewal_cost">Renewal Cost</SelectItem>
               </SelectContent>
@@ -354,8 +305,8 @@ const Domains = () => {
                          <div className="space-y-1">
                            <Input
                              type="date"
-                             value={newRow.expiry_date || ''}
-                             onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'expiry_date', e.target.value)}
+                             value={newRow.renewal_date || ''}
+                             onChange={(e) => handleNewRowUpdate(newRow.tempId!, 'renewal_date', e.target.value)}
                              className="border-dashed border-2 border-blue-300 p-2 h-auto bg-white focus-visible:ring-1 focus-visible:ring-blue-500 text-sm"
                            />
                            <div className="flex items-center gap-2">
@@ -439,7 +390,7 @@ const Domains = () => {
                         >
                           <SelectTrigger className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary">
                             <SelectValue>
-                              {domain.clients?.company}
+                              {domain.client_company}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
@@ -463,8 +414,8 @@ const Domains = () => {
                          <div className="space-y-1">
                            <Input
                              type="date"
-                             value={domain.expiry_date}
-                             onChange={(e) => handleFieldUpdate(domain.id, 'expiry_date', e.target.value)}
+                             value={domain.renewal_date}
+                             onChange={(e) => handleFieldUpdate(domain.id, 'renewal_date', e.target.value)}
                              className="border-none p-2 h-auto bg-transparent focus-visible:ring-1 focus-visible:ring-primary text-sm"
                            />
                            <div className="flex items-center gap-2">
@@ -513,11 +464,33 @@ const Domains = () => {
                             placeholder="Add notes..."
                           />
                         </TableCell>
-                         <TableCell className="w-[20px]">
+                        <TableCell className="w-[20px]">
                         <div title="Delete domain">
                           <Trash2 
                             className="h-4 w-4 text-red-600 cursor-pointer hover:text-red-700" 
-                            onClick={() => deleteDomainMutation.mutate(domain.id)}
+                            onClick={async () => {
+                              if (!user) {
+                                toast({
+                                  title: "Error",
+                                  description: "You must be signed in to delete domains.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              try {
+                                await deleteDomainMutation({ userId: user.id, id: domain.id });
+                                toast({
+                                  title: "Success",
+                                  description: "Domain deleted successfully",
+                                });
+                              } catch (error: any) {
+                                toast({
+                                  title: "Error",
+                                  description: error?.message || "Failed to delete domain",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
                           />
                         </div>
                       </TableCell>

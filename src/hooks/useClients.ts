@@ -1,7 +1,9 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 export interface Client {
   id: string;
@@ -28,111 +30,89 @@ export interface CreateClientData {
 
 export const useClients = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: clients = [], isLoading } = useQuery({
-    queryKey: ['clients'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Client[];
-    },
-  });
+  const clientsData = useConvexQuery(
+    api.clients.list,
+    user ? { userId: user.id } : undefined
+  );
+  const isLoading = clientsData === undefined;
+  const clients = clientsData ?? [];
 
-  const createClient = useMutation({
-    mutationFn: async (clientData: CreateClientData) => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('User not authenticated');
+  useEffect(() => {
+    console.log('useClients', { userId: user?.id, count: clients.length, loading: isLoading });
+  }, [user?.id, clients.length, isLoading]);
 
-      const { data, error } = await supabase
-        .from('clients')
-        .insert({
-          ...clientData,
-          user_id: user.user.id,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+  const createClient = useConvexMutation(api.clients.create);
+  const updateClientMutation = useConvexMutation(api.clients.update);
+  const deleteClientMutation = useConvexMutation(api.clients.remove);
+
+  const handleCreate = async (clientData: CreateClientData) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      console.log('createClient', { userId: user.id, clientData });
+      await createClient({
+        userId: user.id,
+        ...clientData,
+      });
       toast({
         title: "Success",
         description: "Client created successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
+      console.error('Error creating client:', error);
       toast({
         title: "Error",
-        description: "Failed to create client",
+        description: error?.message || "Failed to create client",
         variant: "destructive",
       });
-      console.error('Error creating client:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const updateClient = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
-      const { data, error } = await supabase
-        .from('clients')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+  const handleUpdate = async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      await updateClientMutation({ id, userId: user.id, updates });
       toast({
         title: "Success",
         description: "Client updated successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
+      console.error('Error updating client:', error);
       toast({
         title: "Error",
-        description: "Failed to update client",
+        description: error?.message || "Failed to update client",
         variant: "destructive",
       });
-      console.error('Error updating client:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const deleteClient = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+  const handleDelete = async (id: string) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      await deleteClientMutation({ id, userId: user.id });
       toast({
         title: "Success",
         description: "Client deleted successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
+      console.error('Error deleting client:', error);
       toast({
         title: "Error",
-        description: "Failed to delete client",
+        description: error?.message || "Failed to delete client",
         variant: "destructive",
       });
-      console.error('Error deleting client:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
   return {
     clients,
     isLoading,
-    createClient: createClient.mutate,
-    updateClient: updateClient.mutate,
-    deleteClient: deleteClient.mutate,
+    createClient: handleCreate,
+    updateClient: handleUpdate,
+    deleteClient: handleDelete,
   };
 };

@@ -1,7 +1,9 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 export interface Contact {
   id: string;
@@ -34,135 +36,98 @@ export interface UpdateContactData {
 
 export const useContacts = (clientId: string) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const {
-    data: contacts = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['contacts', clientId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: false });
+  const contactsData = useConvexQuery(
+    api.contacts.list,
+    user && clientId ? { clientId, userId: user.id } : undefined
+  ) as Contact[] | undefined;
+  const contacts = contactsData ?? [];
+  const isLoading = contactsData === undefined;
+  const error = null;
 
-      if (error) {
-        console.error('Error fetching contacts:', error);
-        throw error;
-      }
+  const createContactMutation = useConvexMutation(api.contacts.create);
+  const updateContactMutation = useConvexMutation(api.contacts.update);
+  const deleteContactMutation = useConvexMutation(api.contacts.remove);
 
-      return data as Contact[];
-    },
-    enabled: !!clientId,
-  });
-
-  const createContactMutation = useMutation({
-    mutationFn: async (contactData: CreateContactData) => {
-      const { data, error } = await supabase
-        .from('contacts')
-        .insert(contactData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating contact:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', clientId] });
+  const createContact = async (contactData: CreateContactData) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsCreating(true);
+      await createContactMutation({ ...contactData, userId: user.id });
       toast({
         title: "Contact Added",
         description: "Contact has been successfully added.",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
       console.error('Create contact error:', error);
       toast({
         title: "Error",
-        description: "Failed to create contact. Please try again.",
+        description: error?.message || "Failed to create contact. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsCreating(false);
     }
-  });
+  };
 
-  const updateContactMutation = useMutation({
-    mutationFn: async ({ contactId, contactData }: { contactId: string; contactData: UpdateContactData }) => {
-      const { data, error } = await supabase
-        .from('contacts')
-        .update(contactData)
-        .eq('id', contactId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating contact:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', clientId] });
+  const updateContact = async ({ contactId, contactData }: { contactId: string; contactData: UpdateContactData }) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsUpdating(true);
+      await updateContactMutation({ id: contactId, userId: user.id, updates: contactData });
       toast({
         title: "Contact Updated",
         description: "Contact has been successfully updated.",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
       console.error('Update contact error:', error);
       toast({
         title: "Error",
-        description: "Failed to update contact. Please try again.",
+        description: error?.message || "Failed to update contact. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsUpdating(false);
     }
-  });
+  };
 
-  const deleteContactMutation = useMutation({
-    mutationFn: async (contactId: string) => {
-      const { error } = await supabase
-        .from('contacts')
-        .delete()
-        .eq('id', contactId);
-
-      if (error) {
-        console.error('Error deleting contact:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', clientId] });
+  const deleteContact = async (contactId: string) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsDeleting(true);
+      await deleteContactMutation({ id: contactId, userId: user.id });
       toast({
         title: "Contact Deleted",
         description: "Contact has been successfully deleted.",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
       console.error('Delete contact error:', error);
       toast({
         title: "Error",
-        description: "Failed to delete contact. Please try again.",
+        description: error?.message || "Failed to delete contact. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsDeleting(false);
     }
-  });
+  };
 
   return {
     contacts,
     isLoading,
     error,
-    createContact: createContactMutation.mutate,
-    updateContact: updateContactMutation.mutate,
-    deleteContact: deleteContactMutation.mutate,
-    isCreating: createContactMutation.isPending,
-    isUpdating: updateContactMutation.isPending,
-    isDeleting: deleteContactMutation.isPending
+    createContact,
+    updateContact,
+    deleteContact,
+    isCreating,
+    isUpdating,
+    isDeleting
   };
 };

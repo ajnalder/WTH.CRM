@@ -17,6 +17,9 @@ import { QuotePricingTable } from '@/components/quotes/QuotePricingTable';
 import { QuickClientDialog } from '@/components/quotes/QuickClientDialog';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export default function QuoteBuilder() {
   const { id } = useParams();
@@ -28,6 +31,8 @@ export default function QuoteBuilder() {
   const { data: existingQuote, isLoading: quoteLoading } = useQuote(id);
   const { blocks, addBlock, updateBlock, deleteBlock, reorderBlocks } = useQuoteBlocks(id);
   const { items, addItem, updateItem, deleteItem, total } = useQuoteItems(id);
+  const { user } = useAuth();
+  const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
 
   const [quoteData, setQuoteData] = useState({
     client_id: '',
@@ -151,13 +156,14 @@ export default function QuoteBuilder() {
     try {
       updateQuote({ id, updates: { status: 'sent', total_amount: total } });
       
-      await fetch(`https://jnehwoaockudqsdqwfwl.supabase.co/functions/v1/send-quote-notification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: id,
-          action: 'sent',
-        }),
+      await sendQuoteNotification({
+        userId: user?.id,
+        toEmail: user?.email || undefined,
+        quoteId: id,
+        quoteNumber: existingQuote.quote_number,
+        clientName: selectedClient?.company || 'Client',
+        totalAmount: total,
+        action: 'sent',
       });
       
       toast({ title: 'Success', description: 'Quote sent successfully' });

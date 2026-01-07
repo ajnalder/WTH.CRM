@@ -1,7 +1,8 @@
-
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAction } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export const useXeroIntegration = () => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -11,6 +12,31 @@ export const useXeroIntegration = () => {
     tenantName?: string;
   }>({ isConnected: false });
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  const getAuthUrl = useAction(api.xero.getAuthUrl);
+  const exchangeCode = useAction(api.xero.exchangeCode);
+  const getStatus = useAction(api.xero.getConnectionStatus);
+  const fetchAccountsAction = useAction(api.xero.fetchAccounts);
+  const fetchContactsAction = useAction(api.xero.fetchContacts);
+  const linkContactAction = useAction(api.xero.linkContact);
+  const unlinkContactAction = useAction(api.xero.unlinkContact);
+  const syncInvoiceAction = useAction(api.xero.syncInvoice);
+
+  const checkConnectionStatus = useCallback(async () => {
+    try {
+      if (!user) return;
+      const data = await getStatus({ userId: user.id });
+      setConnectionStatus({
+        isConnected: data.isConnected,
+        tenantName: data.tenantName || undefined,
+      });
+      return data;
+    } catch (error) {
+      console.error('Error checking Xero connection:', error);
+      return { isConnected: false };
+    }
+  }, [getStatus, user]);
 
   // Handle OAuth callback on component mount
   useEffect(() => {
@@ -26,7 +52,6 @@ export const useXeroIntegration = () => {
           description: `Xero connection failed: ${error}`,
           variant: "destructive",
         });
-        // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       }
@@ -34,101 +59,41 @@ export const useXeroIntegration = () => {
       if (code && state) {
         setIsConnecting(true);
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) throw new Error('Not authenticated');
-
-          const { data, error } = await supabase.functions.invoke('xero-oauth', {
-            body: { 
-              action: 'exchange_code',
-              code,
-              state 
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-
-          if (error) throw error;
-
+          if (!user) throw new Error('Not authenticated');
+          const data = await exchangeCode({ code, state, userId: user.id });
           toast({
             title: "Success",
-            description: `Connected to Xero: ${data.tenant_name}`,
+            description: `Connected to Xero: ${data?.tenantName || 'Xero tenant'}`,
           });
-
-          // Refresh connection status
           await checkConnectionStatus();
-        } catch (error) {
-          console.error('Error exchanging code:', error);
+        } catch (err: any) {
+          console.error('Error exchanging code:', err);
           toast({
             title: "Error",
-            description: "Failed to complete Xero connection",
+            description: err?.message || "Failed to complete Xero connection",
             variant: "destructive",
           });
         } finally {
           setIsConnecting(false);
         }
-
-        // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     };
 
     handleOAuthCallback();
-  }, [toast]);
-
-  const checkConnectionStatus = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await supabase.functions.invoke('xero-oauth', {
-        body: { action: 'get_connection_status' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      setConnectionStatus({
-        isConnected: data.is_connected,
-        tenantName: data.tenant_name
-      });
-
-      return data;
-    } catch (error) {
-      console.error('Error checking Xero connection:', error);
-      return { isConnected: false };
-    }
-  };
+  }, [toast, exchangeCode, user, checkConnectionStatus]);
 
   const connectToXero = async () => {
     setIsConnecting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase.functions.invoke('xero-oauth', {
-        body: { 
-          action: 'get_auth_url',
-          frontend_origin: window.location.origin
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      console.log('Redirecting to Xero OAuth:', data.auth_url);
-      // Redirect to Xero OAuth page
-      window.location.href = data.auth_url;
-
-    } catch (error) {
+      if (!user) throw new Error('Not authenticated');
+      const data = await getAuthUrl({ userId: user.id, frontendOrigin: window.location.origin });
+      window.location.href = data.authUrl;
+    } catch (error: any) {
       console.error('Error connecting to Xero:', error);
       toast({
         title: "Error",
-        description: "Failed to connect to Xero",
+        description: error?.message || "Failed to connect to Xero",
         variant: "destructive",
       });
       setIsConnecting(false);
@@ -138,32 +103,18 @@ export const useXeroIntegration = () => {
   const syncInvoiceToXero = async (invoiceId: string) => {
     setIsSyncing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase.functions.invoke('xero-sync', {
-        body: { 
-          action: 'sync_invoice',
-          invoice_id: invoiceId 
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
+      if (!user) throw new Error('Not authenticated');
+      const data = await syncInvoiceAction({ userId: user.id, invoiceId });
       toast({
         title: "Success",
-        description: data.message || "Invoice synced to Xero successfully",
+        description: data?.message || "Invoice synced to Xero successfully",
       });
-
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error syncing invoice to Xero:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to sync invoice to Xero",
+        description: error?.message || "Failed to sync invoice to Xero",
         variant: "destructive",
       });
       throw error;
@@ -172,12 +123,36 @@ export const useXeroIntegration = () => {
     }
   };
 
+  const fetchAccounts = async () => {
+    if (!user) throw new Error('Not authenticated');
+    return fetchAccountsAction({ userId: user.id });
+  };
+
+  const fetchContacts = async () => {
+    if (!user) throw new Error('Not authenticated');
+    return fetchContactsAction({ userId: user.id });
+  };
+
+  const linkContact = async (clientId: string, xeroContactId: string) => {
+    if (!user) throw new Error('Not authenticated');
+    return linkContactAction({ userId: user.id, clientId, xeroContactId });
+  };
+
+  const unlinkContact = async (clientId: string) => {
+    if (!user) throw new Error('Not authenticated');
+    return unlinkContactAction({ userId: user.id, clientId });
+  };
+
   return {
     connectionStatus,
     isConnecting,
     isSyncing,
     connectToXero,
     syncInvoiceToXero,
-    checkConnectionStatus
+    checkConnectionStatus,
+    fetchAccounts,
+    fetchContacts,
+    linkContact,
+    unlinkContact,
   };
 };

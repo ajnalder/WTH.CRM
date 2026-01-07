@@ -26,6 +26,7 @@ import PublicQuoteView from "./pages/PublicQuoteView";
 import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
+import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import SiteLaunch from "./pages/SiteLaunch";
 import Ideas from "./pages/Ideas";
@@ -42,7 +43,8 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/*" element={<Auth />} />
+            <Route path="/sign-up/*" element={<SignUp />} />
             <Route path="/quote/view/:token" element={<PublicQuoteView />} />
             <Route path="/" element={<ProtectedRoute><PageWithSidebar><Index /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><PageWithSidebar><Projects /></PageWithSidebar></ProtectedRoute>} />

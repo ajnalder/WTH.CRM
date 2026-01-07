@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TaskBillingProps {
   taskId: string;
@@ -35,7 +34,7 @@ export const TaskBilling = ({
 }: TaskBillingProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createInvoice } = useInvoices();
+  const { createInvoice, invoices } = useInvoices();
   const [amount, setAmount] = useState(billableAmount?.toString() || '');
   const [description, setDescription] = useState(billingDescription || taskDescription || taskTitle);
   const [isCreating, setIsCreating] = useState(false);
@@ -50,29 +49,17 @@ export const TaskBilling = ({
     onBillableAmountChange(isNaN(numValue) ? null : numValue);
   };
 
-  const generateNextInvoiceNumber = async () => {
-    try {
-      const { data: latestInvoice } = await supabase
-        .from('invoices')
-        .select('invoice_number')
-        .like('invoice_number', 'INV-%')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      let nextNumber = 5057;
-
-      if (latestInvoice?.invoice_number) {
-        const currentNumber = parseInt(latestInvoice.invoice_number.replace('INV-', ''));
-        if (!isNaN(currentNumber) && currentNumber >= 5057) {
-          nextNumber = currentNumber + 1;
+  const generateNextInvoiceNumber = () => {
+    let nextNumber = 5057;
+    invoices
+      .filter((inv) => inv.invoice_number?.startsWith('INV-'))
+      .forEach((inv) => {
+        const current = parseInt(inv.invoice_number.replace('INV-', ''));
+        if (!isNaN(current) && current >= nextNumber) {
+          nextNumber = current + 1;
         }
-      }
-
-      return `INV-${nextNumber}`;
-    } catch (error) {
-      return 'INV-5057';
-    }
+      });
+    return `INV-${nextNumber}`;
   };
 
   const handleCreateInvoice = async () => {
@@ -89,7 +76,7 @@ export const TaskBilling = ({
     setIsCreating(true);
     try {
       // Generate sequential invoice number
-      const invoiceNumber = await generateNextInvoiceNumber();
+      const invoiceNumber = generateNextInvoiceNumber();
       
       // Create the invoice
       const invoice = await createInvoice({

@@ -18,8 +18,7 @@ export const TaskFiles: React.FC<TaskFilesProps> = ({ taskId }) => {
     uploadFile, 
     deleteFile, 
     isUploading, 
-    isDeleting, 
-    getFileUrl 
+    isDeleting
   } = useTaskFiles(taskId);
 
   const handleFileUpload = (file: File) => {
@@ -91,8 +90,7 @@ export const TaskFiles: React.FC<TaskFilesProps> = ({ taskId }) => {
                 file={file}
                 onDelete={handleFileDelete}
                 isDeleting={isDeleting}
-                getFileUrl={getFileUrl}
-                isImage={isImage(file.mime_type)}
+                isImage={isImage(file.mime_type || null)}
                 getFileIcon={getFileIcon}
                 formatFileSize={formatFileSize}
               />
@@ -108,7 +106,6 @@ interface FileItemProps {
   file: TaskFile;
   onDelete: (fileId: string) => void;
   isDeleting: boolean;
-  getFileUrl: (filePath: string) => string;
   isImage: boolean;
   getFileIcon: (mimeType: string | null) => React.ReactNode;
   formatFileSize: (bytes: number | null) => string;
@@ -118,12 +115,11 @@ const FileItem: React.FC<FileItemProps> = ({
   file,
   onDelete,
   isDeleting,
-  getFileUrl,
   isImage,
   getFileIcon,
   formatFileSize
 }) => {
-  const fileUrl = getFileUrl(file.file_path);
+  const fileUrl = file.url || '';
 
   return (
     <div className="border rounded-lg p-3 space-y-2">
@@ -139,7 +135,7 @@ const FileItem: React.FC<FileItemProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => window.open(fileUrl, '_blank')}
+            onClick={() => fileUrl && window.open(fileUrl, '_blank')}
             className="h-8 w-8 p-0"
           >
             <Download className="w-3 h-3" />

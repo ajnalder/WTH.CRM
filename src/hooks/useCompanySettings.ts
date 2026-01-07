@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export interface CompanySettings {
   id: string;
@@ -24,74 +25,39 @@ export interface CompanySettings {
 
 export const useCompanySettings = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ['company-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .maybeSingle();
+  const settingsData = useConvexQuery(
+    api.companySettings.get,
+    user ? { userId: user.id } : undefined
+  ) as CompanySettings | null | undefined;
+  const isLoading = settingsData === undefined;
+  const settings = settingsData ?? null;
 
-      if (error) {
-        console.error('Error fetching company settings:', error);
-        throw error;
-      }
+  const upsertSettings = useConvexMutation(api.companySettings.upsert);
 
-      return data as CompanySettings | null;
-    },
-  });
-
-  const createOrUpdateSettings = useMutation({
-    mutationFn: async (updates: Partial<CompanySettings>) => {
-      if (settings?.id) {
-        // Update existing settings
-        const { data, error } = await supabase
-          .from('company_settings')
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq('id', settings.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      } else {
-        // Create new settings - ensure user_id is included
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('User not authenticated');
-
-        const newSettings = {
-          ...updates,
-          user_id: user.id,
-        };
-
-        const { data, error } = await supabase
-          .from('company_settings')
-          .insert([newSettings])
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+  const createOrUpdateSettings = async (updates: Partial<CompanySettings>) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsUpdating(true);
+      await upsertSettings({ userId: user.id, updates });
       toast({
         title: "Success",
         description: "Company settings updated successfully",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       console.error('Error updating company settings:', error);
       toast({
         title: "Error",
         description: "Failed to update company settings",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const uploadLogo = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -108,8 +74,8 @@ export const useCompanySettings = () => {
   return {
     settings,
     isLoading,
-    updateSettings: createOrUpdateSettings.mutate,
+    updateSettings: createOrUpdateSettings,
     uploadLogo,
-    isUpdating: createOrUpdateSettings.isPending
+    isUpdating,
   };
 };

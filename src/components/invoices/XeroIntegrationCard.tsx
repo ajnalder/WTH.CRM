@@ -9,9 +9,7 @@ import { ExternalLink, CheckCircle, AlertCircle, RefreshCw, Users, Unlink } from
 import { useXeroIntegration } from '@/hooks/useXeroIntegration';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useClients } from '@/hooks/useClients';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
 import { XeroContactPicker } from './XeroContactPicker';
 
 interface XeroAccount {
@@ -32,13 +30,16 @@ export const XeroIntegrationCard: React.FC = () => {
     connectionStatus, 
     isConnecting, 
     connectToXero, 
-    checkConnectionStatus 
+    checkConnectionStatus,
+    fetchAccounts: fetchAccountsAction,
+    fetchContacts: fetchContactsAction,
+    linkContact: linkContactAction,
+    unlinkContact: unlinkContactAction,
   } = useXeroIntegration();
   
   const { settings, updateSettings } = useCompanySettings();
   const { clients } = useClients();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   const [accountCode, setAccountCode] = useState('');
   const [accounts, setAccounts] = useState<XeroAccount[]>([]);
@@ -50,7 +51,7 @@ export const XeroIntegrationCard: React.FC = () => {
 
   useEffect(() => {
     checkConnectionStatus();
-  }, []);
+  }, [checkConnectionStatus]);
 
   useEffect(() => {
     if (settings?.xero_account_code) {
@@ -61,27 +62,18 @@ export const XeroIntegrationCard: React.FC = () => {
   const fetchAccounts = async () => {
     setIsFetchingAccounts(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await supabase.functions.invoke('xero-sync', {
-        body: { action: 'fetch_accounts' }
+      const response = await fetchAccountsAction();
+      const list = response?.accounts || [];
+      setAccounts(list);
+      toast({
+        title: "Accounts loaded",
+        description: `Found ${list.length} sales accounts`,
       });
-
-      if (response.error) throw response.error;
-      
-      if (response.data?.accounts) {
-        setAccounts(response.data.accounts);
-        toast({
-          title: "Accounts loaded",
-          description: `Found ${response.data.accounts.length} sales accounts`,
-        });
-      }
     } catch (error: any) {
       console.error('Error fetching accounts:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to fetch Xero accounts",
+        description: error?.message || "Failed to fetch Xero accounts",
         variant: "destructive",
       });
     } finally {
@@ -92,27 +84,18 @@ export const XeroIntegrationCard: React.FC = () => {
   const fetchContacts = async () => {
     setIsFetchingContacts(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await supabase.functions.invoke('xero-sync', {
-        body: { action: 'fetch_contacts' }
+      const response = await fetchContactsAction();
+      const list = response?.contacts || [];
+      setXeroContacts(list);
+      toast({
+        title: "Contacts loaded",
+        description: `Found ${list.length} Xero contacts`,
       });
-
-      if (response.error) throw response.error;
-      
-      if (response.data?.contacts) {
-        setXeroContacts(response.data.contacts);
-        toast({
-          title: "Contacts loaded",
-          description: `Found ${response.data.contacts.length} Xero contacts`,
-        });
-      }
     } catch (error: any) {
       console.error('Error fetching contacts:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to fetch Xero contacts",
+        description: error?.message || "Failed to fetch Xero contacts",
         variant: "destructive",
       });
     } finally {
@@ -123,24 +106,16 @@ export const XeroIntegrationCard: React.FC = () => {
   const linkContact = async (clientId: string, xeroContactId: string) => {
     setLinkingClientId(clientId);
     try {
-      const response = await supabase.functions.invoke('xero-sync', {
-        body: { action: 'link_contact', client_id: clientId, xero_contact_id: xeroContactId }
-      });
-
-      if (response.error) throw response.error;
-
+      await linkContactAction(clientId, xeroContactId);
       toast({
         title: "Contact linked",
         description: "Xero contact linked to client successfully",
       });
-      
-      // Refresh clients data
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
     } catch (error: any) {
       console.error('Error linking contact:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to link contact",
+        description: error?.message || "Failed to link contact",
         variant: "destructive",
       });
     } finally {
@@ -151,24 +126,16 @@ export const XeroIntegrationCard: React.FC = () => {
   const unlinkContact = async (clientId: string) => {
     setLinkingClientId(clientId);
     try {
-      const response = await supabase.functions.invoke('xero-sync', {
-        body: { action: 'unlink_contact', client_id: clientId }
-      });
-
-      if (response.error) throw response.error;
-
+      await unlinkContactAction(clientId);
       toast({
         title: "Contact unlinked",
         description: "Xero contact unlinked from client",
       });
-      
-      // Refresh clients data
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
     } catch (error: any) {
       console.error('Error unlinking contact:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to unlink contact",
+        description: error?.message || "Failed to unlink contact",
         variant: "destructive",
       });
     } finally {

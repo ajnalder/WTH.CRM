@@ -1,145 +1,120 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getInitials, gradients } from '@/utils/clientGradients';
 import type { CreateClientData, Client } from '@/types/clientTypes';
+import { useState } from 'react';
 
 export const useClientMutations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const createClientMutation = useConvexMutation(api.clients.create);
+  const updateClientMutation = useConvexMutation(api.clients.update);
+  const deleteClientMutation = useConvexMutation(api.clients.remove);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const createClientMutation = useMutation({
-    mutationFn: async (clientData: CreateClientData) => {
-      if (!user) throw new Error('User not authenticated');
+  const createClient = async (clientData: CreateClientData) => {
+    if (!user) throw new Error('User not authenticated');
 
-      // Enhanced avatar generation - handle single word names
-      let avatar: string;
-      const companyName = clientData.company.trim();
-      const words = companyName.split(/\s+/);
-      
-      if (words.length === 1) {
-        // Single word: use first 2 letters
-        avatar = companyName.substring(0, 2).toUpperCase();
-      } else {
-        // Multiple words: use first letter of each word (up to 2)
-        avatar = words
-          .slice(0, 2)
-          .map(word => word[0])
-          .join('')
-          .toUpperCase();
-      }
-      
-      // Get existing clients to determine used gradients
-      const { data: existingClients } = await supabase
-        .from('clients')
-        .select('gradient')
-        .eq('user_id', user.id);
+    // Enhanced avatar generation - handle single word names
+    const companyName = clientData.company.trim();
+    const words = companyName.split(/\s+/);
+    const avatar =
+      words.length === 1
+        ? companyName.substring(0, 2).toUpperCase()
+        : words
+            .slice(0, 2)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
 
-      const usedGradients = existingClients?.map(client => client.gradient).filter(Boolean) || [];
-      
-      // Find the first available gradient that's not already used
-      let selectedGradient = gradients.find(gradient => !usedGradients.includes(gradient));
-      
-      // If all gradients are used, cycle through them starting from the beginning
-      if (!selectedGradient) {
-        selectedGradient = gradients[usedGradients.length % gradients.length];
-      }
+    // Just pick the next gradient in order for now
+    const selectedGradient = gradients[0];
 
-      const { data, error } = await supabase
-        .from('clients')
-        .insert({
-          phone: clientData.phone,
-          company: clientData.company,
-          description: clientData.description,
-          avatar,
-          gradient: selectedGradient,
-          user_id: user.id,
-          status: 'pending',
-          projects_count: 0,
-          total_value: 0
-        })
-        .select()
-        .single();
+    try {
+      setIsCreating(true);
+      await createClientMutation({
+        userId: user.id,
+        phone: clientData.phone,
+        company: clientData.company,
+        description: clientData.description,
+        status: 'pending',
+        // Optional fields not in Convex function args are ignored
+        avatar,
+        gradient: selectedGradient,
+      } as any);
 
-      if (error) {
-        console.error('Error creating client:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast({
         title: "Client Added",
         description: "Your client has been successfully added. Add contact details in the client detail page.",
       });
-    },
-    onError: (error) => {
+    } catch (error) {
       console.error('Create client error:', error);
       toast({
         title: "Error",
         description: "Failed to create client. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsCreating(false);
     }
-  });
+  };
 
-  const updateClientMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
-      const { data, error } = await supabase
-        .from('clients')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating client:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+  const updateClient = async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsUpdating(true);
+      await updateClientMutation({ id, userId: user.id, updates });
       toast({
         title: "Client Updated",
         description: "Client information has been successfully updated.",
       });
+    } catch (error) {
+      console.error('Update client error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update client. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsUpdating(false);
     }
-  });
+  };
 
-  const deleteClientMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error deleting client:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+  const deleteClient = async (id: string) => {
+    if (!user) throw new Error('User not authenticated');
+    try {
+      setIsDeleting(true);
+      await deleteClientMutation({ id, userId: user.id });
       toast({
         title: "Client Deleted",
         description: "Client has been successfully deleted.",
       });
+    } catch (error) {
+      console.error('Delete client error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete client. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsDeleting(false);
     }
-  });
+  };
 
   return {
-    createClient: createClientMutation.mutate,
-    updateClient: updateClientMutation.mutate,
-    deleteClient: deleteClientMutation.mutate,
-    isCreating: createClientMutation.isPending,
-    isUpdating: updateClientMutation.isPending,
-    isDeleting: deleteClientMutation.isPending
+    createClient,
+    updateClient,
+    deleteClient,
+    isCreating,
+    isUpdating,
+    isDeleting
   };
 };

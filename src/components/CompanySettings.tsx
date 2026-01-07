@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,21 @@ export const CompanySettings: React.FC = () => {
     bank_details: settings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited',
     bank_account: settings?.bank_account || '06-0556-0955531-00',
   });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        company_name: settings.company_name || '',
+        owner_name: settings.owner_name || '',
+        address_line1: settings.address_line1 || '',
+        address_line2: settings.address_line2 || '',
+        address_line3: settings.address_line3 || '',
+        gst_number: settings.gst_number || '',
+        bank_details: settings.bank_details || '',
+        bank_account: settings.bank_account || '',
+      });
+    }
+  }, [settings]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,8 +73,8 @@ export const CompanySettings: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <Card>
+    <div className="p-2">
+      <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Company Settings</CardTitle>
         </CardHeader>

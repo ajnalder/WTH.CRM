@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
-import { useInvoices } from '@/hooks/useInvoices';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 
 export const useEmailInvoice = (
   invoice: Invoice,
@@ -14,8 +13,8 @@ export const useEmailInvoice = (
   items?: any[]
 ) => {
   const { toast } = useToast();
-  const { updateInvoice } = useInvoices();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const sendInvoiceEmail = useConvexMutation(api.invoices.sendInvoiceEmail);
   
   const recipientEmail = primaryContact?.email || '';
   const recipientName = primaryContact?.name || client?.company || '';
@@ -26,7 +25,6 @@ export const useEmailInvoice = (
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Update email and message when data changes
   useEffect(() => {
     const currentEmail = primaryContact?.email || '';
     const currentName = primaryContact?.name || client?.company || '';
@@ -53,95 +51,35 @@ What the Heck Team`);
       return false;
     }
 
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be signed in to send email",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     setSending(true);
     
     try {
-      console.log('Starting email send process for invoice:', invoice.invoice_number);
-      
-      // Get the current session to ensure we have a valid auth token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.access_token) {
-        console.error('Authentication error:', sessionError);
-        throw new Error('Authentication required. Please log in again.');
-      }
-
-      console.log('Authentication successful, calling edge function...');
-      
-      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
-        body: {
-          to: email.trim(),
-          subject: subject,
-          message: message,
-          invoiceNumber: invoice.invoice_number,
-          clientName: client?.company || 'Customer',
-          invoiceData: {
-            invoice: invoice,
-            client: client,
-            items: items
-          }
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      await sendInvoiceEmail({
+        userId: user.id,
+        invoiceId: invoice.id,
+        to: email.trim(),
+        subject,
+        message,
       });
 
-      console.log('Edge function response:', { data, error });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
-
-      if (data?.success) {
-        console.log('Email sent successfully');
-        
-        // Update the invoice to record when it was last emailed
-        try {
-          await updateInvoice({
-            id: invoice.id,
-            updates: {
-              last_emailed_at: new Date().toISOString(),
-              status: invoice.status === 'draft' ? 'sent' : invoice.status
-            }
-          });
-        } catch (updateError) {
-          console.warn('Warning: Could not update invoice status, but email was sent successfully:', updateError);
-          // Don't throw here - the email was sent successfully
-        }
-
-        // Invalidate email logs query to refresh the logs
-        queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });
-
-        toast({
-          title: "Success",
-          description: `Invoice with PDF attachment emailed successfully to ${email}`,
-        });
-        
-        return true;
-      } else {
-        throw new Error(data?.error || 'Failed to send email');
-      }
+      toast({
+        title: "Success",
+        description: `Email logged for ${email}`,
+      });
+      return true;
     } catch (error: any) {
-      console.error('Error sending email:', error);
-      
-      // Invalidate email logs query even on error to show failed attempts
-      queryClient.invalidateQueries({ queryKey: ['email-logs', invoice.id] });
-      
-      // Show more specific error messages
-      let errorMessage = "Failed to send email. Please try again.";
-      
-      if (error.message?.includes('Authentication')) {
-        errorMessage = "Authentication error. Please refresh the page and try again.";
-      } else if (error.message?.includes('domain')) {
-        errorMessage = "Email configuration error. Please contact support.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error?.message || "Failed to send email",
         variant: "destructive",
       });
       return false;

@@ -1,7 +1,8 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ProjectTeamMember {
   id: string;
@@ -23,144 +24,94 @@ export interface ProjectTeamMember {
 
 export const useProjectTeamMembers = (projectId?: string) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const projectTeamMembersQuery = useQuery({
-    queryKey: ['project-team-members', projectId],
-    queryFn: async (): Promise<ProjectTeamMember[]> => {
-      if (!projectId) return [];
+  const projectTeamMembersData = useConvexQuery(
+    api.projectTeamMembers.listByProject,
+    user && projectId ? { projectId, userId: user.id } : undefined
+  );
 
-      const { data, error } = await supabase
-        .from('project_team_members')
-        .select(`
-          *,
-          user:profiles(
-            id,
-            full_name,
-            email,
-            avatar_url
-          )
-        `)
-        .eq('project_id', projectId);
+  const gradients = [
+    'from-blue-400 to-blue-600',
+    'from-green-400 to-green-600',
+    'from-purple-400 to-purple-600',
+    'from-red-400 to-red-600',
+    'from-yellow-400 to-yellow-600',
+    'from-pink-400 to-pink-600',
+    'from-indigo-400 to-indigo-600',
+    'from-teal-400 to-teal-600',
+  ];
 
-      if (error) {
-        console.error('Error fetching project team members:', error);
-        throw error;
-      }
+  const projectTeamMembers: ProjectTeamMember[] =
+    (projectTeamMembersData || []).map((ptm, index) => {
+      const profile: any = (ptm as any).profile || {};
+      const name = profile.full_name || profile.email || ptm.user_id;
+      const initials = name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
 
-      // Transform the data to match the expected interface
-      const transformedData: ProjectTeamMember[] = (data || []).map((ptm, index) => {
-        const gradients = [
-          'from-blue-400 to-blue-600',
-          'from-green-400 to-green-600',
-          'from-purple-400 to-purple-600',
-          'from-red-400 to-red-600',
-          'from-yellow-400 to-yellow-600',
-          'from-pink-400 to-pink-600',
-          'from-indigo-400 to-indigo-600',
-          'from-teal-400 to-teal-600',
-        ];
+      return {
+        id: ptm.id,
+        project_id: ptm.project_id,
+        user_id: ptm.user_id,
+        assigned_at: ptm.assigned_at,
+        user: {
+          id: ptm.user_id,
+          full_name: profile.full_name || '',
+          email: profile.email || '',
+          avatar_url: profile.avatar_url,
+          name,
+          role: 'Team Member',
+          avatar: initials || ptm.user_id.slice(0, 2).toUpperCase(),
+          gradient: gradients[index % gradients.length],
+        },
+      };
+    }) || [];
 
-        const user = ptm.user as any;
-        const name = user?.full_name || user?.email || 'Unknown User';
-        const initials = user?.full_name 
-          ? user.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-          : (user?.email || 'UN').slice(0, 2).toUpperCase();
-
-        return {
-          id: ptm.id,
-          project_id: ptm.project_id,
-          user_id: ptm.user_id,
-          assigned_at: ptm.assigned_at,
-          user: {
-            id: user?.id || '',
-            full_name: user?.full_name || '',
-            email: user?.email || '',
-            avatar_url: user?.avatar_url,
-            name,
-            role: 'Team Member',
-            avatar: initials,
-            gradient: gradients[index % gradients.length],
-          },
-        };
-      });
-
-      return transformedData;
-    },
-    enabled: !!projectId,
-  });
-
-  const assignTeamMember = useMutation({
-    mutationFn: async ({ projectId, teamMemberId }: { projectId: string; teamMemberId: string }) => {
-      const { data, error } = await supabase
-        .from('project_team_members')
-        .insert({
-          project_id: projectId,
-          user_id: teamMemberId,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error assigning team member:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-team-members'] });
-      toast({
-        title: "Success",
-        description: "Team member assigned to project",
-      });
-    },
-    onError: (error) => {
-      console.error('Error assigning team member:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign team member",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const removeTeamMember = useMutation({
-    mutationFn: async ({ projectId, teamMemberId }: { projectId: string; teamMemberId: string }) => {
-      const { error } = await supabase
-        .from('project_team_members')
-        .delete()
-        .eq('project_id', projectId)
-        .eq('user_id', teamMemberId);
-
-      if (error) {
-        console.error('Error removing team member:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-team-members'] });
-      toast({
-        title: "Success",
-        description: "Team member removed from project",
-      });
-    },
-    onError: (error) => {
-      console.error('Error removing team member:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove team member",
-        variant: "destructive",
-      });
-    },
-  });
+  const assignTeamMember = useConvexMutation(api.projectTeamMembers.add);
+  const removeTeamMember = useConvexMutation(api.projectTeamMembers.remove);
 
   return {
-    projectTeamMembers: projectTeamMembersQuery.data || [],
-    isLoading: projectTeamMembersQuery.isLoading,
-    error: projectTeamMembersQuery.error,
-    assignTeamMember: assignTeamMember.mutate,
-    removeTeamMember: removeTeamMember.mutate,
+    projectTeamMembers,
+    isLoading: projectTeamMembersData === undefined && !!projectId,
+    error: null,
+    assignTeamMember: async ({ projectId, teamMemberId }: { projectId: string; teamMemberId: string }) => {
+      if (!user) throw new Error('User not authenticated');
+      try {
+        await assignTeamMember({ projectId, memberUserId: teamMemberId, userId: user.id });
+        toast({
+          title: "Success",
+          description: "Team member assigned to project",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to assign team member",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    removeTeamMember: async ({ projectId, teamMemberId }: { projectId: string; teamMemberId: string }) => {
+      if (!user) throw new Error('User not authenticated');
+      try {
+        await removeTeamMember({ projectId, memberUserId: teamMemberId, userId: user.id });
+        toast({
+          title: "Success",
+          description: "Team member removed from project",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to remove team member",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
     isAssigning: assignTeamMember.isPending,
     isRemoving: removeTeamMember.isPending,
   };

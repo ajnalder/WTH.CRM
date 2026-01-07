@@ -1,11 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
-
-type Task = Tables<'tasks'>;
-type TaskInsert = TablesInsert<'tasks'>;
+import { useState } from 'react';
 
 export interface TaskWithClient extends Task {
   client_name?: string;
@@ -14,231 +12,168 @@ export interface TaskWithClient extends Task {
 export const useTasks = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const tasksQuery = useQuery({
-    queryKey: ['tasks', user?.id],
-    queryFn: async (): Promise<TaskWithClient[]> => {
-      if (!user) {
-        console.log('No authenticated user, returning empty tasks array');
-        return [];
-      }
+  const tasksData = useConvexQuery(
+    api.tasks.list,
+    user ? { userId: user.id } : undefined
+  ) as TaskWithClient[] | undefined;
 
-      const { data: tasks, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+  const tasks = tasksData ?? [];
+  console.log('useTasks', { userId: user?.id, count: tasks.length, loading: tasksData === undefined });
+  const isLoading = tasksData === undefined;
+  const error = null;
 
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        throw error;
-      }
+  const createTaskMutation = useConvexMutation(api.tasks.create);
+  const updateTaskMutation = useConvexMutation(api.tasks.update);
+  const deleteTaskMutation = useConvexMutation(api.tasks.remove);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-      // Get projects to map project names to client names
-      const { data: projects, error: projectsError } = await supabase
-        .from('projects')
-        .select(`
-          name,
-          clients (
-            company
-          )
-        `)
-        .eq('user_id', user.id);
+  const createTask = async (taskData: Omit<TaskInsert, 'user_id'>, options?: { onSuccess?: (data: TaskWithClient) => void }) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
-      // Get clients to map client_id directly to client name
-      const { data: clients, error: clientsError } = await supabase
-        .from('clients')
-        .select('id, company')
-        .eq('user_id', user.id);
+    if (!taskData.title || taskData.title.trim().length === 0) {
+      throw new Error('Task title is required');
+    }
+    
+    if (taskData.title.length > 255) {
+      throw new Error('Task title must be less than 255 characters');
+    }
 
-      if (projectsError) {
-        console.error('Error fetching projects:', projectsError);
-      }
-      if (clientsError) {
-        console.error('Error fetching clients:', clientsError);
-      }
+    if (taskData.description && taskData.description.length > 2000) {
+      throw new Error('Task description must be less than 2000 characters');
+    }
 
-      // Create a map of project names to client company names
-      const projectClientMap = new Map();
-      projects?.forEach(project => {
-        if (project.clients && Array.isArray(project.clients) && project.clients[0]) {
-          projectClientMap.set(project.name, project.clients[0].company);
-        } else if (project.clients && !Array.isArray(project.clients)) {
-          projectClientMap.set(project.name, project.clients.company);
-        }
+    try {
+      console.log('createTask', { userId: user.id, taskData });
+      setIsCreating(true);
+      const payload = {
+        userId: user.id,
+        title: taskData.title,
+        description: taskData.description ?? undefined,
+        status: taskData.status ?? undefined,
+        client_id: taskData.client_id ?? undefined,
+        assignee: taskData.assignee ?? undefined,
+        billable_amount: taskData.billable_amount ?? undefined,
+        billing_description: taskData.billing_description ?? undefined,
+        progress: taskData.progress ?? undefined,
+        dropbox_url: taskData.dropbox_url ?? undefined,
+        notes: taskData.notes ?? undefined,
+        due_date: taskData.due_date ?? undefined,
+        project: taskData.project ?? undefined,
+        tags: taskData.tags ?? undefined,
+      };
+      const created = await createTaskMutation({
+        ...payload,
       });
-
-      // Create a map of client_id to company name
-      const clientIdMap = new Map();
-      clients?.forEach(client => {
-        clientIdMap.set(client.id, client.company);
-      });
-
-      // Add client information to tasks - prefer direct client_id, fallback to project's client
-      const tasksWithClients: TaskWithClient[] = (tasks || []).map(task => ({
-        ...task,
-        client_name: task.client_id 
-          ? clientIdMap.get(task.client_id) 
-          : (task.project ? projectClientMap.get(task.project) : undefined)
-      }));
-
-      return tasksWithClients;
-    },
-    enabled: !!user,
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: async (taskData: Omit<TaskInsert, 'user_id'>) => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Input validation
-      if (!taskData.title || taskData.title.trim().length === 0) {
-        throw new Error('Task title is required');
-      }
-      
-      if (taskData.title.length > 255) {
-        throw new Error('Task title must be less than 255 characters');
-      }
-
-      if (taskData.description && taskData.description.length > 2000) {
-        throw new Error('Task description must be less than 2000 characters');
-      }
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([{ ...taskData, user_id: user.id }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating task:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+      options?.onSuccess?.(created as TaskWithClient);
       toast({
         title: "Success",
         description: "Task created successfully",
       });
-    },
-    onError: (error) => {
+      return created as TaskWithClient;
+    } catch (error: any) {
       console.error('Create task error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create task",
+        description: error?.message || "Failed to create task",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  const updateTask = async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
-      // Input validation
-      if (updates.title !== undefined && (!updates.title || updates.title.trim().length === 0)) {
-        throw new Error('Task title is required');
-      }
-      
-      if (updates.title && updates.title.length > 255) {
-        throw new Error('Task title must be less than 255 characters');
-      }
+    if (updates.title !== undefined && (!updates.title || updates.title.trim().length === 0)) {
+      throw new Error('Task title is required');
+    }
+    
+    if (updates.title && updates.title.length > 255) {
+      throw new Error('Task title must be less than 255 characters');
+    }
 
-      if (updates.description && updates.description.length > 2000) {
-        throw new Error('Task description must be less than 2000 characters');
-      }
+    if (updates.description && updates.description.length > 2000) {
+      throw new Error('Task description must be less than 2000 characters');
+    }
 
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+    try {
+      setIsUpdating(true);
+      const normalizedUpdates: Partial<Task> = {
+        ...updates,
+        client_id: updates.client_id ?? undefined,
+        project: updates.project ?? undefined,
+        description: updates.description ?? undefined,
+        assignee: updates.assignee ?? undefined,
+        billable_amount: updates.billable_amount ?? undefined,
+        billing_description: updates.billing_description ?? undefined,
+        progress: updates.progress ?? undefined,
+        dropbox_url: updates.dropbox_url ?? undefined,
+        notes: updates.notes ?? undefined,
+        due_date: updates.due_date ?? undefined,
+        tags: updates.tags ?? undefined,
+      };
+      await updateTaskMutation({ id, userId: user.id, updates: normalizedUpdates });
       toast({
         title: "Success",
         description: "Task updated successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
       console.error('Update task error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update task",
+        description: error?.message || "Failed to update task",
         variant: "destructive",
       });
-    },
-  });
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  const deleteTask = async (id: string) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error deleting task:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+    try {
+      setIsDeleting(true);
+      await deleteTaskMutation({ id, userId: user.id });
       toast({
         title: "Success",
         description: "Task deleted successfully",
       });
-    },
-    onError: (error) => {
+    } catch (error: any) {
       console.error('Delete task error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete task",
+        description: error?.message || "Failed to delete task",
         variant: "destructive",
       });
-    },
-  });
-
-  const createTask = (taskData: Omit<TaskInsert, 'user_id'>, options?: { onSuccess?: (data: Task) => void }) => {
-    return createTaskMutation.mutate(taskData, {
-      onSuccess: (data) => {
-        options?.onSuccess?.(data);
-      }
-    });
+      throw error;
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
+
   return {
-    tasks: tasksQuery.data || [],
-    isLoading: tasksQuery.isLoading,
-    error: tasksQuery.error,
+    tasks,
+    isLoading,
+    error,
     createTask,
-    updateTask: updateTaskMutation.mutate,
-    deleteTask: deleteTaskMutation.mutate,
-    isCreating: createTaskMutation.isPending,
-    isUpdating: updateTaskMutation.isPending,
-    isDeleting: deleteTaskMutation.isPending,
+    updateTask,
+    deleteTask,
+    isCreating,
+    isUpdating,
+    isDeleting,
   };
 };
