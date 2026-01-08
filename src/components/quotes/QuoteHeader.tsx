@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Image, Pencil, Trash2 } from 'lucide-react';
+import { Image, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface QuoteHeaderProps {
@@ -43,22 +42,16 @@ export function QuoteHeader({
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `cover-${Date.now()}.${fileExt}`;
-      const filePath = `quote-covers/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('email-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('email-images')
-        .getPublicUrl(filePath);
-
-      onCoverImageChange(publicUrl);
-      toast({ title: 'Cover image uploaded' });
+      // TODO: Implement file upload with Convex file storage or external service (Cloudinary, S3, etc.)
+      // For now, we'll use a data URL as a temporary solution
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          onCoverImageChange(event.target.result as string);
+          toast({ title: 'Cover image uploaded (temporary - stored as data URL)' });
+        }
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Upload error:', error);
       toast({ title: 'Error', description: 'Failed to upload cover image', variant: 'destructive' });
@@ -73,8 +66,8 @@ export function QuoteHeader({
     }
   };
 
-  const displayTitle = projectType 
-    ? `${clientName} | ${projectType}` 
+  const displayTitle = projectType
+    ? `${clientName} | ${projectType}`
     : title;
 
   // Default cover image
@@ -84,7 +77,7 @@ export function QuoteHeader({
   return (
     <div className="relative w-full overflow-hidden rounded-lg">
       {/* Cover Image */}
-      <div 
+      <div
         className="relative h-[400px] bg-cover bg-center"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
@@ -94,9 +87,9 @@ export function QuoteHeader({
         {/* Edit Controls */}
         {editable && (
           <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-            <Button 
-              variant="secondary" 
-              size="sm" 
+            <Button
+              variant="secondary"
+              size="sm"
               className="bg-background/90 hover:bg-background"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
@@ -131,10 +124,10 @@ export function QuoteHeader({
             {/* Logo - prefer inverse logo for dark backgrounds */}
             <div>
               {(logoInverseBase64 || logoBase64) ? (
-                <img 
-                  src={logoInverseBase64 || logoBase64} 
-                  alt="Company Logo" 
-                  className="h-10" 
+                <img
+                  src={logoInverseBase64 || logoBase64}
+                  alt="Company Logo"
+                  className="h-10"
                 />
               ) : (
                 <div className="text-xl font-bold">{companyName || 'Company'}</div>

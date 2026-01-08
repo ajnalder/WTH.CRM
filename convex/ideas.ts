@@ -7,44 +7,43 @@ export const list = query({
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
 
-    const templates = await ctx.db
-      .query("email_templates")
+    const ideas = await ctx.db
+      .query("ideas")
       .withIndex("by_user", (q) => q.eq("user_id", userId))
       .collect();
 
-    return templates.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return ideas.sort((a, b) => b.created_at.localeCompare(a.created_at));
   },
 });
 
 export const create = mutation({
   args: {
     userId: v.optional(v.string()),
-    name: v.string(),
-    description: v.optional(v.string()),
-    content_html: v.string(),
-    content_json: v.optional(v.any()),
-    thumbnail_url: v.optional(v.string()),
+    title: v.string(),
+    content: v.optional(v.string()),
+    priority: v.string(),
+    status: v.string(),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
     const timestamp = nowIso();
 
-    const template = {
+    const idea = {
       id: crypto.randomUUID(),
       user_id: userId,
-      name: args.name,
-      description: args.description ?? undefined,
-      content_html: args.content_html,
-      content_json: args.content_json ?? undefined,
-      is_default: false,
-      thumbnail_url: args.thumbnail_url ?? undefined,
+      title: args.title,
+      content: args.content ?? undefined,
+      priority: args.priority,
+      status: args.status,
+      tags: args.tags ?? undefined,
       created_at: timestamp,
       updated_at: timestamp,
     };
 
-    const _id = await ctx.db.insert("email_templates", template);
+    const _id = await ctx.db.insert("ideas", idea);
     const created = await ctx.db.get(_id);
-    return created ?? template;
+    return created ?? idea;
   },
 });
 
@@ -53,36 +52,35 @@ export const update = mutation({
     id: v.string(),
     userId: v.optional(v.string()),
     updates: v.object({
-      name: v.optional(v.string()),
-      description: v.optional(v.string()),
-      content_html: v.optional(v.string()),
-      content_json: v.optional(v.any()),
-      is_default: v.optional(v.boolean()),
-      thumbnail_url: v.optional(v.string()),
+      title: v.optional(v.string()),
+      content: v.optional(v.string()),
+      priority: v.optional(v.string()),
+      status: v.optional(v.string()),
+      tags: v.optional(v.array(v.string())),
     }),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
 
-    const template = await ctx.db
-      .query("email_templates")
+    const idea = await ctx.db
+      .query("ideas")
       .filter((q) => q.eq(q.field("id"), args.id))
       .first();
 
-    if (!template) {
-      throw new Error("Template not found");
+    if (!idea) {
+      throw new Error("Idea not found");
     }
-    if (template.user_id !== userId) {
+    if (idea.user_id !== userId) {
       throw new Error("Forbidden");
     }
 
     const updated = {
-      ...template,
+      ...idea,
       ...args.updates,
       updated_at: nowIso(),
     };
 
-    await ctx.db.replace(template._id, updated);
+    await ctx.db.replace(idea._id, updated);
     return updated;
   },
 });
@@ -92,17 +90,17 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
 
-    const template = await ctx.db
-      .query("email_templates")
+    const idea = await ctx.db
+      .query("ideas")
       .filter((q) => q.eq(q.field("id"), args.id))
       .first();
 
-    if (!template) return null;
-    if (template.user_id !== userId) {
+    if (!idea) return null;
+    if (idea.user_id !== userId) {
       throw new Error("Forbidden");
     }
 
-    await ctx.db.delete(template._id);
-    return template._id;
+    await ctx.db.delete(idea._id);
+    return idea._id;
   },
 });

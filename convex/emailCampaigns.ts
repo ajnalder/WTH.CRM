@@ -1,7 +1,125 @@
-import { mutation } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
 
+// CRUD Operations
+export const list = query({
+  args: { userId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+
+    const campaigns = await ctx.db
+      .query("email_campaigns")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    return campaigns.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  },
+});
+
+export const create = mutation({
+  args: {
+    userId: v.optional(v.string()),
+    name: v.string(),
+    subject: v.string(),
+    content_html: v.string(),
+    content_json: v.optional(v.any()),
+    status: v.optional(v.string()),
+    scheduled_at: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+    const timestamp = nowIso();
+
+    const campaign = {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      name: args.name,
+      subject: args.subject,
+      content_html: args.content_html,
+      content_json: args.content_json ?? undefined,
+      status: args.status ?? "draft",
+      recipient_count: 0,
+      opened_count: 0,
+      clicked_count: 0,
+      delivered_count: 0,
+      scheduled_at: args.scheduled_at ?? undefined,
+      sent_at: undefined,
+      created_at: timestamp,
+      updated_at: timestamp,
+    };
+
+    const _id = await ctx.db.insert("email_campaigns", campaign);
+    const created = await ctx.db.get(_id);
+    return created ?? campaign;
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.string(),
+    userId: v.optional(v.string()),
+    updates: v.object({
+      name: v.optional(v.string()),
+      subject: v.optional(v.string()),
+      content_html: v.optional(v.string()),
+      content_json: v.optional(v.any()),
+      status: v.optional(v.string()),
+      scheduled_at: v.optional(v.string()),
+      recipient_count: v.optional(v.number()),
+      opened_count: v.optional(v.number()),
+      clicked_count: v.optional(v.number()),
+      delivered_count: v.optional(v.number()),
+      sent_at: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+
+    const campaign = await ctx.db
+      .query("email_campaigns")
+      .filter((q) => q.eq(q.field("id"), args.id))
+      .first();
+
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+    if (campaign.user_id !== userId) {
+      throw new Error("Forbidden");
+    }
+
+    const updated = {
+      ...campaign,
+      ...args.updates,
+      updated_at: nowIso(),
+    };
+
+    await ctx.db.replace(campaign._id, updated);
+    return updated;
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.string(), userId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+
+    const campaign = await ctx.db
+      .query("email_campaigns")
+      .filter((q) => q.eq(q.field("id"), args.id))
+      .first();
+
+    if (!campaign) return null;
+    if (campaign.user_id !== userId) {
+      throw new Error("Forbidden");
+    }
+
+    await ctx.db.delete(campaign._id);
+    return campaign._id;
+  },
+});
+
+// Send Campaign
 export const sendCampaign = mutation({
   args: {
     userId: v.optional(v.string()),

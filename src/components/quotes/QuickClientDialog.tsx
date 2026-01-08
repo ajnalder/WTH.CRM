@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuickClientDialogProps {
   onClientCreated: (clientId: string, contactName: string, contactEmail: string) => void;
@@ -21,58 +22,52 @@ export function QuickClientDialog({ onClientCreated }: QuickClientDialogProps) {
     contactEmail: '',
     contactPhone: '',
   });
-  
+
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const createClientMutation = useConvexMutation(api.clients.create);
+  const createContactMutation = useConvexMutation(api.contacts.create);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.company.trim()) {
       toast({ title: 'Error', description: 'Company name is required', variant: 'destructive' });
       return;
     }
-    
+
     if (!formData.contactName.trim() || !formData.contactEmail.trim()) {
       toast({ title: 'Error', description: 'Contact name and email are required', variant: 'destructive' });
       return;
     }
-    
+
+    if (!user) {
+      toast({ title: 'Error', description: 'Not authenticated', variant: 'destructive' });
+      return;
+    }
+
     setIsCreating(true);
-    
+
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Not authenticated');
-      
       // Create the client
-      const { data: client, error: clientError } = await supabase
-        .from('clients')
-        .insert({
-          company: formData.company.trim(),
-          user_id: user.user.id,
-        })
-        .select()
-        .single();
-        
-      if (clientError) throw clientError;
-      
+      const client = await createClientMutation({
+        userId: user.id,
+        company: formData.company.trim(),
+      });
+
       // Create the primary contact
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .insert({
-          client_id: client.id,
-          name: formData.contactName.trim(),
-          email: formData.contactEmail.trim(),
-          phone: formData.contactPhone.trim() || null,
-          is_primary: true,
-        });
-        
-      if (contactError) throw contactError;
-      
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      
+      await createContactMutation({
+        userId: user.id,
+        client_id: client.id,
+        name: formData.contactName.trim(),
+        email: formData.contactEmail.trim(),
+        phone: formData.contactPhone.trim() || undefined,
+        is_primary: true,
+        email_subscribed: true,
+      });
+
       toast({ title: 'Success', description: 'Client and contact created' });
-      
+
       onClientCreated(client.id, formData.contactName.trim(), formData.contactEmail.trim());
       setFormData({ company: '', contactName: '', contactEmail: '', contactPhone: '' });
       setOpen(false);

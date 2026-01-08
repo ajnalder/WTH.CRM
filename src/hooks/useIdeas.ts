@@ -1,113 +1,98 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-
-type Idea = Tables<'ideas'>;
-type IdeaInsert = TablesInsert<'ideas'>;
-type IdeaUpdate = TablesUpdate<'ideas'>;
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useIdeas = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: ideas, isLoading, error } = useQuery({
-    queryKey: ['ideas'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ideas')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const ideasData = useConvexQuery(
+    api.ideas.list,
+    user ? { userId: user.id } : undefined
+  );
 
-      if (error) {
-        throw error;
-      }
-      return data as Idea[];
-    },
-  });
+  const ideas = ideasData ?? [];
+  const isLoading = ideasData === undefined;
+  const error = null;
 
-  const createIdea = useMutation({
-    mutationFn: async (ideaData: Omit<IdeaInsert, 'user_id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
+  const createIdeaMutation = useConvexMutation(api.ideas.create);
+  const updateIdeaMutation = useConvexMutation(api.ideas.update);
+  const deleteIdeaMutation = useConvexMutation(api.ideas.remove);
+
+  const createIdea = {
+    mutateAsync: async (ideaData: {
+      title: string;
+      content?: string;
+      priority: string;
+      status: string;
+      tags?: string[];
+    }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('ideas')
-        .insert([{ ...ideaData, user_id: user.id }])
-        .select()
-        .single();
+      try {
+        const data = await createIdeaMutation({
+          userId: user.id,
+          ...ideaData,
+        });
+        toast({
+          title: "Success",
+          description: "Idea created successfully!",
+        });
+        return data;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create idea. Please try again.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ideas'] });
-      toast({
-        title: "Success",
-        description: "Idea created successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create idea. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const updateIdea = {
+    mutateAsync: async ({ id, updates }: { id: string; updates: any }) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const updateIdea = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: IdeaUpdate }) => {
-      const { data, error } = await supabase
-        .from('ideas')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        const data = await updateIdeaMutation({ id, userId: user.id, updates });
+        toast({
+          title: "Success",
+          description: "Idea updated successfully!",
+        });
+        return data;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update idea. Please try again.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ideas'] });
-      toast({
-        title: "Success",
-        description: "Idea updated successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update idea. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteIdea = {
+    mutateAsync: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const deleteIdea = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('ideas')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      try {
+        await deleteIdeaMutation({ id, userId: user.id });
+        toast({
+          title: "Success",
+          description: "Idea deleted successfully!",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete idea. Please try again.",
+          variant: "destructive",
+        });
+        throw error;
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ideas'] });
-      toast({
-        title: "Success",
-        description: "Idea deleted successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete idea. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  };
 
   return {
     ideas,

@@ -11,7 +11,6 @@ import { useQuoteItems } from '@/hooks/useQuoteItems';
 import { useQuoteEvents } from '@/hooks/useQuoteEvents';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
@@ -24,7 +23,8 @@ export default function PublicQuoteView() {
   const { logEvent } = useQuoteEvents();
   const { settings } = useCompanySettings();
   const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
-  
+  const updateQuoteMutation = useMutation(api.quotes.update);
+
   const [clientName, setClientName] = useState('');
   const [isAccepting, setIsAccepting] = useState(false);
   const [hasLoggedView, setHasLoggedView] = useState(false);
@@ -34,13 +34,16 @@ export default function PublicQuoteView() {
     if (quote && !hasLoggedView && quote.status !== 'accepted') {
       setHasLoggedView(true);
       logEvent({ quote_id: quote.id, event_type: 'opened' });
-      
+
       // Update viewed_at if not already set
       if (!quote.viewed_at) {
-        supabase
-          .from('quotes')
-          .update({ viewed_at: new Date().toISOString(), status: 'viewed' })
-          .eq('id', quote.id)
+        updateQuoteMutation({
+          id: quote.id,
+          updates: {
+            viewed_at: new Date().toISOString(),
+            status: 'viewed',
+          },
+        })
           .then(() => {
             // Send notification
             sendQuoteNotification({
@@ -51,27 +54,28 @@ export default function PublicQuoteView() {
               totalAmount: quote.total_amount,
               action: 'viewed',
             }).catch((err) => console.error('Quote notification failed', err));
-          });
+          })
+          .catch((err) => console.error('Failed to update quote:', err));
       }
     }
-  }, [quote, hasLoggedView, logEvent, sendQuoteNotification]);
+  }, [quote, hasLoggedView, logEvent, sendQuoteNotification, updateQuoteMutation]);
 
   const handleAccept = async () => {
     if (!quote || !clientName.trim()) return;
-    
+
     setIsAccepting(true);
     try {
       await logEvent({ quote_id: quote.id, event_type: 'accepted' });
-      
-      await supabase
-        .from('quotes')
-        .update({
+
+      await updateQuoteMutation({
+        id: quote.id,
+        updates: {
           status: 'accepted',
           accepted_at: new Date().toISOString(),
           accepted_by_name: clientName.trim(),
-        })
-        .eq('id', quote.id);
-      
+        },
+      });
+
       // Send notification
       await sendQuoteNotification({
         userId: quote.user_id,
@@ -82,7 +86,7 @@ export default function PublicQuoteView() {
         action: 'accepted',
         accepted_by_name: clientName.trim(),
       });
-      
+
       refetch();
     } catch (error) {
       console.error('Error accepting quote:', error);

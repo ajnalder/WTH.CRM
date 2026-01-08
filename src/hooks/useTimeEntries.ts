@@ -1,13 +1,22 @@
-
 import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { useState } from 'react';
 
-type TimeEntry = Tables<'time_entries'>;
-type TimeEntryInsert = TablesInsert<'time_entries'>;
+// Time entry types
+type TimeEntry = {
+  id: string;
+  task_id: string;
+  user_id: string;
+  date: string;
+  description: string;
+  hours: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type TimeEntryInsert = Omit<TimeEntry, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
 
 export const useTimeEntries = (taskId: string) => {
   const { toast } = useToast();

@@ -1,98 +1,73 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
 import { QuoteBlock } from '@/types/quote';
 
 export const useQuoteBlocks = (quoteId: string | undefined) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: blocks = [], isLoading } = useQuery({
-    queryKey: ['quote-blocks', quoteId],
-    queryFn: async () => {
-      if (!quoteId) return [];
-      const { data, error } = await supabase
-        .from('quote_blocks')
-        .select('*')
-        .eq('quote_id', quoteId)
-        .order('order_index', { ascending: true });
-      if (error) throw error;
-      return data as QuoteBlock[];
-    },
-    enabled: !!quoteId,
-  });
+  const blocksData = useConvexQuery(
+    api.quoteBlocks.listByQuote,
+    quoteId ? { quoteId } : undefined
+  ) as QuoteBlock[] | undefined;
 
-  const addBlock = useMutation({
-    mutationFn: async (blockData: Omit<QuoteBlock, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('quote_blocks')
-        .insert(blockData)
-        .select()
-        .single();
-      if (error) throw error;
+  const blocks = blocksData ?? [];
+  const isLoading = blocksData === undefined;
+
+  const addBlockMutation = useConvexMutation(api.quoteBlocks.create);
+  const updateBlockMutation = useConvexMutation(api.quoteBlocks.update);
+  const deleteBlockMutation = useConvexMutation(api.quoteBlocks.remove);
+
+  const addBlock = async (blockData: Omit<QuoteBlock, 'id' | 'created_at'>) => {
+    try {
+      const data = await addBlockMutation(blockData);
       return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quote-blocks', quoteId] });
-    },
-    onError: (error) => {
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to add block', variant: 'destructive' });
       console.error('Error adding block:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const updateBlock = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<QuoteBlock> }) => {
-      const { data, error } = await supabase
-        .from('quote_blocks')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quote-blocks', quoteId] });
-    },
-    onError: (error) => {
+  const updateBlock = async ({ id, updates }: { id: string; updates: Partial<QuoteBlock> }) => {
+    try {
+      await updateBlockMutation({ id, updates });
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to update block', variant: 'destructive' });
       console.error('Error updating block:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const deleteBlock = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('quote_blocks').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quote-blocks', quoteId] });
-    },
-    onError: (error) => {
+  const deleteBlock = async (id: string) => {
+    try {
+      await deleteBlockMutation({ id });
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to delete block', variant: 'destructive' });
       console.error('Error deleting block:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const reorderBlocks = useMutation({
-    mutationFn: async (reorderedBlocks: { id: string; order_index: number }[]) => {
-      const updates = reorderedBlocks.map(({ id, order_index }) =>
-        supabase.from('quote_blocks').update({ order_index }).eq('id', id)
+  const reorderBlocks = async (reorderedBlocks: { id: string; order_index: number }[]) => {
+    try {
+      await Promise.all(
+        reorderedBlocks.map(({ id, order_index }) =>
+          updateBlockMutation({ id, updates: { order_index } })
+        )
       );
-      await Promise.all(updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quote-blocks', quoteId] });
-    },
-  });
+    } catch (error) {
+      console.error('Error reordering blocks:', error);
+      throw error;
+    }
+  };
 
   return {
     blocks,
     isLoading,
-    addBlock: addBlock.mutateAsync,
-    updateBlock: updateBlock.mutate,
-    deleteBlock: deleteBlock.mutate,
-    reorderBlocks: reorderBlocks.mutate,
+    addBlock,
+    updateBlock,
+    deleteBlock,
+    reorderBlocks,
   };
 };

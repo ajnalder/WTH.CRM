@@ -1,25 +1,5 @@
-
-import { supabase } from '@/integrations/supabase/client';
-import { shopifyChecklistItems } from './shopifyChecklist';
-
+// TODO: Migrate to Convex - currently stubbed
 export const updateShopifyChecklistTemplate = async () => {
-  try {
-    const { error } = await supabase
-      .from('checklist_templates')
-      .update({
-        items: shopifyChecklistItems,
-        updated_at: new Date().toISOString()
-      })
-      .eq('name', 'Shopify');
-
-    if (error) {
-      console.error('Error updating Shopify checklist template:', error);
-      throw error;
-    }
-
-    console.log('Shopify checklist template updated successfully');
-  } catch (error) {
-    console.error('Failed to update Shopify checklist template:', error);
-    throw error;
-  }
+  console.warn('updateShopifyChecklistTemplate not yet migrated to Convex');
+  return null;
 };

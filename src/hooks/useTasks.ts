@@ -2,8 +2,30 @@ import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'co
 import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { useState } from 'react';
+
+// Task types
+type Task = {
+  id: string;
+  user_id: string;
+  client_id?: string;
+  title: string;
+  description?: string;
+  status: string;
+  assignee?: string;
+  billable_amount?: number;
+  billing_description?: string;
+  progress?: number;
+  dropbox_url?: string;
+  notes?: string;
+  due_date?: string;
+  project?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+type TaskInsert = Omit<Task, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
 
 export interface TaskWithClient extends Task {
   client_name?: string;

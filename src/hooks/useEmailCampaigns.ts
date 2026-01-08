@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -32,94 +32,71 @@ export type CreateCampaignData = {
 
 export const useEmailCampaigns = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ['email-campaigns'],
-    queryFn: async () => {
-      if (!user) return [];
+  const campaignsData = useConvexQuery(
+    api.emailCampaigns.list,
+    user ? { userId: user.id } : undefined
+  );
 
-      const { data, error } = await supabase
-        .from('email_campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const campaigns = (campaignsData ?? []) as EmailCampaign[];
+  const isLoading = campaignsData === undefined;
 
-      if (error) {
-        console.error('Error fetching campaigns:', error);
-        throw error;
-      }
+  const createCampaignMutation = useConvexMutation(api.emailCampaigns.create);
+  const updateCampaignMutation = useConvexMutation(api.emailCampaigns.update);
+  const deleteCampaignMutation = useConvexMutation(api.emailCampaigns.remove);
 
-      return data as EmailCampaign[];
-    },
-    enabled: !!user,
-  });
-
-  const createCampaign = useMutation({
-    mutationFn: async (campaign: CreateCampaignData) => {
+  const createCampaign = {
+    mutate: async (campaign: CreateCampaignData) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('email_campaigns')
-        .insert({
+      try {
+        const data = await createCampaignMutation({
+          userId: user.id,
           ...campaign,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+        });
+        toast.success('Campaign created successfully');
+        return data;
+      } catch (error) {
+        console.error('Error creating campaign:', error);
+        toast.error('Failed to create campaign');
+        throw error;
+      }
+    },
+    isPending: false,
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campaigns'] });
-      toast.success('Campaign created successfully');
-    },
-    onError: (error) => {
-      console.error('Error creating campaign:', error);
-      toast.error('Failed to create campaign');
-    },
-  });
+  const updateCampaign = {
+    mutate: async ({ id, ...updates }: Partial<EmailCampaign> & { id: string }) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const updateCampaign = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<EmailCampaign> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('email_campaigns')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        const data = await updateCampaignMutation({ id, userId: user.id, updates });
+        toast.success('Campaign updated successfully');
+        return data;
+      } catch (error) {
+        console.error('Error updating campaign:', error);
+        toast.error('Failed to update campaign');
+        throw error;
+      }
+    },
+    isPending: false,
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campaigns'] });
-      toast.success('Campaign updated successfully');
-    },
-    onError: (error) => {
-      console.error('Error updating campaign:', error);
-      toast.error('Failed to update campaign');
-    },
-  });
+  const deleteCampaign = {
+    mutate: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const deleteCampaign = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('email_campaigns')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      try {
+        await deleteCampaignMutation({ id, userId: user.id });
+        toast.success('Campaign deleted successfully');
+      } catch (error) {
+        console.error('Error deleting campaign:', error);
+        toast.error('Failed to delete campaign');
+        throw error;
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campaigns'] });
-      toast.success('Campaign deleted successfully');
-    },
-    onError: (error) => {
-      console.error('Error deleting campaign:', error);
-      toast.error('Failed to delete campaign');
-    },
-  });
+    isPending: false,
+  };
 
   return {
     campaigns,

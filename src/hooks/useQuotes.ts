@@ -1,184 +1,143 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Quote } from '@/types/quote';
+import { useState } from 'react';
 
 export const useQuotes = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
 
-  const { data: quotes = [], isLoading } = useQuery({
-    queryKey: ['quotes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select(`
-          *,
-          clients (
-            id,
-            company
-          )
-        `)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Quote[];
-    },
-  });
+  const quotesData = useConvexQuery(
+    api.quotes.list,
+    user ? { userId: user.id } : undefined
+  ) as Quote[] | undefined;
+
+  const quotes = quotesData ?? [];
+  const isLoading = quotesData === undefined;
+
+  const createQuoteMutation = useConvexMutation(api.quotes.create);
+  const updateQuoteMutation = useConvexMutation(api.quotes.update);
+  const deleteQuoteMutation = useConvexMutation(api.quotes.remove);
 
   const generateNextQuoteNumber = async (): Promise<string> => {
-    const { data } = await supabase
-      .from('quotes')
-      .select('quote_number')
-      .order('created_at', { ascending: false })
-      .limit(1);
-    
-    if (data && data.length > 0) {
-      const lastNumber = parseInt(data[0].quote_number.replace('QUO-', ''), 10);
-      return `QUO-${String(lastNumber + 1).padStart(4, '0')}`;
+    if (quotes.length === 0) {
+      return 'QUO-0001';
     }
-    return 'QUO-0001';
+
+    const numbers = quotes
+      .map((q) => parseInt(q.quote_number.replace('QUO-', ''), 10))
+      .filter((n) => !isNaN(n));
+
+    if (numbers.length === 0) {
+      return 'QUO-0001';
+    }
+
+    const lastNumber = Math.max(...numbers);
+    return `QUO-${String(lastNumber + 1).padStart(4, '0')}`;
   };
 
-  const createQuote = useMutation({
-    mutationFn: async (quoteData: {
-      client_id: string;
-      title: string;
-      project_type?: string;
-      valid_until?: string;
-      deposit_percentage?: number;
-      total_amount?: number;
-      contact_name?: string;
-      contact_email?: string;
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+  const createQuote = async (quoteData: {
+    client_id: string;
+    title: string;
+    project_type?: string;
+    valid_until?: string;
+    deposit_percentage?: number;
+    total_amount?: number;
+    contact_name?: string;
+    contact_email?: string;
+  }) => {
+    if (!user) throw new Error('Not authenticated');
 
-      // Get the user's profile to store creator name
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', user.id)
-        .single();
-
-      const quoteNumber = await generateNextQuoteNumber();
-      
-      const { data, error } = await supabase
-        .from('quotes')
-        .insert({
-          client_id: quoteData.client_id,
-          title: quoteData.title,
-          project_type: quoteData.project_type,
-          valid_until: quoteData.valid_until,
-          deposit_percentage: quoteData.deposit_percentage ?? 50,
-          total_amount: quoteData.total_amount ?? 0,
-          user_id: user.id,
-          quote_number: quoteNumber,
-          creator_name: profile?.full_name || null,
-          contact_name: quoteData.contact_name,
-          contact_email: quoteData.contact_email,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+    try {
+      setIsCreating(true);
+      const data = await createQuoteMutation({
+        userId: user.id,
+        client_id: quoteData.client_id,
+        title: quoteData.title,
+        project_type: quoteData.project_type,
+        valid_until: quoteData.valid_until,
+        deposit_percentage: quoteData.deposit_percentage,
+        total_amount: quoteData.total_amount,
+        contact_name: quoteData.contact_name,
+        contact_email: quoteData.contact_email,
+      });
       toast({ title: 'Success', description: 'Quote created successfully' });
-    },
-    onError: (error) => {
+      return data;
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to create quote', variant: 'destructive' });
       console.error('Error creating quote:', error);
-    },
-  });
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-  const updateQuote = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Quote> }) => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-    },
-    onError: (error) => {
+  const updateQuote = async ({ id, updates }: { id: string; updates: Partial<Quote> }) => {
+    if (!user) throw new Error('Not authenticated');
+
+    try {
+      await updateQuoteMutation({ id, userId: user.id, updates });
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to update quote', variant: 'destructive' });
       console.error('Error updating quote:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
-  const deleteQuote = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('quotes').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+  const deleteQuote = async (id: string) => {
+    if (!user) throw new Error('Not authenticated');
+
+    try {
+      await deleteQuoteMutation({ id, userId: user.id });
       toast({ title: 'Success', description: 'Quote deleted successfully' });
-    },
-    onError: (error) => {
+    } catch (error) {
       toast({ title: 'Error', description: 'Failed to delete quote', variant: 'destructive' });
       console.error('Error deleting quote:', error);
-    },
-  });
+      throw error;
+    }
+  };
 
   return {
     quotes,
     isLoading,
-    createQuote: createQuote.mutateAsync,
-    updateQuote: updateQuote.mutate,
-    deleteQuote: deleteQuote.mutate,
+    createQuote,
+    updateQuote,
+    deleteQuote,
     generateNextQuoteNumber,
   };
 };
 
 export const useQuote = (quoteId: string | undefined) => {
-  return useQuery({
-    queryKey: ['quote', quoteId],
-    queryFn: async () => {
-      if (!quoteId) return null;
-      const { data, error } = await supabase
-        .from('quotes')
-        .select(`
-          *,
-          clients (
-            id,
-            company
-          )
-        `)
-        .eq('id', quoteId)
-        .single();
-      if (error) throw error;
-      return data as Quote;
-    },
-    enabled: !!quoteId,
-  });
+  const { user } = useAuth();
+
+  const quoteData = useConvexQuery(
+    api.quotes.getById,
+    quoteId && user ? { id: quoteId, userId: user.id } : undefined
+  );
+
+  return {
+    data: quoteData ?? null,
+    isLoading: quoteData === undefined,
+  };
 };
 
 export const useQuoteByToken = (token: string | undefined) => {
-  return useQuery({
-    queryKey: ['quote-public', token],
-    queryFn: async () => {
-      if (!token) return null;
-      const { data, error } = await supabase
-        .from('quotes')
-        .select(`
-          *,
-          clients (
-            id,
-            company
-          )
-        `)
-        .eq('public_token', token)
-        .single();
-      if (error) throw error;
-      return data as Quote;
-    },
-    enabled: !!token,
-  });
+  const quoteData = useConvexQuery(
+    api.quotes.getByToken,
+    token ? { token } : undefined
+  );
+
+  const refetch = () => {
+    // Convex auto-refetches, but we can return a function for compatibility
+    return Promise.resolve();
+  };
+
+  return {
+    data: quoteData ?? null,
+    isLoading: quoteData === undefined,
+    refetch,
+  };
 };

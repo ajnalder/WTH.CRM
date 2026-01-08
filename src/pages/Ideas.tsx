@@ -9,10 +9,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageLayout } from '@/components/PageLayout';
 import { useIdeas } from '@/hooks/useIdeas';
-import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 
-type Idea = Tables<'ideas'>;
+type Idea = {
+  id: string;
+  user_id: string;
+  title: string;
+  content?: string;
+  priority: string;
+  status: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+};
 
 const Ideas = () => {
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea } = useIdeas();

@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery as useConvexQuery, useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -26,94 +26,71 @@ export type CreateTemplateData = {
 
 export const useEmailTemplates = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { data: templates = [], isLoading } = useQuery({
-    queryKey: ['email-templates'],
-    queryFn: async () => {
-      if (!user) return [];
+  const templatesData = useConvexQuery(
+    api.emailTemplates.list,
+    user ? { userId: user.id } : undefined
+  );
 
-      const { data, error } = await supabase
-        .from('email_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const templates = (templatesData ?? []) as EmailTemplate[];
+  const isLoading = templatesData === undefined;
 
-      if (error) {
-        console.error('Error fetching templates:', error);
-        throw error;
-      }
+  const createTemplateMutation = useConvexMutation(api.emailTemplates.create);
+  const updateTemplateMutation = useConvexMutation(api.emailTemplates.update);
+  const deleteTemplateMutation = useConvexMutation(api.emailTemplates.remove);
 
-      return data as EmailTemplate[];
-    },
-    enabled: !!user,
-  });
-
-  const createTemplate = useMutation({
-    mutationFn: async (template: CreateTemplateData) => {
+  const createTemplate = {
+    mutate: async (template: CreateTemplateData) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('email_templates')
-        .insert({
+      try {
+        const data = await createTemplateMutation({
+          userId: user.id,
           ...template,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+        });
+        toast.success('Template created successfully');
+        return data;
+      } catch (error) {
+        console.error('Error creating template:', error);
+        toast.error('Failed to create template');
+        throw error;
+      }
+    },
+    isPending: false,
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      toast.success('Template created successfully');
-    },
-    onError: (error) => {
-      console.error('Error creating template:', error);
-      toast.error('Failed to create template');
-    },
-  });
+  const updateTemplate = {
+    mutate: async ({ id, ...updates }: Partial<EmailTemplate> & { id: string }) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const updateTemplate = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<EmailTemplate> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        const data = await updateTemplateMutation({ id, userId: user.id, updates });
+        toast.success('Template updated successfully');
+        return data;
+      } catch (error) {
+        console.error('Error updating template:', error);
+        toast.error('Failed to update template');
+        throw error;
+      }
+    },
+    isPending: false,
+  };
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      toast.success('Template updated successfully');
-    },
-    onError: (error) => {
-      console.error('Error updating template:', error);
-      toast.error('Failed to update template');
-    },
-  });
+  const deleteTemplate = {
+    mutate: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const deleteTemplate = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('email_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      try {
+        await deleteTemplateMutation({ id, userId: user.id });
+        toast.success('Template deleted successfully');
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        toast.error('Failed to delete template');
+        throw error;
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      toast.success('Template deleted successfully');
-    },
-    onError: (error) => {
-      console.error('Error deleting template:', error);
-      toast.error('Failed to delete template');
-    },
-  });
+    isPending: false,
+  };
 
   return {
     templates,
