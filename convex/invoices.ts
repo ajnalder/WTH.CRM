@@ -61,8 +61,9 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
     const timestamp = nowIso();
+    const { userId: _userId, ...invoiceData } = args; // Remove userId from spread
     const invoice = {
-      ...args,
+      ...invoiceData,
       user_id: userId,
       id: crypto.randomUUID(),
       gst_rate: args.gst_rate ?? 0,
