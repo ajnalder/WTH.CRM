@@ -2,7 +2,7 @@ import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
 import { api } from "./_generated/api";
-import { createEmailTemplate, generateInvoicePDF } from "./emailTemplates";
+import { createEmailTemplate, generateInvoicePDF } from "./invoicePDF";
 
 export const list = query({
   args: { userId: v.optional(v.string()), clientId: v.optional(v.string()) },
