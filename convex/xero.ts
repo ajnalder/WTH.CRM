@@ -130,11 +130,12 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": createBasicAuthHeader(clientId, clientSecret),
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: token.refresh_token,
+      client_id: clientId,
+      client_secret: clientSecret,
     }),
   });
 
@@ -219,12 +220,13 @@ export const exchangeCodeNoAuth = action({
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": createBasicAuthHeader(clientId, clientSecret),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: args.code,
         redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret,
       }),
     });
 
