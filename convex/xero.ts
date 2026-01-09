@@ -126,15 +126,11 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
   const clientId = getEnv("XERO_CLIENT_ID");
   const clientSecret = getEnv("XERO_CLIENT_SECRET");
 
-  // For confidential clients, Xero requires Basic auth header for token refresh
-  // Create auth string manually using Buffer (available in "use node" context)
-  const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
   const res = await fetch("https://identity.xero.com/connect/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": `Basic ${authString}`,
+      "Authorization": createBasicAuthHeader(clientId, clientSecret),
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
@@ -219,14 +215,11 @@ export const exchangeCodeNoAuth = action({
       throw new Error("Invalid state");
     }
 
-    // For confidential clients, use Basic auth header
-    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
     const res = await fetch("https://identity.xero.com/connect/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${authString}`,
+        "Authorization": createBasicAuthHeader(clientId, clientSecret),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
