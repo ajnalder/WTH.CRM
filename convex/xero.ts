@@ -126,20 +126,23 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
   const clientId = getEnv("XERO_CLIENT_ID");
   const clientSecret = getEnv("XERO_CLIENT_SECRET");
 
+  // Xero requires client_id and client_secret in the body for refresh tokens
   const res = await fetch("https://identity.xero.com/connect/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: createBasicAuthHeader(clientId, clientSecret),
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: token.refresh_token,
+      client_id: clientId,
+      client_secret: clientSecret,
     }),
   });
 
   if (!res.ok) {
     const text = await res.text();
+    console.error("Xero refresh failed", { status: res.status, body: text });
     throw new Error(`Xero refresh failed: ${res.status} ${text}`);
   }
 
