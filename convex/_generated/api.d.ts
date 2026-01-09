@@ -9,19 +9,28 @@
  */
 
 import type * as _utils from "../_utils.js";
+import type * as checklists from "../checklists.js";
 import type * as clients from "../clients.js";
 import type * as companySettings from "../companySettings.js";
 import type * as contacts from "../contacts.js";
 import type * as domains from "../domains.js";
 import type * as emailCampaigns from "../emailCampaigns.js";
+import type * as emailLogs from "../emailLogs.js";
 import type * as emailTemplates from "../emailTemplates.js";
+import type * as files from "../files.js";
+import type * as ideas from "../ideas.js";
 import type * as invoiceItems from "../invoiceItems.js";
+import type * as invoicePDF from "../invoicePDF.js";
 import type * as invoicePayments from "../invoicePayments.js";
 import type * as invoices from "../invoices.js";
 import type * as profiles from "../profiles.js";
 import type * as projectTeamMembers from "../projectTeamMembers.js";
 import type * as projects from "../projects.js";
+import type * as quoteBlocks from "../quoteBlocks.js";
+import type * as quoteEvents from "../quoteEvents.js";
+import type * as quoteItems from "../quoteItems.js";
 import type * as quoteNotifications from "../quoteNotifications.js";
+import type * as quotes from "../quotes.js";
 import type * as taskFiles from "../taskFiles.js";
 import type * as taskPlanning from "../taskPlanning.js";
 import type * as tasks from "../tasks.js";
@@ -36,19 +45,28 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   _utils: typeof _utils;
+  checklists: typeof checklists;
   clients: typeof clients;
   companySettings: typeof companySettings;
   contacts: typeof contacts;
   domains: typeof domains;
   emailCampaigns: typeof emailCampaigns;
+  emailLogs: typeof emailLogs;
   emailTemplates: typeof emailTemplates;
+  files: typeof files;
+  ideas: typeof ideas;
   invoiceItems: typeof invoiceItems;
+  invoicePDF: typeof invoicePDF;
   invoicePayments: typeof invoicePayments;
   invoices: typeof invoices;
   profiles: typeof profiles;
   projectTeamMembers: typeof projectTeamMembers;
   projects: typeof projects;
+  quoteBlocks: typeof quoteBlocks;
+  quoteEvents: typeof quoteEvents;
+  quoteItems: typeof quoteItems;
   quoteNotifications: typeof quoteNotifications;
+  quotes: typeof quotes;
   taskFiles: typeof taskFiles;
   taskPlanning: typeof taskPlanning;
   tasks: typeof tasks;

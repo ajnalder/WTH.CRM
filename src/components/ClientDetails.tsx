@@ -75,12 +75,19 @@ export const ClientDetails = ({ client, isOpen, onClose, onUpdateClient, startIn
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (client && formData.company) {
+      // Only send the fields that can be updated, not internal Convex fields
       const updatedClient = {
-        ...client,
+        id: client.id,
         company: formData.company,
         phone: formData.phone,
         description: formData.description,
         status: formData.status,
+        // Include display fields for UI updates
+        projects_count: client.projects_count,
+        total_value: client.total_value,
+        joined_date: client.joined_date,
+        avatar: client.avatar,
+        gradient: client.gradient,
       };
       onUpdateClient(updatedClient);
       setIsEditing(false);

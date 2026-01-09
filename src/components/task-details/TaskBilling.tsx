@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useInvoices } from '@/hooks/useInvoices';
-import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { useToast } from '@/hooks/use-toast';
+import { useMutation as useConvexMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TaskBillingProps {
   taskId: string;
@@ -34,14 +36,14 @@ export const TaskBilling = ({
 }: TaskBillingProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { createInvoice, invoices } = useInvoices();
   const [amount, setAmount] = useState(billableAmount?.toString() || '');
   const [description, setDescription] = useState(billingDescription || taskDescription || taskTitle);
   const [isCreating, setIsCreating] = useState(false);
-  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
-  
-  // Hook for adding items - only called when we have an invoice ID
-  const { addItem } = useInvoiceItems(createdInvoiceId || '');
+
+  // Use the mutation directly to avoid hook dependency on invoice ID
+  const addItemMutation = useConvexMutation(api.invoiceItems.create);
 
   const handleAmountChange = (value: string) => {
     setAmount(value);
@@ -77,24 +79,36 @@ export const TaskBilling = ({
     try {
       // Generate sequential invoice number
       const invoiceNumber = generateNextInvoiceNumber();
-      
-      // Create the invoice
+
+      // Calculate totals with GST
+      const subtotal = numAmount;
+      const gstRate = 15;
+      const gstAmount = subtotal * (gstRate / 100);
+      const subtotalInclGst = subtotal + gstAmount;
+      const totalAmount = subtotalInclGst;
+
+      // Create the invoice with calculated totals
       const invoice = await createInvoice({
         client_id: clientId,
         invoice_number: invoiceNumber,
         title: `Task: ${taskTitle}`,
         description: `Invoice for task: ${taskTitle}`,
-        gst_rate: 15,
-        due_date: null,
+        subtotal: subtotal,
+        gst_rate: gstRate,
+        gst_amount: gstAmount,
+        subtotal_incl_gst: subtotalInclGst,
+        total_amount: totalAmount,
+        balance_due: totalAmount,
         issued_date: new Date().toISOString().split('T')[0],
       });
 
       if (invoice) {
         const invoiceId = (invoice as { id: string }).id;
-        
+
         // Add the line item to the invoice
-        await addItem({
-          invoice_id: invoiceId,
+        await addItemMutation({
+          invoiceId: invoiceId,
+          userId: user?.id,
           description: description,
           quantity: 1,
           rate: numAmount,

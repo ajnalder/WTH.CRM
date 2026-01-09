@@ -54,7 +54,13 @@ export function createEmailTemplate(message: string, clientName: string, company
   `;
 }
 
-export async function generateInvoicePDF(invoice: any, client: any, items: any[], companySettings?: any): Promise<Uint8Array> {
+export async function generateInvoicePDF(
+  invoice: any,
+  client: any,
+  items: any[],
+  companySettings?: any,
+  storageContext?: { storage: { getUrl: (storageId: string) => Promise<string | null> } }
+): Promise<Uint8Array> {
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -77,18 +83,51 @@ export async function generateInvoicePDF(invoice: any, client: any, items: any[]
   const rightAlign = pageWidth - marginRight;
   let logoBottomY = marginTop;
 
-  if (companySettings?.logo_base64) {
+  // Try to get logo from storage first, fall back to base64
+  let logoBase64 = companySettings?.logo_base64;
+
+  if (companySettings?.logo_storage_id && storageContext) {
+    try {
+      const logoUrl = await storageContext.storage.getUrl(companySettings.logo_storage_id);
+      if (logoUrl) {
+        // Fetch the image from storage and convert to base64
+        const response = await fetch(logoUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        // Convert ArrayBuffer to base64 using Uint8Array and btoa
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        logoBase64 = `data:image/png;base64,${base64}`;
+      }
+    } catch (e) {
+      console.error("Failed to fetch logo from storage:", e);
+      // Fall back to base64 if storage fetch fails
+    }
+  }
+
+  if (logoBase64) {
     try {
       let logoWidth = 50;
       let logoHeight = 15;
 
-      const base64Data = companySettings.logo_base64.split(",")[1] || companySettings.logo_base64;
-      const buffer = Buffer.from(base64Data, "base64");
+      const base64Data = logoBase64.split(",")[1] || logoBase64;
+
+      // Convert base64 to Uint8Array without using Buffer
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
 
       // PNG width/height from bytes 16-23 / 20-23
-      if (buffer.length > 24 && buffer.toString("ascii", 1, 4) === "PNG") {
-        const width = buffer.readUInt32BE(16);
-        const height = buffer.readUInt32BE(20);
+      if (bytes.length > 24 &&
+          bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) { // Check for "PNG"
+        // Read big-endian 32-bit integers for width and height
+        const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+        const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
         if (width > 0 && height > 0) {
           const aspectRatio = width / height;
           logoHeight = logoWidth / aspectRatio;
@@ -96,7 +135,7 @@ export async function generateInvoicePDF(invoice: any, client: any, items: any[]
       }
 
       pdf.addImage(
-        companySettings.logo_base64,
+        logoBase64,
         "PNG",
         rightAlign - logoWidth,
         marginTop,

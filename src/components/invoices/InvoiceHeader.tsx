@@ -3,6 +3,7 @@ import React from 'react';
 import { Invoice } from '@/types/invoiceTypes';
 import { CompanySettings } from '@/hooks/useCompanySettings';
 import { Client } from '@/hooks/useClients';
+import { useCompanyLogo } from '@/hooks/useCompanyLogo';
 
 interface InvoiceHeaderProps {
   invoice: Invoice;
@@ -11,6 +12,8 @@ interface InvoiceHeaderProps {
 }
 
 export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ invoice, companySettings, client }) => {
+  const { logo } = useCompanyLogo();
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return new Date().toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
     return new Date(dateString).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -26,12 +29,12 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ invoice, companySe
             <div className="text-lg font-semibold text-gray-800">{client.company}</div>
           )}
         </div>
-        
+
         <div className="text-right text-sm">
-          {companySettings?.logo_base64 && (
-            <img 
-              src={companySettings.logo_base64} 
-              alt="Company Logo" 
+          {logo && (
+            <img
+              src={logo}
+              alt="Company Logo"
               className="h-10 ml-auto mb-2 object-contain"
             />
           )}

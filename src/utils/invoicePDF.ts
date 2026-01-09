@@ -4,10 +4,11 @@ import { Client } from '@/hooks/useClients';
 import { CompanySettings } from '@/hooks/useCompanySettings';
 
 export const generateInvoicePDF = async (
-  invoice: Invoice, 
-  client: Client | undefined, 
+  invoice: Invoice,
+  client: Client | undefined,
   items: InvoiceItem[],
-  companySettings?: CompanySettings | null
+  companySettings?: CompanySettings | null,
+  logoUrl?: string | null
 ) => {
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -29,20 +30,23 @@ export const generateInvoicePDF = async (
   // Company logo on right (if available)
   const rightAlign = pageWidth - marginRight;
   let logoBottomY = marginTop;
-  
-  if (companySettings?.logo_base64) {
+
+  // Use passed logoUrl (from storage) or fall back to base64
+  const logoSrc = logoUrl || companySettings?.logo_base64;
+
+  if (logoSrc) {
     try {
       // Get natural dimensions to preserve aspect ratio
       const img = new Image();
-      img.src = companySettings.logo_base64;
+      img.src = logoSrc;
       await new Promise((resolve) => { img.onload = resolve; });
-      
+
       const aspectRatio = img.naturalWidth / img.naturalHeight;
       const logoWidth = 50; // Fixed width in mm
       const logoHeight = logoWidth / aspectRatio; // Maintain natural ratio
-      
+
       pdf.addImage(
-        companySettings.logo_base64,
+        logoSrc,
         'PNG',
         rightAlign - logoWidth,
         marginTop,

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CompanySettings } from '@/components/CompanySettings';
+import { CompanySettingsWithStorage } from '@/components/CompanySettingsWithStorage';
 import { TeamManagement } from '@/components/TeamManagement';
 import { XeroIntegrationCard } from '@/components/invoices/XeroIntegrationCard';
 
@@ -15,10 +15,10 @@ const Settings = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <CompanySettings />
+          <CompanySettingsWithStorage />
           <XeroIntegrationCard />
         </div>
-        
+
         <div>
           <TeamManagement />
         </div>

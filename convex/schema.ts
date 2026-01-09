@@ -72,6 +72,8 @@ export default defineSchema({
     owner_name: v.optional(v.string()),
     logo_base64: v.optional(v.string()),
     logo_inverse_base64: v.optional(v.string()),
+    logo_storage_id: v.optional(v.string()),
+    logo_inverse_storage_id: v.optional(v.string()),
     xero_account_code: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
@@ -162,6 +164,22 @@ export default defineSchema({
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_user", ["user_id"]),
+
+  files: defineTable({
+    id: v.string(),
+    storage_id: v.string(),
+    user_id: v.string(),
+    file_name: v.string(),
+    file_type: v.string(),
+    mime_type: v.string(),
+    file_size: v.number(),
+    related_id: v.optional(v.string()),
+    created_at: v.string(),
+  })
+    .index("by_user", ["user_id"])
+    .index("by_type", ["file_type"])
+    .index("by_related", ["related_id"])
+    .index("by_storage_id", ["storage_id"]),
 
   hosting: defineTable({
     id: v.string(),

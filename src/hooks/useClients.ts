@@ -73,7 +73,10 @@ export const useClients = () => {
   const handleUpdate = async ({ id, updates }: { id: string; updates: Partial<Client> }) => {
     if (!user) throw new Error('User not authenticated');
     try {
-      await updateClientMutation({ id, userId: user.id, updates });
+      // Filter out fields that shouldn't be sent to the backend (id, user_id, timestamps, etc.)
+      const { id: _id, user_id, created_at, updated_at, ...cleanUpdates } = updates as any;
+
+      await updateClientMutation({ id, userId: user.id, updates: cleanUpdates });
       toast({
         title: "Success",
         description: "Client updated successfully",

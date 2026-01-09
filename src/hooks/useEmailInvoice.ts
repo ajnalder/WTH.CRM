@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMutation as useConvexMutation } from 'convex/react';
+import { useAction } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 
 export const useEmailInvoice = (
@@ -14,7 +14,7 @@ export const useEmailInvoice = (
 ) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const sendInvoiceEmail = useConvexMutation(api.invoices.sendInvoiceEmail);
+  const sendInvoiceEmail = useAction(api.invoices.sendInvoiceEmail);
   
   const recipientEmail = primaryContact?.email || '';
   const recipientName = primaryContact?.name || client?.company || '';

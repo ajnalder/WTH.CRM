@@ -5,6 +5,9 @@ import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { InvoiceItem } from '@/types/invoiceTypes';
 import { InvoiceItemsTable } from './InvoiceItemsTable';
 import { InvoiceTotals } from './InvoiceTotals';
+import { useMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface InvoiceItemsManagerProps {
   invoiceId: string;
@@ -15,7 +18,9 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
   invoiceId,
   onItemsChange
 }) => {
+  const { user } = useAuth();
   const { items, isLoading, addItem, updateItem, deleteItem } = useInvoiceItems(invoiceId);
+  const recalculateTotals = useMutation(api.invoices.recalculateTotals);
   const [newItem, setNewItem] = useState<Omit<InvoiceItem, 'id' | 'created_at' | 'invoice_id'>>({
     description: '',
     quantity: 1,
@@ -38,8 +43,8 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
   };
 
   const handleAddItem = async () => {
-    if (!newItem.description.trim()) return;
-    
+    if (!newItem.description.trim() || !user) return;
+
     console.log('Adding item:', {
       invoice_id: invoiceId,
       description: newItem.description,
@@ -47,7 +52,7 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
       rate: newItem.rate,
       amount: newItem.amount
     });
-    
+
     try {
       await addItem({
         invoice_id: invoiceId,
@@ -56,7 +61,10 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
         rate: newItem.rate,
         amount: newItem.amount
       });
-      
+
+      // Recalculate invoice totals
+      await recalculateTotals({ invoiceId, userId: user.id });
+
       // Reset the form
       setNewItem({
         description: '',
@@ -64,10 +72,10 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
         rate: 0,
         amount: 0
       });
-      
+
       // Trigger callback
       onItemsChange?.();
-      
+
       console.log('Item added successfully');
     } catch (error) {
       console.error('Error adding item:', error);
@@ -76,14 +84,14 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
 
   const handleUpdateItem = async (itemId: string, field: keyof InvoiceItem, value: string | number) => {
     const item = items.find(i => i.id === itemId);
-    if (!item) return;
-    
+    if (!item || !user) return;
+
     const updatedItem = { ...item, [field]: value };
-    
+
     if (field === 'quantity' || field === 'rate') {
       updatedItem.amount = calculateAmount(updatedItem.quantity, updatedItem.rate);
     }
-    
+
     try {
       await updateItem({
         id: itemId,
@@ -94,7 +102,10 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
           amount: updatedItem.amount
         }
       });
-      
+
+      // Recalculate invoice totals
+      await recalculateTotals({ invoiceId, userId: user.id });
+
       onItemsChange?.();
     } catch (error) {
       console.error('Error updating item:', error);
@@ -102,8 +113,14 @@ export const InvoiceItemsManager: React.FC<InvoiceItemsManagerProps> = ({
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    if (!user) return;
+
     try {
       await deleteItem(itemId);
+
+      // Recalculate invoice totals
+      await recalculateTotals({ invoiceId, userId: user.id });
+
       onItemsChange?.();
     } catch (error) {
       console.error('Error deleting item:', error);

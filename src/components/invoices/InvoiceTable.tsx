@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, FileText, Check, Mail, Trash2 } from 'lucide-react';
+import { Eye, Edit, FileText, Check, Mail, Trash2, AlertTriangle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -17,12 +17,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Invoice } from '@/types/invoiceTypes';
+import { Client } from '@/hooks/useClients';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useNavigate } from 'react-router-dom';
 
 interface InvoiceTableProps {
   invoices: Invoice[];
+  clients: Client[];
 }
 
 const getStatusColor = (status: string) => {
@@ -42,9 +52,16 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
+export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices, clients }) => {
   const navigate = useNavigate();
   const { updateInvoice, deleteInvoice } = useInvoices();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client?.company || 'Unknown Client';
+  };
 
   const handleMarkAsPaid = (invoiceId: string) => {
     updateInvoice({
@@ -56,10 +73,22 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
     });
   };
 
-  const handleDelete = (invoiceId: string) => {
-    if (window.confirm('Are you sure you want to delete this invoice?')) {
-      deleteInvoice(invoiceId);
+  const handleDeleteClick = (invoice: Invoice) => {
+    setInvoiceToDelete(invoice);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (invoiceToDelete) {
+      deleteInvoice(invoiceToDelete.id);
+      setDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setInvoiceToDelete(null);
   };
 
   return (
@@ -95,7 +124,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                 </div>
               </TableCell>
               <TableCell>
-                {(invoice as any).clients?.company || 'Unknown Client'}
+                {getClientName(invoice.client_id)}
               </TableCell>
               <TableCell>
                 <div>
@@ -152,7 +181,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(invoice.id)}
+                      onClick={() => handleDeleteClick(invoice)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       title="Delete Invoice"
                     >
@@ -176,6 +205,47 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
           )}
         </TableBody>
       </Table>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle size={20} />
+              Delete Invoice
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              Are you sure you want to delete invoice{' '}
+              <span className="font-semibold">{invoiceToDelete?.invoice_number}</span>?
+              {invoiceToDelete && (
+                <div className="mt-2 text-sm">
+                  <div className="font-medium text-gray-900">{invoiceToDelete.title}</div>
+                  <div className="text-gray-600">
+                    {getClientName(invoiceToDelete.client_id)} • ${invoiceToDelete.total_amount.toLocaleString()}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3 text-red-600 font-medium">
+                This action cannot be undone.
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 };

@@ -21,8 +21,8 @@ interface TaskCreateDialogProps {
   triggerVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
 }
 
-export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({ 
-  onTaskCreated, 
+export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
+  onTaskCreated,
   prefilledProject,
   triggerText = "New Task",
   triggerVariant = "default"
@@ -33,7 +33,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
   const { projects } = useProjects();
   const { teamMembers } = useTeamMembers();
   const { clients } = useClients();
-  
+
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -46,6 +46,26 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
     client_id: ''
   });
 
+  // Filter projects based on selected client - show Planning and In Progress projects
+  const filteredProjects = React.useMemo(() => {
+    if (!projects) return [];
+
+    // Show projects that are actively being worked on (not completed/archived)
+    const activeStatuses = ['Planning', 'In Progress', 'planning', 'in progress', 'in_progress'];
+
+    // If a client is selected, filter projects by that client
+    if (formData.client_id) {
+      const filtered = projects.filter(project =>
+        project.client_id === formData.client_id &&
+        activeStatuses.includes(project.status)
+      );
+      return filtered;
+    }
+
+    // If no client selected, show all active projects
+    return projects.filter(project => activeStatuses.includes(project.status));
+  }, [projects, formData.client_id]);
+
   // Set default assignee to logged-in user when dialog opens
   useEffect(() => {
     if (open && user && teamMembers) {
@@ -55,6 +75,17 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
       }
     }
   }, [open, user, teamMembers]);
+
+  // Clear project selection when client changes
+  useEffect(() => {
+    if (formData.client_id) {
+      // Check if currently selected project belongs to the new client
+      const selectedProject = projects?.find(p => p.name === formData.project);
+      if (selectedProject && selectedProject.client_id !== formData.client_id) {
+        setFormData(prev => ({ ...prev, project: '' }));
+      }
+    }
+  }, [formData.client_id, formData.project, projects]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +184,7 @@ export const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects?.map((project) => (
+                  {filteredProjects?.map((project) => (
                     <SelectItem key={project.id} value={project.name}>
                       {project.name}
                     </SelectItem>

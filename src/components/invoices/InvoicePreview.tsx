@@ -5,6 +5,7 @@ import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
 import { useInvoiceItems } from '@/hooks/useInvoiceItems';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useCompanyLogo } from '@/hooks/useCompanyLogo';
 import { InvoiceHeader } from './InvoiceHeader';
 import { InvoiceItemsTablePreview } from './InvoiceItemsTablePreview';
 import { InvoiceTotalsPreview } from './InvoiceTotalsPreview';
@@ -22,6 +23,7 @@ interface InvoicePreviewProps {
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client }) => {
   const { items, isLoading: itemsLoading } = useInvoiceItems(invoice.id);
   const { settings: companySettings, isLoading: settingsLoading } = useCompanySettings();
+  const { logo } = useCompanyLogo();
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Upon receipt';
@@ -34,7 +36,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client 
 
   const handleDownloadPDF = async () => {
     try {
-      await generateInvoicePDF(invoice, client, items, companySettings);
+      await generateInvoicePDF(invoice, client, items, companySettings, logo);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }

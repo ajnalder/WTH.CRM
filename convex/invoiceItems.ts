@@ -1,13 +1,23 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
-import { getById as getInvoiceById } from "./invoices";
 
+// Helper function to verify invoice ownership directly via database query
+// Cannot call exported queries from within mutations, so we replicate the logic
 async function assertInvoiceOwnership(ctx: any, invoiceId: string, userId: string) {
-  const invoice = await ctx.runQuery(getInvoiceById, { id: invoiceId, userId });
+  const invoice = await ctx.db
+    .query("invoices")
+    .withIndex("by_public_id", (q: any) => q.eq("id", invoiceId))
+    .unique();
+
   if (!invoice) {
     throw new Error("Invoice not found");
   }
+
+  if (invoice.user_id !== userId) {
+    throw new Error("Forbidden: You don't have access to this invoice");
+  }
+
   return invoice;
 }
 

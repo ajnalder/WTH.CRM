@@ -98,7 +98,7 @@ const Invoices = () => {
 
       <ShadowBox className="p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-6">All Invoices</h2>
-        <InvoiceTable invoices={invoices} />
+        <InvoiceTable invoices={invoices} clients={clients} />
       </ShadowBox>
 
       <CreateInvoiceDialog

@@ -105,13 +105,18 @@ export const update = mutation({
       throw new Error("Forbidden");
     }
 
+    // Extract only the fields we want to update (exclude Convex internal fields)
+    const { _id, _creationTime, ...clientData } = client;
+    // Also strip internal fields from the updates if they were accidentally included
+    const { _id: _updateId, _creationTime: _updateCreationTime, ...cleanUpdates } = args.updates as any;
+
     const updated = {
-      ...client,
-      ...args.updates,
+      ...clientData,
+      ...cleanUpdates,
       updated_at: nowIso(),
     };
 
-    await ctx.db.replace(client._id, updated);
+    await ctx.db.replace(_id, updated);
     return updated;
   },
 });

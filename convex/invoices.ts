@@ -61,20 +61,29 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx, args.userId);
     const timestamp = nowIso();
-    const { userId: _userId, ...invoiceData } = args; // Remove userId from spread
     const invoice = {
-      ...invoiceData,
-      user_id: userId,
-      id: crypto.randomUUID(),
+      client_id: args.client_id,
+      project_id: args.project_id,
+      invoice_number: args.invoice_number,
+      title: args.title,
+      description: args.description,
+      subtotal: args.subtotal,
       gst_rate: args.gst_rate ?? 0,
       gst_amount: args.gst_amount ?? 0,
       subtotal_incl_gst: args.subtotal_incl_gst ?? args.subtotal + (args.gst_amount ?? 0),
+      total_amount: args.total_amount,
       deposit_percentage: args.deposit_percentage ?? 0,
       deposit_amount: args.deposit_amount ?? 0,
       balance_due: args.balance_due ?? args.total_amount,
+      status: args.status,
+      issued_date: args.issued_date,
+      due_date: args.due_date,
+      paid_date: args.paid_date,
+      last_emailed_at: args.last_emailed_at,
+      user_id: userId,
+      id: crypto.randomUUID(),
       created_at: timestamp,
       updated_at: timestamp,
-      xero_invoice_id: undefined,
     };
     const _id = await ctx.db.insert("invoices", invoice);
     return (await ctx.db.get(_id)) ?? invoice;
@@ -159,6 +168,51 @@ export const remove = mutation({
   },
 });
 
+export const recalculateTotals = mutation({
+  args: {
+    invoiceId: v.string(),
+    userId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+
+    // Get the invoice
+    const invoice = await ctx.db
+      .query("invoices")
+      .withIndex("by_public_id", (q) => q.eq("id", args.invoiceId))
+      .unique();
+    if (!invoice) throw new Error("Invoice not found");
+    if (invoice.user_id !== userId) throw new Error("Forbidden");
+
+    // Get all items for this invoice
+    const items = await ctx.db
+      .query("invoice_items")
+      .withIndex("by_invoice", (q) => q.eq("invoice_id", args.invoiceId))
+      .collect();
+
+    // Calculate totals from items
+    const subtotal = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const gstRate = invoice.gst_rate || 15;
+    const gstAmount = subtotal * (gstRate / 100);
+    const subtotalInclGst = subtotal + gstAmount;
+    const totalAmount = subtotalInclGst;
+
+    // Update the invoice with calculated totals
+    const updated = {
+      ...invoice,
+      subtotal,
+      gst_amount: gstAmount,
+      subtotal_incl_gst: subtotalInclGst,
+      total_amount: totalAmount,
+      balance_due: totalAmount, // Reset balance due to total amount
+      updated_at: nowIso(),
+    };
+
+    await ctx.db.replace(invoice._id, updated);
+    return updated;
+  },
+});
+
 export const sendInvoiceEmail = action({
   args: {
     userId: v.optional(v.string()),
@@ -168,7 +222,6 @@ export const sendInvoiceEmail = action({
     message: v.string(),
   },
   handler: async (ctx, args) => {
-    // use node for outbound network calls
     'use node';
 
     const userId = await getUserId(ctx, args.userId);
@@ -187,8 +240,13 @@ export const sendInvoiceEmail = action({
       throw new Error("RESEND_API_KEY and RESEND_FROM_EMAIL must be set");
     }
 
-    const pdfBuffer = await generateInvoicePDF(invoice, client, items, companySettings);
-    const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
+    const pdfBuffer = await generateInvoicePDF(invoice, client, items, companySettings, ctx);
+    // Convert Uint8Array to base64 using btoa (web-compatible)
+    let binary = '';
+    for (let i = 0; i < pdfBuffer.byteLength; i++) {
+      binary += String.fromCharCode(pdfBuffer[i]);
+    }
+    const pdfBase64 = btoa(binary);
     const html = createEmailTemplate(args.message, client?.company || "Customer", companySettings);
     const timestamp = nowIso();
 
