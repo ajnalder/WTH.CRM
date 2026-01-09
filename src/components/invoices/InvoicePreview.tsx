@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Invoice } from '@/types/invoiceTypes';
 import { Client } from '@/hooks/useClients';
@@ -14,6 +14,9 @@ import { EmailLogs } from './EmailLogs';
 import { generateInvoicePDF } from '@/utils/invoicePDF';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMutation } from 'convex/react';
+import { api } from '@/integrations/convex/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface InvoicePreviewProps {
   invoice: Invoice;
@@ -21,9 +24,24 @@ interface InvoicePreviewProps {
 }
 
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, client }) => {
+  const { user } = useAuth();
   const { items, isLoading: itemsLoading } = useInvoiceItems(invoice.id);
   const { settings: companySettings, isLoading: settingsLoading } = useCompanySettings();
   const { logo } = useCompanyLogo();
+  const recalculateTotals = useMutation(api.invoices.recalculateTotals);
+
+  // Automatically recalculate totals if they're zero but items exist
+  useEffect(() => {
+    if (!itemsLoading && items && items.length > 0 && invoice.total_amount === 0 && user) {
+      const itemsTotal = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+      if (itemsTotal > 0) {
+        console.log('Auto-recalculating invoice totals');
+        recalculateTotals({ invoiceId: invoice.id, userId: user.id }).catch(err => {
+          console.error('Failed to recalculate totals:', err);
+        });
+      }
+    }
+  }, [items, itemsLoading, invoice.total_amount, invoice.id, user, recalculateTotals]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Upon receipt';
