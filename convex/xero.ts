@@ -19,6 +19,11 @@ function getEnv(key: string) {
   return val;
 }
 
+// Helper function to create Basic auth header using btoa (web-compatible)
+function createBasicAuthHeader(clientId: string, clientSecret: string): string {
+  return `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
+}
+
 export const getTokenRecord = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
@@ -116,7 +121,7 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+      Authorization: createBasicAuthHeader(clientId, clientSecret),
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
@@ -203,7 +208,7 @@ export const exchangeCode = action({
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+        Authorization: createBasicAuthHeader(clientId, clientSecret),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
