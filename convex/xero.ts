@@ -19,8 +19,17 @@ function getEnv(key: string) {
   return val;
 }
 
-// Helper function to create Basic auth header using btoa (web-compatible)
+// Helper function to create Basic auth header
+// Use Buffer in Node.js context (actions with "use node"), btoa otherwise
 function createBasicAuthHeader(clientId: string, clientSecret: string): string {
+  try {
+    // Try Buffer first (available in Node.js / "use node" actions)
+    if (typeof Buffer !== 'undefined') {
+      return `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`;
+    }
+  } catch (e) {
+    // Fall back to btoa if Buffer not available
+  }
   return `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
 }
 
