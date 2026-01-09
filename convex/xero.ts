@@ -185,6 +185,81 @@ export const getAuthUrl = action({
   },
 });
 
+// Version for HTTP callback that doesn't require auth context
+export const exchangeCodeNoAuth = action({
+  args: {
+    userId: v.string(),
+    code: v.string(),
+    state: v.string(),
+  },
+  handler: async (ctx, args) => {
+    "use node";
+    const userId = args.userId;
+    const clientId = getEnv("XERO_CLIENT_ID");
+    const clientSecret = getEnv("XERO_CLIENT_SECRET");
+    const redirectUri = getEnv("XERO_REDIRECT_URI");
+
+    const stateRecord = await ctx.runQuery(api.xero.getStateRecord, { state: args.state });
+
+    if (!stateRecord || stateRecord.user_id !== userId) {
+      throw new Error("Invalid state");
+    }
+
+    const res = await fetch("https://identity.xero.com/connect/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: createBasicAuthHeader(clientId, clientSecret),
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: args.code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Xero token exchange failed: ${res.status} ${text}`);
+    }
+
+    const tokens = await res.json();
+
+    const connectionsRes = await fetch("https://api.xero.com/connections", {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!connectionsRes.ok) {
+      const text = await connectionsRes.text();
+      throw new Error(`Failed to fetch Xero connections: ${text}`);
+    }
+
+    const connections = await connectionsRes.json();
+    const primary = connections[0];
+
+    const existing = await ctx.runQuery(api.xero.getTokenRecord, { userId });
+
+    await ctx.runMutation(api.xero.saveTokenRecord, {
+      id: existing?._id,
+      user_id: userId,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      tenant_id: primary?.tenantId ?? "",
+      tenant_name: primary?.tenantName,
+      expires_at: new Date(Date.now() + (tokens.expires_in ?? 0) * 1000).toISOString(),
+    });
+
+    if (stateRecord) {
+      await ctx.runMutation(api.xero.deleteStateRecord, { id: stateRecord._id });
+    }
+
+    return { tenantName: primary?.tenantName ?? null };
+  },
+});
+
 export const exchangeCode = action({
   args: {
     userId: v.optional(v.string()),

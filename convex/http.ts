@@ -39,8 +39,9 @@ http.route({
         );
       }
 
-      // Exchange the code for tokens
-      await ctx.runAction(api.xero.exchangeCode, {
+      // Exchange the code for tokens - pass the user_id from the state record
+      // This bypasses auth since we're in an HTTP callback without session
+      await ctx.runAction(api.xero.exchangeCodeNoAuth, {
         userId: stateRecord.user_id,
         code,
         state,
