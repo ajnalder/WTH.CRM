@@ -126,17 +126,19 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
   const clientId = getEnv("XERO_CLIENT_ID");
   const clientSecret = getEnv("XERO_CLIENT_SECRET");
 
-  // Xero requires client_id and client_secret in the body for refresh tokens
+  // For confidential clients, Xero requires Basic auth header for token refresh
+  // Create auth string manually using Buffer (available in "use node" context)
+  const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
   const res = await fetch("https://identity.xero.com/connect/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${authString}`,
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: token.refresh_token,
-      client_id: clientId,
-      client_secret: clientSecret,
     }),
   });
 
@@ -217,11 +219,14 @@ export const exchangeCodeNoAuth = action({
       throw new Error("Invalid state");
     }
 
+    // For confidential clients, use Basic auth header
+    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
     const res = await fetch("https://identity.xero.com/connect/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: createBasicAuthHeader(clientId, clientSecret),
+        "Authorization": `Basic ${authString}`,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
@@ -291,16 +296,18 @@ export const exchangeCode = action({
       throw new Error("Invalid state");
     }
 
+    // Xero requires client_id and client_secret in the body, not Basic auth
     const res = await fetch("https://identity.xero.com/connect/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: createBasicAuthHeader(clientId, clientSecret),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: args.code,
         redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret,
       }),
     });
 
