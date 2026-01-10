@@ -437,7 +437,18 @@ export const fetchAccounts = action({
       throw new Error(`Failed to fetch accounts: ${res.status} ${text}`);
     }
     const data: any = await res.json();
-    return { accounts: data.Accounts ?? [] };
+
+    // Transform Xero accounts to ensure consistent field names
+    // Filter to only show REVENUE accounts (sales accounts)
+    const accounts = (data.Accounts ?? [])
+      .filter((account: any) => account.Type === "REVENUE" && account.Status === "ACTIVE")
+      .map((account: any) => ({
+        code: account.Code || '',
+        name: account.Name || 'Unnamed Account',
+        type: account.Type || '',
+      }));
+
+    return { accounts };
   },
 });
 
