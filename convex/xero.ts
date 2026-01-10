@@ -680,7 +680,9 @@ export const syncInvoice = action({
     await ctx.runMutation(api.invoices.update, {
       userId,
       id: args.invoiceId,
-      xero_invoice_id: xeroInvoiceId,
+      updates: {
+        xero_invoice_id: xeroInvoiceId,
+      },
     });
 
     return {
