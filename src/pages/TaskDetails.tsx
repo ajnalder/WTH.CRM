@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, Trash2, User, Calendar, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ const TaskDetails = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { deleteTask, isDeleting } = useTasks();
   const { teamMembers } = useTeamMembers();
+  const navigate = useNavigate();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -92,9 +93,14 @@ const TaskDetails = () => {
     setTimerHours(hours);
   };
 
-  const handleDeleteTask = () => {
-    if (id) {
-      deleteTask(id);
+  const handleDeleteTask = async () => {
+    if (!id) return;
+    try {
+      await deleteTask(id);
+      setShowDeleteDialog(false);
+      navigate('/tasks');
+    } catch (error) {
+      // Toasts handled in hook; keep user on page if delete fails.
     }
   };
 
@@ -348,6 +354,7 @@ const TaskDetails = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteTask}
+              disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
               Delete Task
