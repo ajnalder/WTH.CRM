@@ -114,15 +114,31 @@ export const deleteStateRecord = mutation({
 
 async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
   const token: any = await ctx.runQuery(api.xero.getTokenRecord, { userId });
-  if (!token) return null;
+  if (!token) {
+    console.log("No token found for user", { userId });
+    return null;
+  }
 
   const expiresAt = new Date(token.expires_at).getTime();
   const now = Date.now();
+  const timeUntilExpiry = expiresAt - now;
+  const minutesUntilExpiry = Math.floor(timeUntilExpiry / 60_000);
+
+  console.log("Token expiration check", {
+    userId,
+    expiresAt: token.expires_at,
+    now: new Date(now).toISOString(),
+    timeUntilExpiryMs: timeUntilExpiry,
+    minutesUntilExpiry,
+    needsRefresh: expiresAt <= now + 60_000
+  });
 
   if (expiresAt > now + 60_000) {
+    console.log("Token still valid, no refresh needed");
     return token;
   }
 
+  console.log("Token needs refresh, attempting to refresh...");
   const clientId = getEnv("XERO_CLIENT_ID");
   const clientSecret = getEnv("XERO_CLIENT_SECRET");
 
@@ -141,9 +157,25 @@ async function refreshIfNeeded(ctx: any, userId: string): Promise<any | null> {
 
   if (!res.ok) {
     const text = await res.text();
-    console.error("Xero refresh failed", { status: res.status, body: text });
+    console.error("Xero refresh failed", {
+      status: res.status,
+      body: text,
+      userId,
+      tokenExpiresAt: token.expires_at,
+      hasRefreshToken: !!token.refresh_token,
+      refreshTokenLength: token.refresh_token?.length || 0
+    });
+
+    // If invalid_client or invalid_grant, token is bad - return null to signal re-auth needed
+    if (text.includes('invalid_client') || text.includes('invalid_grant')) {
+      console.log('Token is invalid, user needs to reconnect');
+      return null;
+    }
+
     throw new Error(`Xero refresh failed: ${res.status} ${text}`);
   }
+
+  console.log("Token refresh successful");
 
   const updated = await res.json();
   const refreshed = {
@@ -237,6 +269,14 @@ export const exchangeCodeNoAuth = action({
 
     const tokens = await res.json();
 
+    console.log("Xero token exchange successful (exchangeCodeNoAuth)", {
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      expiresIn: tokens.expires_in,
+      tokenType: tokens.token_type,
+      scope: tokens.scope
+    });
+
     const connectionsRes = await fetch("https://api.xero.com/connections", {
       headers: {
         Authorization: `Bearer ${tokens.access_token}`,
@@ -261,7 +301,7 @@ export const exchangeCodeNoAuth = action({
       refresh_token: tokens.refresh_token,
       tenant_id: primary?.tenantId ?? "",
       tenant_name: primary?.tenantName,
-      expires_at: new Date(Date.now() + (tokens.expires_in ?? 0) * 1000).toISOString(),
+      expires_at: new Date(Date.now() + (tokens.expires_in ?? 1800) * 1000).toISOString(),
     });
 
     if (stateRecord) {
@@ -337,7 +377,7 @@ export const exchangeCode = action({
       refresh_token: tokens.refresh_token,
       tenant_id: primary?.tenantId ?? "",
       tenant_name: primary?.tenantName,
-      expires_at: new Date(Date.now() + (tokens.expires_in ?? 0) * 1000).toISOString(),
+      expires_at: new Date(Date.now() + (tokens.expires_in ?? 1800) * 1000).toISOString(),
     });
 
     if (stateRecord) {

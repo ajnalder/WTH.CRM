@@ -65,7 +65,11 @@ export const useXeroIntegration = () => {
             title: "Success",
             description: `Connected to Xero: ${data?.tenantName || 'Xero tenant'}`,
           });
-          await checkConnectionStatus();
+          // Update local state directly instead of re-fetching to avoid premature refresh
+          setConnectionStatus({
+            isConnected: true,
+            tenantName: data?.tenantName || undefined,
+          });
         } catch (err: any) {
           console.error('Error exchanging code:', err);
           toast({
