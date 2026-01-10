@@ -453,7 +453,16 @@ export const fetchContacts = action({
       throw new Error(`Failed to fetch contacts: ${res.status} ${text}`);
     }
     const data: any = await res.json();
-    return { contacts: data.Contacts ?? [] };
+
+    // Transform Xero contacts to ensure all fields are present and valid
+    const contacts = (data.Contacts ?? []).map((contact: any) => ({
+      contact_id: contact.ContactID || '',
+      name: contact.Name || 'Unnamed Contact',
+      email: contact.EmailAddress || '',
+      phone: contact.Phones?.[0]?.PhoneNumber || '',
+    }));
+
+    return { contacts };
   },
 });
 

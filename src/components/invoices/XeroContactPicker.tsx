@@ -67,9 +67,10 @@ export const XeroContactPicker: React.FC<XeroContactPickerProps> = ({
   // Sort contacts by similarity to client name, with best matches first
   const sortedContacts = useMemo(() => {
     return [...availableContacts]
+      .filter(contact => contact && contact.name) // Filter out invalid contacts
       .map(contact => ({
         ...contact,
-        score: getSimilarityScore(contact.name, clientName)
+        score: getSimilarityScore(contact.name || '', clientName || '')
       }))
       .sort((a, b) => b.score - a.score);
   }, [availableContacts, clientName]);
@@ -126,9 +127,9 @@ export const XeroContactPicker: React.FC<XeroContactPickerProps> = ({
             <CommandEmpty>No contact found.</CommandEmpty>
             <CommandGroup>
               {sortedContacts
-                .filter(contact => 
-                  !search || 
-                  contact.name.toLowerCase().includes(search.toLowerCase())
+                .filter(contact =>
+                  !search ||
+                  (contact.name || '').toLowerCase().includes(search.toLowerCase())
                 )
                 .map((contact) => (
                   <CommandItem
