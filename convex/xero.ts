@@ -509,8 +509,176 @@ export const unlinkContact = mutation({
 
 export const syncInvoice = action({
   args: { userId: v.optional(v.string()), invoiceId: v.string() },
-  handler: async () => {
+  handler: async (ctx, args) => {
     "use node";
-    throw new Error("Invoice sync not yet implemented in Convex Xero integration.");
+    const userId = await getUserId(ctx, args.userId);
+
+    // Get the invoice
+    const invoice: any = await ctx.runQuery(api.invoices.getById, {
+      userId,
+      id: args.invoiceId,
+    });
+
+    if (!invoice) {
+      throw new Error("Invoice not found");
+    }
+
+    // Get the client
+    const client: any = await ctx.runQuery(api.clients.getById, {
+      userId,
+      id: invoice.client_id,
+    });
+
+    if (!client) {
+      throw new Error("Client not found for invoice");
+    }
+
+    // Check if client has a linked Xero contact
+    if (!client.xero_contact_id) {
+      throw new Error(
+        `Client "${client.company}" is not linked to a Xero contact. Please link them in Settings > Xero Integration first.`
+      );
+    }
+
+    // Get invoice items
+    const items: any[] = await ctx.runQuery(api.invoiceItems.listByInvoice, {
+      userId,
+      invoiceId: args.invoiceId,
+    });
+
+    if (!items || items.length === 0) {
+      throw new Error("Invoice has no line items");
+    }
+
+    // Get company settings for account code
+    const settings: any = await ctx.runQuery(api.companySettings.get, {
+      userId,
+    });
+
+    const accountCode = settings?.xero_account_code;
+    if (!accountCode) {
+      throw new Error(
+        "Sales account code not configured. Please set it in Settings > Xero Integration."
+      );
+    }
+
+    // Get auth headers with token refresh
+    const headers = await getAuthHeaders(ctx, userId);
+
+    // Prepare line items for Xero
+    const lineItems = items.map((item) => ({
+      Description: item.description,
+      Quantity: item.quantity,
+      UnitAmount: item.rate,
+      AccountCode: accountCode,
+      TaxType: invoice.gst_rate > 0 ? "OUTPUT2" : "NONE", // OUTPUT2 = 15% GST in NZ
+    }));
+
+    // Prepare invoice data for Xero
+    const xeroInvoice: any = {
+      Type: "ACCREC", // Accounts Receivable (sales invoice)
+      Contact: {
+        ContactID: client.xero_contact_id,
+      },
+      LineItems: lineItems,
+      InvoiceNumber: invoice.invoice_number,
+      Reference: invoice.title,
+      Status: invoice.status === "paid" ? "PAID" : "AUTHORISED", // AUTHORISED = approved
+    };
+
+    // Add dates if available
+    if (invoice.issued_date) {
+      xeroInvoice.Date = invoice.issued_date;
+    }
+    if (invoice.due_date) {
+      xeroInvoice.DueDate = invoice.due_date;
+    }
+
+    console.log("Syncing invoice to Xero", {
+      invoiceNumber: invoice.invoice_number,
+      clientName: client.company,
+      xeroContactId: client.xero_contact_id,
+      lineItemCount: lineItems.length,
+      totalAmount: invoice.total_amount,
+      existingXeroId: invoice.xero_invoice_id || "none",
+    });
+
+    let res: any;
+    let xeroInvoiceId: string;
+
+    // If invoice already has a Xero ID, update it; otherwise create new
+    if (invoice.xero_invoice_id) {
+      console.log("Updating existing Xero invoice", {
+        xeroInvoiceId: invoice.xero_invoice_id,
+      });
+
+      // Update existing invoice
+      res = await fetch(
+        `https://api.xero.com/api.xro/2.0/Invoices/${invoice.xero_invoice_id}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ Invoices: [xeroInvoice] }),
+        }
+      );
+
+      xeroInvoiceId = invoice.xero_invoice_id;
+    } else {
+      console.log("Creating new Xero invoice");
+
+      // Create new invoice
+      res = await fetch("https://api.xero.com/api.xro/2.0/Invoices", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ Invoices: [xeroInvoice] }),
+      });
+    }
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Xero invoice sync failed", {
+        status: res.status,
+        body: text,
+        invoiceNumber: invoice.invoice_number,
+      });
+      throw new Error(`Failed to sync invoice to Xero: ${res.status} ${text}`);
+    }
+
+    const data: any = await res.json();
+
+    console.log("Xero invoice sync response", {
+      hasInvoices: !!data.Invoices,
+      invoiceCount: data.Invoices?.length || 0,
+    });
+
+    if (!data.Invoices || data.Invoices.length === 0) {
+      throw new Error("Xero did not return invoice data");
+    }
+
+    const syncedInvoice = data.Invoices[0];
+    xeroInvoiceId = syncedInvoice.InvoiceID;
+
+    console.log("Xero invoice synced successfully", {
+      xeroInvoiceId,
+      xeroInvoiceNumber: syncedInvoice.InvoiceNumber,
+      xeroStatus: syncedInvoice.Status,
+      xeroTotal: syncedInvoice.Total,
+    });
+
+    // Update the invoice record with Xero ID
+    await ctx.runMutation(api.invoices.update, {
+      userId,
+      id: args.invoiceId,
+      xero_invoice_id: xeroInvoiceId,
+    });
+
+    return {
+      success: true,
+      xeroInvoiceId,
+      xeroInvoiceNumber: syncedInvoice.InvoiceNumber,
+      message: invoice.xero_invoice_id
+        ? "Invoice updated in Xero successfully"
+        : "Invoice created in Xero successfully",
+    };
   },
 });
