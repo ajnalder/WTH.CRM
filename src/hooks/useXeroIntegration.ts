@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAction } from 'convex/react';
+import { useAction, useMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 
 export const useXeroIntegration = () => {
@@ -19,8 +19,8 @@ export const useXeroIntegration = () => {
   const getStatus = useAction(api.xero.getConnectionStatus);
   const fetchAccountsAction = useAction(api.xero.fetchAccounts);
   const fetchContactsAction = useAction(api.xero.fetchContacts);
-  const linkContactAction = useAction(api.xero.linkContact);
-  const unlinkContactAction = useAction(api.xero.unlinkContact);
+  const linkContactMutation = useMutation(api.xero.linkContact);
+  const unlinkContactMutation = useMutation(api.xero.unlinkContact);
   const syncInvoiceAction = useAction(api.xero.syncInvoice);
 
   const checkConnectionStatus = useCallback(async () => {
@@ -139,12 +139,12 @@ export const useXeroIntegration = () => {
 
   const linkContact = async (clientId: string, xeroContactId: string) => {
     if (!user) throw new Error('Not authenticated');
-    return linkContactAction({ userId: user.id, clientId, xeroContactId });
+    return linkContactMutation({ userId: user.id, clientId, xeroContactId });
   };
 
   const unlinkContact = async (clientId: string) => {
     if (!user) throw new Error('Not authenticated');
-    return unlinkContactAction({ userId: user.id, clientId });
+    return unlinkContactMutation({ userId: user.id, clientId });
   };
 
   return {
