@@ -248,6 +248,14 @@ export const exchangeCodeNoAuth = action({
       throw new Error("Invalid state");
     }
 
+    console.log("Xero token exchange request (exchangeCodeNoAuth)", {
+      clientIdLength: clientId?.length || 0,
+      clientSecretLength: clientSecret?.length || 0,
+      redirectUri,
+      codeLength: args.code?.length || 0,
+      stateLength: args.state?.length || 0,
+    });
+
     const res = await fetch("https://identity.xero.com/connect/token", {
       method: "POST",
       headers: {
@@ -264,6 +272,13 @@ export const exchangeCodeNoAuth = action({
 
     if (!res.ok) {
       const text = await res.text();
+      console.error("Xero token exchange failed (exchangeCodeNoAuth)", {
+        status: res.status,
+        body: text,
+        redirectUri,
+        clientIdFirst10: clientId?.substring(0, 10) || 'missing',
+        clientSecretFirst10: clientSecret?.substring(0, 10) || 'missing',
+      });
       throw new Error(`Xero token exchange failed: ${res.status} ${text}`);
     }
 

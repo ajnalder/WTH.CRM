@@ -18,6 +18,7 @@ import type * as emailCampaigns from "../emailCampaigns.js";
 import type * as emailLogs from "../emailLogs.js";
 import type * as emailTemplates from "../emailTemplates.js";
 import type * as files from "../files.js";
+import type * as http from "../http.js";
 import type * as ideas from "../ideas.js";
 import type * as invoiceItems from "../invoiceItems.js";
 import type * as invoicePDF from "../invoicePDF.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   emailLogs: typeof emailLogs;
   emailTemplates: typeof emailTemplates;
   files: typeof files;
+  http: typeof http;
   ideas: typeof ideas;
   invoiceItems: typeof invoiceItems;
   invoicePDF: typeof invoicePDF;
