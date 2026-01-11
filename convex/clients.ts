@@ -2,6 +2,31 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { nowIso, getUserId } from "./_utils";
 
+const clientGradients = [
+  "from-blue-400 to-blue-600",
+  "from-green-400 to-green-600",
+  "from-purple-400 to-purple-600",
+  "from-red-400 to-red-600",
+  "from-yellow-400 to-yellow-600",
+  "from-pink-400 to-pink-600",
+  "from-indigo-400 to-indigo-600",
+  "from-teal-400 to-teal-600",
+  "from-orange-400 to-orange-600",
+  "from-cyan-400 to-cyan-600",
+  "from-lime-400 to-lime-600",
+  "from-rose-400 to-rose-600",
+];
+
+const DEFAULT_BLUE_GRADIENT = "from-blue-400 to-blue-600";
+
+function getRandomGradient(exclude?: string) {
+  const choices = exclude
+    ? clientGradients.filter((gradient) => gradient !== exclude)
+    : clientGradients;
+  if (choices.length === 0) return exclude ?? DEFAULT_BLUE_GRADIENT;
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
 export const list = query({
   args: { userId: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -139,5 +164,51 @@ export const remove = mutation({
 
     await ctx.db.delete(client._id);
     return client._id;
+  },
+});
+
+export const randomizeRecentGradients = mutation({
+  args: {
+    userId: v.optional(v.string()),
+    limit: v.optional(v.number()),
+    createdAfter: v.optional(v.string()),
+    onlyDefaultBlue: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+    const onlyDefaultBlue = args.onlyDefaultBlue ?? true;
+    const limit = Math.max(0, args.limit ?? 20);
+    const createdAfter = args.createdAfter;
+
+    let clients = await ctx.db
+      .query("clients")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    clients = clients.sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+    if (createdAfter) {
+      clients = clients.filter((client) => client.created_at >= createdAfter);
+    }
+
+    if (onlyDefaultBlue) {
+      clients = clients.filter(
+        (client) => !client.gradient || client.gradient === DEFAULT_BLUE_GRADIENT
+      );
+    }
+
+    const selected = clients.slice(0, limit);
+
+    for (const client of selected) {
+      const { _id, _creationTime, ...clientData } = client as any;
+      const nextGradient = getRandomGradient(client.gradient ?? undefined);
+      await ctx.db.replace(_id, {
+        ...clientData,
+        gradient: nextGradient,
+        updated_at: nowIso(),
+      });
+    }
+
+    return { updatedCount: selected.length };
   },
 });
