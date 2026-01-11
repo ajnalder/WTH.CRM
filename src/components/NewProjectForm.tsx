@@ -243,7 +243,9 @@ export const NewProjectForm: React.FC = () => {
               name="budget"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Budget ($)</FormLabel>
+                  <FormLabel>
+                    {isRetainer ? 'Monthly Retainer Charge' : 'Project Value'} ($)
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number"

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
+import { Control, useWatch } from 'react-hook-form';
 import {
   FormControl,
   FormField,
@@ -30,6 +30,8 @@ interface ProjectSettingsFieldsProps {
 export const ProjectSettingsFields: React.FC<ProjectSettingsFieldsProps> = ({
   control,
 }) => {
+  const isRetainer = useWatch({ control, name: 'is_retainer' });
+
   return (
     <>
       <FormField
@@ -37,7 +39,9 @@ export const ProjectSettingsFields: React.FC<ProjectSettingsFieldsProps> = ({
         name="budget"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Budget</FormLabel>
+            <FormLabel>
+              {isRetainer ? 'Monthly Retainer Charge' : 'Project Value'}
+            </FormLabel>
             <FormControl>
               <Input 
                 type="number" 

@@ -26,6 +26,7 @@ interface TransformedProject {
   description: string;
   budget: number;
   startDate: string;
+  isRetainer?: boolean;
   client_id?: string; // Optional for backward compatibility
 }
 
@@ -59,7 +60,7 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
           <TableHead>Client</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Team</TableHead>
-          <TableHead>Budget</TableHead>
+          <TableHead>Value</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -124,9 +125,16 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({ projects }) => {
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-600">
-                  {project.budget ? `$${Number(project.budget).toLocaleString()}` : 'No budget'}
-                </div>
+                {project.budget ? (
+                  <div className="text-sm text-gray-600">
+                    {project.isRetainer ? 'Monthly Retainer Charge' : 'Project Value'}:{' '}
+                    <span className="font-medium text-gray-900">
+                      ${Number(project.budget).toLocaleString()}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-600">No value set</div>
+                )}
               </TableCell>
             </TableRow>
           );

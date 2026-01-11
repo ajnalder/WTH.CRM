@@ -51,7 +51,9 @@ export const ProjectStats: React.FC<ProjectStatsProps> = ({
       
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Budget</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-600">
+            {project.isRetainer ? 'Monthly Retainer Charge' : 'Project Value'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-gray-900">{formatBudget(project.budget)}</div>

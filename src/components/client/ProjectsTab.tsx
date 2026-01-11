@@ -123,7 +123,9 @@ const ProjectCard = ({ project, tasks }: { project: any; tasks: any[] }) => {
         {shouldShowBudget && (
           <div className="pt-2 border-t border-gray-100">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Budget</span>
+              <span className="text-gray-600">
+                {project.isRetainer ? 'Monthly Retainer Charge' : 'Project Value'}
+              </span>
               <span className="font-medium">${Number(project.budget).toLocaleString()}</span>
             </div>
           </div>

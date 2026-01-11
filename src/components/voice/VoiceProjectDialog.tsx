@@ -162,7 +162,7 @@ export const VoiceProjectDialog: React.FC<VoiceProjectDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budget">Budget ($)</Label>
+            <Label htmlFor="budget">Project Value ($)</Label>
             <Input
               id="budget"
               type="number"
