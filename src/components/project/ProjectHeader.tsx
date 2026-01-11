@@ -1,12 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MobileButton } from '@/components/ui/mobile-button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { EditProjectDialog } from './EditProjectDialog';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
+import { useProjects } from '@/hooks/useProjects';
 
 interface Project {
   id: string;
@@ -30,10 +41,17 @@ interface ProjectHeaderProps {
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
   const navigate = useNavigate();
   const { isMobileDevice } = useMobileOptimization();
+  const { deleteProject, isDeleting } = useProjects();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleDelete = () => {
-    // TODO: Implement delete project functionality
-    console.log('Delete project:', project.id);
+  const handleDelete = async () => {
+    try {
+      await deleteProject(project.id);
+      setShowDeleteDialog(false);
+      navigate('/projects');
+    } catch (error) {
+      // Toasts handled in hook; keep dialog open on error.
+    }
   };
 
   if (isMobileDevice) {
@@ -83,7 +101,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
               <MobileButton 
                 variant="outline" 
                 size="sm"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isDeleting}
                 className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50"
                 hapticFeedback={true}
               >
@@ -134,7 +153,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isDeleting}
                 className="flex items-center space-x-1 text-red-600 border-red-200 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
@@ -145,6 +165,27 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project }) => {
           <p className="text-lg text-gray-600">{project.client}</p>
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{project.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
