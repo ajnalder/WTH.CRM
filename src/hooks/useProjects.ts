@@ -51,9 +51,9 @@ export interface UpdateProjectData {
   description?: string;
   status?: string;
   priority?: string;
-  start_date?: string;
-  due_date?: string;
-  budget?: number;
+  start_date?: string | null;
+  due_date?: string | null;
+  budget?: number | null;
   progress?: number;
   is_retainer?: boolean;
   is_billable?: boolean;
@@ -108,7 +108,20 @@ export const useProjects = (clientId?: string) => {
     if (!user) throw new Error('User not authenticated');
     try {
       setIsUpdating(true);
-      await updateProjectMutation({ id: projectId, userId: user.id, updates: projectData });
+      const normalizedUpdates: UpdateProjectData = {
+        ...projectData,
+        name: projectData.name ?? undefined,
+        description: projectData.description ?? undefined,
+        status: projectData.status ?? undefined,
+        priority: projectData.priority ?? undefined,
+        start_date: projectData.start_date ?? undefined,
+        due_date: projectData.due_date ?? undefined,
+        budget: projectData.budget ?? undefined,
+        progress: projectData.progress ?? undefined,
+        is_retainer: projectData.is_retainer ?? undefined,
+        is_billable: projectData.is_billable ?? undefined,
+      };
+      await updateProjectMutation({ id: projectId, userId: user.id, updates: normalizedUpdates });
       toast({
         title: "Success",
         description: "Project updated successfully",
