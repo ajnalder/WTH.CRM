@@ -212,3 +212,34 @@ export const randomizeRecentGradients = mutation({
     return { updatedCount: selected.length };
   },
 });
+
+export const randomizeAllGradients = mutation({
+  args: {
+    userId: v.optional(v.string()),
+    onlyDefaultBlue: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    await getUserId(ctx, args.userId);
+    const onlyDefaultBlue = args.onlyDefaultBlue ?? false;
+
+    let clients = await ctx.db.query("clients").collect();
+
+    if (onlyDefaultBlue) {
+      clients = clients.filter(
+        (client) => !client.gradient || client.gradient === DEFAULT_BLUE_GRADIENT
+      );
+    }
+
+    for (const client of clients) {
+      const { _id, _creationTime, ...clientData } = client as any;
+      const nextGradient = getRandomGradient(client.gradient ?? undefined);
+      await ctx.db.replace(_id, {
+        ...clientData,
+        gradient: nextGradient,
+        updated_at: nowIso(),
+      });
+    }
+
+    return { updatedCount: clients.length };
+  },
+});
