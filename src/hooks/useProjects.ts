@@ -40,7 +40,7 @@ export interface CreateProjectData {
   priority?: string;
   start_date?: string;
   due_date?: string | null;
-  budget?: number;
+  budget?: number | null;
   progress?: number;
   is_retainer?: boolean;
   is_billable?: boolean;
@@ -83,9 +83,22 @@ export const useProjects = (clientId?: string) => {
     try {
       console.log('createProject', { userId: user.id, projectData });
       setIsCreating(true);
+      const normalizedData: CreateProjectData = {
+        ...projectData,
+        description: projectData.description ?? undefined,
+        status: projectData.status ?? undefined,
+        priority: projectData.priority ?? undefined,
+        start_date: projectData.start_date ?? undefined,
+        due_date: projectData.due_date ?? undefined,
+        budget: projectData.budget ?? undefined,
+        progress: projectData.progress ?? undefined,
+        is_retainer: projectData.is_retainer ?? undefined,
+        is_billable:
+          projectData.is_billable ?? (projectData.is_retainer ? false : undefined),
+      };
       await createProjectMutation({
         userId: user.id,
-        ...projectData,
+        ...normalizedData,
       });
       toast({
         title: "Success",
