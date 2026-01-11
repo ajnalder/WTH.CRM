@@ -3,7 +3,7 @@ import { useMutation as useConvexMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getInitials, gradients } from '@/utils/clientGradients';
+import { getInitials, getRandomGradient } from '@/utils/clientGradients';
 import type { CreateClientData, Client } from '@/types/clientTypes';
 import { useState } from 'react';
 
@@ -23,17 +23,9 @@ export const useClientMutations = () => {
     // Enhanced avatar generation - handle single word names
     const companyName = clientData.company.trim();
     const words = companyName.split(/\s+/);
-    const avatar =
-      words.length === 1
-        ? companyName.substring(0, 2).toUpperCase()
-        : words
-            .slice(0, 2)
-            .map(word => word[0])
-            .join('')
-            .toUpperCase();
+    const avatar = getInitials(companyName);
 
-    // Just pick the next gradient in order for now
-    const selectedGradient = gradients[0];
+    const selectedGradient = getRandomGradient();
 
     try {
       setIsCreating(true);
