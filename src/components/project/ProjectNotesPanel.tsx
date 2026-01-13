@@ -2,6 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -23,8 +28,21 @@ export const ProjectNotesPanel: React.FC<{ projectId: string }> = ({ projectId }
   const { notes, createNote, isLoading } = useProjectNotes(projectId);
   const [content, setContent] = useState('');
   const [withReminder, setWithReminder] = useState(false);
-  const [remindAt, setRemindAt] = useState('');
+  const [remindDate, setRemindDate] = useState<Date | undefined>();
+  const [remindTime, setRemindTime] = useState('09:00');
   const [isSaving, setIsSaving] = useState(false);
+  const timeOptions = [
+    { label: '8:00 AM', value: '08:00' },
+    { label: '9:00 AM', value: '09:00' },
+    { label: '10:00 AM', value: '10:00' },
+    { label: '11:00 AM', value: '11:00' },
+    { label: '12:00 PM', value: '12:00' },
+    { label: '1:00 PM', value: '13:00' },
+    { label: '2:00 PM', value: '14:00' },
+    { label: '3:00 PM', value: '15:00' },
+    { label: '4:00 PM', value: '16:00' },
+    { label: '5:00 PM', value: '17:00' },
+  ];
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, typeof notes> = {};
@@ -46,10 +64,19 @@ export const ProjectNotesPanel: React.FC<{ projectId: string }> = ({ projectId }
     if (!content.trim()) return;
     setIsSaving(true);
     try {
-      const remindIso = withReminder && remindAt ? new Date(remindAt).toISOString() : undefined;
+      const remindIso =
+        withReminder && remindDate
+          ? (() => {
+              const [hour, minute] = remindTime.split(':').map(Number);
+              const date = new Date(remindDate);
+              date.setHours(hour || 0, minute || 0, 0, 0);
+              return date.toISOString();
+            })()
+          : undefined;
       await createNote(content.trim(), remindIso);
       setContent('');
-      setRemindAt('');
+      setRemindDate(undefined);
+      setRemindTime('09:00');
       setWithReminder(false);
     } finally {
       setIsSaving(false);
@@ -77,20 +104,42 @@ export const ProjectNotesPanel: React.FC<{ projectId: string }> = ({ projectId }
               <span className="text-xs text-muted-foreground">Set reminder</span>
             </div>
             {withReminder && (
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-muted-foreground">Remind me at</Label>
-                <input
-                  type="datetime-local"
-                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                  value={remindAt}
-                  onChange={(e) => setRemindAt(e.target.value)}
-                />
+              <div className="flex flex-wrap items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Remind me on</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="justify-start text-xs">
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {remindDate ? format(remindDate, 'dd MMM yyyy') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-2" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={remindDate}
+                      onSelect={setRemindDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Select value={remindTime} onValueChange={setRemindTime}>
+                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                    <SelectValue placeholder="Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
             <Button
               size="sm"
               onClick={handleSubmit}
-              disabled={isSaving || !content.trim() || (withReminder && !remindAt)}
+              disabled={isSaving || !content.trim() || (withReminder && !remindDate)}
             >
               {isSaving ? 'Saving...' : 'Add note'}
             </Button>
