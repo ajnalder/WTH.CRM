@@ -285,6 +285,22 @@ export default defineSchema({
     .index("by_project", ["project_id"])
     .index("by_user", ["user_id"]),
 
+  project_notes: defineTable({
+    id: v.string(),
+    project_id: v.string(),
+    user_id: v.string(),
+    content: v.string(),
+    created_at: v.string(),
+    updated_at: v.string(),
+    remind_at: v.optional(v.string()),
+    reminder_status: v.optional(v.string()),
+    reminder_snoozed_until: v.optional(v.string()),
+    reminder_completed_at: v.optional(v.string()),
+  })
+    .index("by_project", ["project_id"])
+    .index("by_user", ["user_id"])
+    .index("by_public_id", ["id"]),
+
   projects: defineTable({
     id: v.string(),
     client_id: v.string(),

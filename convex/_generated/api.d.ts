@@ -25,6 +25,7 @@ import type * as invoicePDF from "../invoicePDF.js";
 import type * as invoicePayments from "../invoicePayments.js";
 import type * as invoices from "../invoices.js";
 import type * as profiles from "../profiles.js";
+import type * as projectNotes from "../projectNotes.js";
 import type * as projectTeamMembers from "../projectTeamMembers.js";
 import type * as projects from "../projects.js";
 import type * as quoteBlocks from "../quoteBlocks.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   invoicePayments: typeof invoicePayments;
   invoices: typeof invoices;
   profiles: typeof profiles;
+  projectNotes: typeof projectNotes;
   projectTeamMembers: typeof projectTeamMembers;
   projects: typeof projects;
   quoteBlocks: typeof quoteBlocks;

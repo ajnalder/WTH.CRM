@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { MobileContainer } from '@/components/ui/mobile-container';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
 import { ProjectTimeline } from '@/components/project/ProjectTimeline';
 import { ProjectTeam } from '@/components/project/ProjectTeam';
 import { ProjectTasksList } from '@/components/project/ProjectTasksList';
+import { ProjectNotesPanel } from '@/components/project/ProjectNotesPanel';
+import { ProjectRemindersPanel } from '@/components/project/ProjectRemindersPanel';
 import { TaskCreateDialog } from '@/components/task/TaskCreateDialog';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { useProjects } from '@/hooks/useProjects';
@@ -27,8 +28,6 @@ const ProjectDetail = () => {
   const { clients } = useClients();
   const { invoices } = useInvoices();
   const { isMobileDevice, isOnline } = useMobileOptimization();
-  const [notes, setNotes] = React.useState('');
-  const [notesDirty, setNotesDirty] = React.useState(false);
   
   if (isLoading) {
     return (
@@ -99,10 +98,6 @@ const ProjectDetail = () => {
     is_billable: project.is_billable
   };
 
-  React.useEffect(() => {
-    setNotes(project.notes || '');
-    setNotesDirty(false);
-  }, [project.notes]);
   
   const daysUntilDue = transformedProject.dueDate 
     ? calculateDaysUntilDue(transformedProject.dueDate, transformedProject.isRetainer) 
@@ -118,14 +113,6 @@ const ProjectDetail = () => {
     });
   };
 
-  const handleNotesSave = () => {
-    if (!notesDirty) return;
-    updateProject({
-      projectId: transformedProject.id,
-      projectData: { notes },
-    });
-    setNotesDirty(false);
-  };
 
   const handleProjectTypeToggle = (checked: boolean) => {
     updateProject({
@@ -252,31 +239,12 @@ const ProjectDetail = () => {
                       {transformedProject.description || 'No description provided.'}
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="project_notes">Notes</Label>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!notesDirty}
-                        onClick={handleNotesSave}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                    <Textarea
-                      id="project_notes"
-                      value={notes}
-                      placeholder="Add project notes..."
-                      onChange={(e) => {
-                        setNotes(e.target.value);
-                        setNotesDirty(true);
-                      }}
-                      rows={4}
-                    />
-                  </div>
                 </CardContent>
               </Card>
+            </MobileContainer>
+
+            <MobileContainer padding="md">
+              <ProjectNotesPanel projectId={project.id} />
             </MobileContainer>
             
             <MobileContainer padding="md">
@@ -305,6 +273,9 @@ const ProjectDetail = () => {
           <div className={isMobileDevice ? 'space-y-3' : 'space-y-6'}>
             <MobileContainer padding="md">
               <ProjectTeam projectId={transformedProject.id} />
+            </MobileContainer>
+            <MobileContainer padding="md">
+              <ProjectRemindersPanel projectId={project.id} />
             </MobileContainer>
             <MobileContainer padding="md">
               <Card>

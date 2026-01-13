@@ -6,6 +6,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { PageLayout } from "@/components/PageLayout";
 import { VoiceCommandButton } from "@/components/voice/VoiceCommandButton";
 import { VoiceDialogManager } from "@/components/voice/VoiceDialogManager";
+import { ReminderNotifier } from "@/components/reminders/ReminderNotifier";
 
 interface PageWithSidebarProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export const PageWithSidebar: React.FC<PageWithSidebarProps> = ({ children }) =>
             {children}
             <VoiceCommandButton />
             <VoiceDialogManager />
+            <ReminderNotifier />
           </PageLayout>
         </SidebarInset>
       </div>
