@@ -13,6 +13,7 @@ interface InvoiceFormFieldsProps {
     invoice_number: string;
     title: string;
     gst_rate: number;
+    gst_mode: 'standard' | 'zero_rated';
     due_date: string;
     issued_date?: string;
   };
@@ -124,16 +125,22 @@ export const InvoiceFormFields: React.FC<InvoiceFormFieldsProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gst_rate">GST Rate (%)</Label>
-          <Input
-            id="gst_rate"
-            type="number"
-            min="0"
-            max="30"
-            step="0.01"
-            value={formData.gst_rate}
-            onChange={(e) => onFieldChange('gst_rate', parseFloat(e.target.value) || 0)}
-          />
+          <Label htmlFor="gst_mode">GST</Label>
+          <Select
+            value={formData.gst_mode}
+            onValueChange={(value: 'standard' | 'zero_rated') => {
+              onFieldChange('gst_mode', value);
+              onFieldChange('gst_rate', value === 'zero_rated' ? 0 : 15);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="standard">Standard GST (15%)</SelectItem>
+              <SelectItem value="zero_rated">Zero-rated GST (0%)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

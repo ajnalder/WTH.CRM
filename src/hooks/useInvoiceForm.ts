@@ -7,6 +7,7 @@ interface InvoiceFormData {
   invoice_number: string;
   title: string;
   gst_rate: number;
+  gst_mode: 'standard' | 'zero_rated';
   due_date: string;
   issued_date?: string;
 }
@@ -22,6 +23,7 @@ export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
     invoice_number: '',
     title: '',
     gst_rate: 15,
+    gst_mode: 'standard',
     due_date: '',
     issued_date: new Date().toISOString().split('T')[0],
     ...initialData,
@@ -72,6 +74,7 @@ export const useInvoiceForm = (initialData?: Partial<InvoiceFormData>) => {
       invoice_number: nextInvoiceNumber,
       title: '',
       gst_rate: 15,
+      gst_mode: 'standard',
       due_date: '',
       issued_date: new Date().toISOString().split('T')[0],
       ...initialData,

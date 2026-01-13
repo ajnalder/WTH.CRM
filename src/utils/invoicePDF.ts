@@ -162,7 +162,8 @@ export const generateInvoicePDF = async (
   pdf.text(invoice.subtotal.toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
   
   yPos += 6;
-  pdf.text(`TOTAL GST ${invoice.gst_rate}%`, totalsXPos, yPos);
+  const isZeroRated = invoice.gst_mode === 'zero_rated' || invoice.gst_rate === 0;
+  pdf.text(isZeroRated ? 'TOTAL GST (Zero-rated)' : `TOTAL GST ${invoice.gst_rate}%`, totalsXPos, yPos);
   pdf.text((invoice.gst_amount || 0).toFixed(2), pageWidth - marginRight, yPos, { align: 'right' });
   
   // Dark line before total

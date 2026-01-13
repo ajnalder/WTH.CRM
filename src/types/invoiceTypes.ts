@@ -9,6 +9,7 @@ export interface Invoice {
   description?: string;
   subtotal: number;
   gst_rate: number;
+  gst_mode?: 'standard' | 'zero_rated';
   gst_amount: number;
   subtotal_incl_gst: number;
   total_amount: number;

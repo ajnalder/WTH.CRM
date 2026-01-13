@@ -245,7 +245,12 @@ export async function generateInvoicePDF(
   pdf.text(Number(invoice.subtotal).toFixed(2), pageWidth - marginRight, yPos, { align: "right" });
 
   yPos += 6;
-  pdf.text(`TOTAL GST ${invoice.gst_rate ?? 0}%`, totalsXPos, yPos);
+  const isZeroRated = invoice.gst_mode === "zero_rated" || invoice.gst_rate === 0;
+  pdf.text(
+    isZeroRated ? "TOTAL GST (Zero-rated)" : `TOTAL GST ${invoice.gst_rate ?? 0}%`,
+    totalsXPos,
+    yPos
+  );
   pdf.text(Number(invoice.gst_amount ?? 0).toFixed(2), pageWidth - marginRight, yPos, { align: "right" });
 
   yPos += 5;

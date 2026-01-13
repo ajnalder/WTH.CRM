@@ -40,6 +40,9 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
   const { updateInvoice } = useInvoices();
   const { clients } = useClients();
   const { contacts } = useContacts(invoice.client_id);
+
+  const initialGstMode =
+    invoice.gst_mode ?? (invoice.gst_rate === 0 ? 'zero_rated' : 'standard');
   
   const [formData, setFormData] = useState({
     client_id: invoice.client_id,
@@ -48,7 +51,8 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
     status: invoice.status,
     issued_date: invoice.issued_date || '',
     due_date: invoice.due_date || '',
-    gst_rate: invoice.gst_rate
+    gst_rate: invoice.gst_rate,
+    gst_mode: initialGstMode,
   });
 
   const client = clients.find(c => c.id === formData.client_id);
@@ -187,16 +191,22 @@ export const InvoiceEditForm: React.FC<InvoiceEditFormProps> = ({ invoice }) => 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="gst_rate">GST Rate (%)</Label>
-                  <Input
-                    id="gst_rate"
-                    type="number"
-                    min="0"
-                    max="30"
-                    step="0.01"
-                    value={formData.gst_rate}
-                    onChange={(e) => handleInputChange('gst_rate', parseFloat(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="gst_mode">GST</Label>
+                  <Select
+                    value={formData.gst_mode}
+                    onValueChange={(value: 'standard' | 'zero_rated') => {
+                      handleInputChange('gst_mode', value);
+                      handleInputChange('gst_rate', value === 'zero_rated' ? 0 : 15);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard GST (15%)</SelectItem>
+                      <SelectItem value="zero_rated">Zero-rated GST (0%)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </form>
             </CardContent>

@@ -24,11 +24,17 @@ export const useInvoices = (clientId?: string) => {
       try {
         if (!user) throw new Error('User not authenticated');
 
+        const gstMode =
+          invoiceData.gst_mode ??
+          (invoiceData.gst_rate === 0 ? 'zero_rated' : 'standard');
+        const gstRate = gstMode === 'zero_rated' ? 0 : invoiceData.gst_rate ?? 15;
+
         const invoiceToCreate = {
           ...invoiceData,
           userId: user.id,
           subtotal: invoiceData.subtotal ?? 0,
-          gst_rate: invoiceData.gst_rate ?? 0,
+          gst_mode: gstMode,
+          gst_rate: gstRate,
           gst_amount: invoiceData.gst_amount ?? 0,
           subtotal_incl_gst: invoiceData.subtotal_incl_gst ?? invoiceData.subtotal ?? 0,
           total_amount: invoiceData.total_amount ?? 0,

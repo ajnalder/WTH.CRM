@@ -244,6 +244,7 @@ export default defineSchema({
     subtotal_incl_gst: v.optional(v.number()),
     gst_amount: v.optional(v.number()),
     gst_rate: v.optional(v.number()),
+    gst_mode: v.optional(v.string()),
     total_amount: v.number(),
     balance_due: v.optional(v.number()),
     deposit_amount: v.optional(v.number()),

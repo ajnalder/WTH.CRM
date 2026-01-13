@@ -6,6 +6,9 @@ interface InvoiceTotalsPreviewProps {
 }
 
 export const InvoiceTotalsPreview: React.FC<InvoiceTotalsPreviewProps> = ({ invoice }) => {
+  const isZeroRated =
+    invoice.gst_mode === 'zero_rated' || invoice.gst_rate === 0;
+
   return (
     <div className="flex justify-end">
       <div className="w-72">
@@ -15,7 +18,9 @@ export const InvoiceTotalsPreview: React.FC<InvoiceTotalsPreviewProps> = ({ invo
             <span className="text-gray-900">{invoice.subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-gray-700">TOTAL GST {invoice.gst_rate}%</span>
+            <span className="text-gray-700">
+              {isZeroRated ? 'TOTAL GST (Zero-rated)' : `TOTAL GST ${invoice.gst_rate}%`}
+            </span>
             <span className="text-gray-900">{(invoice.gst_amount || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between border-t-2 border-gray-400 pt-2 mt-2">
