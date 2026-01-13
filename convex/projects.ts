@@ -66,6 +66,7 @@ export const create = mutation({
     client_id: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
+    notes: v.optional(v.string()),
     status: v.optional(v.string()),
     priority: v.optional(v.string()),
     start_date: v.optional(v.string()),
@@ -85,6 +86,7 @@ export const create = mutation({
       user_id: userId,
       name: args.name,
       description: args.description ?? undefined,
+      notes: args.notes ?? undefined,
       status: args.status ?? "active",
       priority: args.priority ?? "medium",
       start_date: args.start_date ?? undefined,
@@ -109,6 +111,7 @@ export const update = mutation({
     updates: v.object({
       name: v.optional(v.string()),
       description: v.optional(v.string()),
+      notes: v.optional(v.string()),
       status: v.optional(v.string()),
       priority: v.optional(v.string()),
       start_date: v.optional(v.string()),

@@ -291,6 +291,7 @@ export default defineSchema({
     user_id: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
+    notes: v.optional(v.string()),
     status: v.string(),
     priority: v.string(),
     start_date: v.optional(v.string()),

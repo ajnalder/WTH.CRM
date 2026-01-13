@@ -14,6 +14,7 @@ export const transformProject = (project: Project & { clients?: { company: strin
     priority: project.priority,
     tasks: { completed: 0, total: 1 }, // Placeholder until we implement tasks
     description: project.description || '',
+    notes: project.notes || '',
     budget: project.budget || 0,
     startDate: project.start_date || '',
     isRetainer: project.is_retainer || false,

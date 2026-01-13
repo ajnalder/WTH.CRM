@@ -11,6 +11,7 @@ export interface Project {
   user_id: string;
   name: string;
   description: string | null;
+  notes?: string | null;
   status: string;
   priority: string;
   start_date: string | null;
@@ -36,6 +37,7 @@ export interface CreateProjectData {
   client_id: string;
   name: string;
   description?: string;
+  notes?: string;
   status?: string;
   priority?: string;
   start_date?: string;
@@ -49,6 +51,7 @@ export interface CreateProjectData {
 export interface UpdateProjectData {
   name?: string;
   description?: string;
+  notes?: string;
   status?: string;
   priority?: string;
   start_date?: string | null;
@@ -125,6 +128,7 @@ export const useProjects = (clientId?: string) => {
         ...projectData,
         name: projectData.name ?? undefined,
         description: projectData.description ?? undefined,
+        notes: projectData.notes ?? undefined,
         status: projectData.status ?? undefined,
         priority: projectData.priority ?? undefined,
         start_date: projectData.start_date ?? undefined,
