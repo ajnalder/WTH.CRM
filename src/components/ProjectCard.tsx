@@ -3,9 +3,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Users, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useClients } from '@/hooks/useClients';
 import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
+import { useInvoices } from '@/hooks/useInvoices';
 
 interface TeamMember {
   id: string;
@@ -39,22 +39,10 @@ interface ProjectCardProps {
   project: TransformedProject;
 }
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'High':
-      return 'bg-red-100 text-red-800 border-red-200';
-    case 'Medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'Low':
-      return 'bg-green-100 text-green-800 border-green-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const { clients } = useClients();
   const { projectTeamMembers } = useProjectTeamMembers(project.id);
+  const { invoices } = useInvoices();
 
   const getClientInitials = (clientName: string) => {
     return clientName
@@ -75,6 +63,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     : null;
 
   const clientGradient = getClientGradient(project.client);
+  const invoicedTotal = invoices
+    .filter((invoice) => invoice.project_id === project.id && invoice.status !== 'cancelled')
+    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
 
   // Extract the base color from the gradient for the card background with tint
   const getCardBackgroundClass = (gradient: string) => {
@@ -124,10 +115,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 <div className="text-sm text-gray-600">{project.client}</div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>
-                {project.priority}
-              </Badge>
+            <div className="text-right">
+              <div className="text-[11px] uppercase tracking-wide text-gray-500">Invoiced</div>
+              <div className="text-sm font-semibold text-gray-900">
+                ${Number(invoicedTotal).toLocaleString()}
+              </div>
             </div>
           </div>
           <CardTitle className="text-lg font-semibold text-gray-900 leading-tight">
