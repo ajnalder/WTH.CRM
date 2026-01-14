@@ -41,5 +41,9 @@ Known gotchas
 - If Vercel points to dev, the app will show dev data; Convex env vars do not affect frontend.
 - Convex deploys must target the same deployment as Vercel’s VITE_CONVEX_URL.
 
+Workflow
+- After making changes, automatically commit and push to GitHub.
+- Use the user's latest request as the commit title/message.
+
 User
 - Clerk user id often used in logs: user_36ULtIVv9VJUrLwuZHkKNX7Vc4s
