@@ -544,13 +544,6 @@ export const syncInvoice = action({
       throw new Error("Client not found for invoice");
     }
 
-    // Check if client has a linked Xero contact
-    if (!client.xero_contact_id) {
-      throw new Error(
-        `Client "${client.company}" is not linked to a Xero contact. Please link them in Settings > Xero Integration first.`
-      );
-    }
-
     // Get invoice items
     const items: any[] = await ctx.runQuery(api.invoiceItems.listByInvoice, {
       userId,
@@ -576,6 +569,62 @@ export const syncInvoice = action({
     // Get auth headers with token refresh
     const headers = await getAuthHeaders(ctx, userId);
 
+    // Ensure client is linked to a Xero contact (auto-create if missing)
+    let xeroContactId = client.xero_contact_id;
+    if (!xeroContactId) {
+      const contactPayload: any = {
+        Contacts: [
+          {
+            Name: client.company,
+          },
+        ],
+      };
+
+      if (client.phone) {
+        contactPayload.Contacts[0].Phones = [
+          { PhoneType: "DEFAULT", PhoneNumber: client.phone },
+        ];
+      }
+
+      console.log("Creating Xero contact for client", {
+        clientId: client.id,
+        clientName: client.company,
+      });
+
+      const contactRes = await fetch(
+        "https://api.xero.com/api.xro/2.0/Contacts",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(contactPayload),
+        }
+      );
+
+      if (!contactRes.ok) {
+        const text = await contactRes.text();
+        console.error("Xero contact create failed", {
+          status: contactRes.status,
+          body: text,
+          clientName: client.company,
+        });
+        throw new Error(`Failed to create Xero contact: ${contactRes.status} ${text}`);
+      }
+
+      const contactData: any = await contactRes.json();
+      const createdContact = contactData.Contacts?.[0];
+      xeroContactId = createdContact?.ContactID;
+
+      if (!xeroContactId) {
+        throw new Error("Xero did not return a contact ID");
+      }
+
+      await ctx.runMutation(api.clients.update, {
+        userId,
+        id: client.id,
+        updates: { xero_contact_id: xeroContactId },
+      });
+    }
+
     // Prepare line items for Xero
     const lineItems = items.map((item) => ({
       Description: item.description,
@@ -589,7 +638,7 @@ export const syncInvoice = action({
     const xeroInvoice: any = {
       Type: "ACCREC", // Accounts Receivable (sales invoice)
       Contact: {
-        ContactID: client.xero_contact_id,
+        ContactID: xeroContactId,
       },
       LineItems: lineItems,
       InvoiceNumber: invoice.invoice_number,
@@ -608,7 +657,7 @@ export const syncInvoice = action({
     console.log("Syncing invoice to Xero", {
       invoiceNumber: invoice.invoice_number,
       clientName: client.company,
-      xeroContactId: client.xero_contact_id,
+      xeroContactId,
       lineItemCount: lineItems.length,
       totalAmount: invoice.total_amount,
       existingXeroId: invoice.xero_invoice_id || "none",
