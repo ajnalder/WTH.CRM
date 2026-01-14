@@ -41,8 +41,15 @@ interface ProjectFormData {
 export const NewProjectForm: React.FC = () => {
   const [open, setOpen] = React.useState(false);
   const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([]);
+  const [showNewClient, setShowNewClient] = React.useState(false);
+  const [newClient, setNewClient] = React.useState({
+    company: '',
+    phone: '',
+    description: '',
+  });
+  const [isCreatingClient, setIsCreatingClient] = React.useState(false);
   const { createProject, isCreating } = useProjects();
-  const { clients } = useClients();
+  const { clients, createClient } = useClients();
   const { assignTeamMember } = useProjectTeamMembers();
   
   const form = useForm<ProjectFormData>({
@@ -89,6 +96,31 @@ export const NewProjectForm: React.FC = () => {
     setOpen(false);
     form.reset();
     setSelectedTeamMembers([]);
+  };
+
+  const handleCreateClient = async () => {
+    if (!newClient.company.trim()) return;
+    setIsCreatingClient(true);
+    try {
+      const created = await createClient({
+        company: newClient.company.trim(),
+        phone: newClient.phone.trim(),
+        description: newClient.description.trim(),
+      });
+      if (created && typeof created === 'object' && 'id' in created) {
+        form.setValue('client_id', created.id as string, { shouldValidate: true });
+      }
+      setNewClient({ company: '', phone: '', description: '' });
+      setShowNewClient(false);
+    } catch (error) {
+      // Toasts handled in hook; keep form open on error.
+    } finally {
+      setIsCreatingClient(false);
+    }
+  };
+
+  const handleNewClientChange = (field: 'company' | 'phone' | 'description', value: string) => {
+    setNewClient((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -143,6 +175,58 @@ export const NewProjectForm: React.FC = () => {
                       ))}
                     </select>
                   </FormControl>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-700"
+                      onClick={() => setShowNewClient((prev) => !prev)}
+                    >
+                      {showNewClient ? 'Cancel new client' : 'Add new client'}
+                    </button>
+                    {showNewClient && (
+                      <span className="text-muted-foreground">
+                        Create client without leaving this form.
+                      </span>
+                    )}
+                  </div>
+                  {showNewClient && (
+                    <div className="mt-3 space-y-3 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-3">
+                      <div className="space-y-2">
+                        <FormLabel>Company Name *</FormLabel>
+                        <Input
+                          value={newClient.company}
+                          onChange={(e) => handleNewClientChange('company', e.target.value)}
+                          placeholder="Enter company name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Phone</FormLabel>
+                        <Input
+                          value={newClient.phone}
+                          onChange={(e) => handleNewClientChange('phone', e.target.value)}
+                          placeholder="Enter phone number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Description</FormLabel>
+                        <Input
+                          value={newClient.description}
+                          onChange={(e) => handleNewClientChange('description', e.target.value)}
+                          placeholder="e.g., Local bakery chain, SaaS startup"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCreateClient}
+                          disabled={isCreatingClient || !newClient.company.trim()}
+                        >
+                          {isCreatingClient ? 'Creating...' : 'Create client'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

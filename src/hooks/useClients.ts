@@ -24,8 +24,8 @@ export interface Client {
 
 export interface CreateClientData {
   company: string;
-  phone: string;
-  description: string;
+  phone?: string;
+  description?: string;
 }
 
 export const useClients = () => {
@@ -51,14 +51,17 @@ export const useClients = () => {
     if (!user) throw new Error('User not authenticated');
     try {
       console.log('createClient', { userId: user.id, clientData });
-      await createClient({
+      const created = await createClient({
         userId: user.id,
-        ...clientData,
+        company: clientData.company,
+        phone: clientData.phone?.trim() || undefined,
+        description: clientData.description?.trim() || undefined,
       });
       toast({
         title: "Success",
         description: "Client created successfully",
       });
+      return created;
     } catch (error: any) {
       console.error('Error creating client:', error);
       toast({
