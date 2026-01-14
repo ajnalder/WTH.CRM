@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageWithSidebar } from "@/components/PageWithSidebar";
+import { ReminderNotifier } from "@/components/reminders/ReminderNotifier";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -41,6 +42,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <ReminderNotifier />
           <Routes>
             <Route path="/auth/*" element={<Auth />} />
             <Route path="/sign-up/*" element={<SignUp />} />
