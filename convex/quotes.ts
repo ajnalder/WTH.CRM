@@ -12,28 +12,45 @@ export const list = query({
       .withIndex("by_user", (q) => q.eq("user_id", userId))
       .collect();
 
-    // Fetch client data for each quote
+    // Fetch client data and ensure missing fields don't break the UI.
     const quotesWithClients = await Promise.all(
       quotes.map(async (quote) => {
         const client = await ctx.db
           .query("clients")
           .withIndex("by_public_id", (q) => q.eq("id", quote.client_id))
           .unique();
+        let totalAmount = quote.total_amount;
+        if (typeof totalAmount !== "number") {
+          const items = await ctx.db
+            .query("quote_items")
+            .withIndex("by_quote", (q) => q.eq("quote_id", quote.id))
+            .collect();
+          totalAmount = items
+            .filter((item) => !item.is_optional)
+            .reduce((sum, item) => sum + item.amount, 0);
+        }
 
         return {
           ...quote,
+          status: quote.status ?? "draft",
+          total_amount: totalAmount ?? 0,
+          created_at: quote.created_at ?? quote.updated_at ?? nowIso(),
+          updated_at: quote.updated_at ?? quote.created_at ?? nowIso(),
           clients: client ? { id: client.id, company: client.company } : null,
         };
       })
     );
 
-    return quotesWithClients.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return quotesWithClients.sort((a, b) =>
+      (b.created_at ?? "").localeCompare(a.created_at ?? "")
+    );
   },
 });
 
 export const getById = query({
-  args: { id: v.string(), userId: v.optional(v.string()) },
+  args: { id: v.optional(v.string()), userId: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    if (!args.id) return null;
     const userId = await getUserId(ctx, args.userId);
 
     const quote = await ctx.db

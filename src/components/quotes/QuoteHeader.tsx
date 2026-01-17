@@ -66,9 +66,9 @@ export function QuoteHeader({
     }
   };
 
-  const displayTitle = projectType
-    ? `${clientName} | ${projectType}`
-    : title;
+  const displayTitle = title
+    ? `${clientName} | ${title}`
+    : clientName;
 
   // Default cover image
   const defaultCover = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80';

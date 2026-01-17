@@ -30,9 +30,14 @@ export const listByProject = query({
 });
 
 export const listDueReminders = query({
-  args: { userId: v.optional(v.string()), nowIso: v.string() },
+  args: { userId: v.optional(v.string()), nowIso: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const userId = await getUserId(ctx, args.userId);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity?.subject && !args.userId) {
+      return [];
+    }
+    const userId = identity?.subject ?? (args.userId as string);
+    const now = args.nowIso ?? nowIso();
     const notes = await ctx.db
       .query("project_notes")
       .withIndex("by_user", (q) => q.eq("user_id", userId))
@@ -42,7 +47,7 @@ export const listDueReminders = query({
       const nextReminderAt = getNextReminderAt(note);
       if (!nextReminderAt) return false;
       if (note.reminder_status === REMINDER_DONE) return false;
-      return nextReminderAt <= args.nowIso;
+      return nextReminderAt <= now;
     });
   },
 });

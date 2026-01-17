@@ -3,11 +3,15 @@ import { v } from "convex/values";
 import { nowIso } from "./_utils";
 
 export const listByQuote = query({
-  args: { quoteId: v.string() },
+  args: { quoteId: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    const quoteId = args.quoteId;
+    if (!quoteId) {
+      return [];
+    }
     const blocks = await ctx.db
       .query("quote_blocks")
-      .withIndex("by_quote", (q) => q.eq("quote_id", args.quoteId))
+      .withIndex("by_quote", (q) => q.eq("quote_id", quoteId))
       .collect();
 
     return blocks.sort((a, b) => a.order_index - b.order_index);

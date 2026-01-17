@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useQuotes } from '@/hooks/useQuotes';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -33,6 +33,22 @@ const statusColors: Record<string, string> = {
   accepted: 'bg-green-100 text-green-800',
   declined: 'bg-red-100 text-red-800',
   expired: 'bg-gray-100 text-gray-800',
+};
+
+const formatCurrency = (value: number | undefined | null) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) return '0';
+  return value.toLocaleString();
+};
+
+const formatDate = (value: string | undefined | null) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return isValid(date) ? format(date, 'dd MMM yyyy') : '—';
+};
+
+const formatStatus = (value: string | undefined | null) => {
+  const status = value || 'draft';
+  return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
 export default function Quotes() {
@@ -91,16 +107,16 @@ export default function Quotes() {
               ) : (
                 quotes.map((quote) => (
                   <TableRow key={quote.id}>
-                    <TableCell className="font-medium">{quote.quote_number}</TableCell>
+                    <TableCell className="font-medium">{quote.quote_number || '—'}</TableCell>
                     <TableCell>{quote.clients?.company || 'Unknown'}</TableCell>
-                    <TableCell>{quote.title}</TableCell>
-                    <TableCell>${quote.total_amount.toLocaleString()}</TableCell>
+                    <TableCell>{quote.title || 'Untitled quote'}</TableCell>
+                    <TableCell>${formatCurrency(quote.total_amount)}</TableCell>
                     <TableCell>
-                      <Badge className={statusColors[quote.status] || ''}>
-                        {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                      <Badge className={statusColors[quote.status || 'draft'] || ''}>
+                        {formatStatus(quote.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{format(new Date(quote.created_at), 'dd MMM yyyy')}</TableCell>
+                    <TableCell>{formatDate(quote.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button

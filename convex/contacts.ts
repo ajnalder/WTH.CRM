@@ -3,19 +3,23 @@ import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
 
 export const list = query({
-  args: { clientId: v.string(), userId: v.optional(v.string()) },
+  args: { clientId: v.optional(v.string()), userId: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    const clientId = args.clientId;
+    if (!clientId) {
+      return [];
+    }
     const userId = await getUserId(ctx, args.userId);
 
     const contacts = await ctx.db
       .query("contacts")
-      .withIndex("by_client", (q) => q.eq("client_id", args.clientId))
+      .withIndex("by_client", (q) => q.eq("client_id", clientId))
       .collect();
 
     // Filter by user ownership via the parent client
     const client = await ctx.db
       .query("clients")
-      .withIndex("by_public_id", (q) => q.eq("id", args.clientId))
+      .withIndex("by_public_id", (q) => q.eq("id", clientId))
       .unique();
 
     if (client && client.user_id !== userId) {
