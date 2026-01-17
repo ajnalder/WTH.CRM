@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { nowIso, getUserId } from "./_utils";
 
@@ -229,5 +229,153 @@ export const remove = mutation({
 
     await ctx.db.delete(quote._id);
     return quote._id;
+  },
+});
+
+export const generateFromTranscript = action({
+  args: {
+    userId: v.optional(v.string()),
+    transcript: v.string(),
+    title: v.optional(v.string()),
+    project_type: v.optional(v.string()),
+    client_name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await getUserId(ctx, args.userId);
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENROUTER_API_KEY is not set");
+    }
+
+    const systemPrompt = [
+      "You are generating client quotations for a New Zealand-based web design and digital consultancy called What The Heck.",
+      "",
+      "Your input will usually be a rough transcript from a client meeting or post-meeting voice note. These transcripts may be messy, informal, repetitive, or contain half-formed thoughts. Your job is to turn them into a clear, professional, well-structured written quote.",
+      "",
+      "Tone & Style",
+      "- Professional but relaxed, never corporate or salesy",
+      "- Straight-talking and confident, no fluff or hype",
+      "- Friendly, human, and practical",
+      "- Written in NZ English",
+      "- No buzzwords, no marketing waffle",
+      "- Avoid phrases like \"we're thrilled\", \"excited to\", or \"cutting-edge\"",
+      "- Use hyphens, never em dashes",
+      "- Assume the reader is a business owner, not a marketer",
+      "",
+      "Overall Structure",
+      "- Short Intro / Context",
+      "- Recommended Approach",
+      "- Scope of Work (bullet points)",
+      "- What's Not Included (if relevant)",
+      "- Investment (pricing, mention GST if relevant)",
+      "- Next Steps",
+      "",
+      "Content Rules",
+      "- Do not invent services, features, or pricing that were not discussed",
+      "- If something is unclear, make a sensible assumption and phrase it safely",
+      "- Prefer clarity over persuasion",
+      "- Write in short paragraphs and bullet points where possible",
+      "- The quote should feel like it came from someone experienced who has been here before",
+      "",
+      "Perspective",
+      "- Write as What The Heck, not as a generic agency",
+      "- Position the business as practical, experienced, and hands-on",
+      "- The goal is trust and clarity, not upselling",
+    ].join("\n");
+
+    const userPrompt = [
+      "Client context:",
+      `Client name: ${args.client_name ?? "Unknown"}`,
+      `Proposed title (if provided): ${args.title ?? "Not provided"}`,
+      `Project type (if provided): ${args.project_type ?? "Not provided"}`,
+      "",
+      "Transcript:",
+      args.transcript,
+      "",
+      "Return JSON only with this exact shape:",
+      "{",
+      '  "title": string | null,',
+      '  "project_type": string | null,',
+      '  "intro": string[],',
+      '  "approach": string[],',
+      '  "scope": string[],',
+      '  "not_included": string[],',
+      '  "investment": string[],',
+      '  "next_steps": string[],',
+      '  "assumptions": string[],',
+      '  "items": [{ "description": string, "quantity": number, "rate": number, "is_optional": boolean }]',
+      "}",
+      "",
+      "Rules for JSON:",
+      "- Use empty arrays when a section is not relevant",
+      "- Only include pricing in items/investment if it appears in the transcript",
+      "- If pricing is unclear, leave items empty and note this in investment",
+      "- Keep wording concise and NZ English",
+    ].join("\n");
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "kimi-k2-0905",
+        temperature: 0.2,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenRouter error: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content ?? "";
+    const start = content.indexOf("{");
+    const end = content.lastIndexOf("}");
+    if (start === -1 || end === -1) {
+      throw new Error("Failed to parse quote draft response");
+    }
+
+    const parsed = JSON.parse(content.slice(start, end + 1));
+    const asArray = (value: unknown) => {
+      if (Array.isArray(value)) {
+        return value.filter((item) => typeof item === "string");
+      }
+      if (typeof value === "string" && value.trim().length > 0) {
+        return [value.trim()];
+      }
+      return [];
+    };
+
+    const items = Array.isArray(parsed.items)
+      ? parsed.items
+          .map((item: any) => ({
+            description: typeof item.description === "string" ? item.description : null,
+            quantity: typeof item.quantity === "number" ? item.quantity : 1,
+            rate: typeof item.rate === "number" ? item.rate : null,
+            is_optional: Boolean(item.is_optional),
+          }))
+          .filter((item: any) => item.description && typeof item.rate === "number")
+      : [];
+
+    return {
+      title: typeof parsed.title === "string" ? parsed.title : null,
+      project_type: typeof parsed.project_type === "string" ? parsed.project_type : null,
+      intro: asArray(parsed.intro),
+      approach: asArray(parsed.approach),
+      scope: asArray(parsed.scope),
+      not_included: asArray(parsed.not_included),
+      investment: asArray(parsed.investment),
+      next_steps: asArray(parsed.next_steps),
+      assumptions: asArray(parsed.assumptions),
+      items,
+    };
   },
 });

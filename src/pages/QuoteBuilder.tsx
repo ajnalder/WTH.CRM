@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Save, Send, Eye, Type, Image } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Send, Eye, Type, Image, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuotes, useQuote } from '@/hooks/useQuotes';
 import { useQuoteBlocks } from '@/hooks/useQuoteBlocks';
@@ -18,8 +19,21 @@ import { QuickClientDialog } from '@/components/quotes/QuickClientDialog';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMutation } from 'convex/react';
+import { useAction, useMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
+
+type GeneratedQuoteDraft = {
+  title: string | null;
+  project_type: string | null;
+  intro: string[];
+  approach: string[];
+  scope: string[];
+  not_included: string[];
+  investment: string[];
+  next_steps: string[];
+  assumptions: string[];
+  items: Array<{ description: string; quantity: number; rate: number; is_optional: boolean }>;
+};
 
 export default function QuoteBuilder() {
   const { id } = useParams();
@@ -33,6 +47,7 @@ export default function QuoteBuilder() {
   const { items, addItem, updateItem, deleteItem, total } = useQuoteItems(id);
   const { user } = useAuth();
   const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
+  const generateFromTranscript = useAction(api.quotes.generateFromTranscript);
 
   const [quoteData, setQuoteData] = useState({
     client_id: '',
@@ -46,6 +61,9 @@ export default function QuoteBuilder() {
   });
   const [nextQuoteNumber, setNextQuoteNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedDraft, setGeneratedDraft] = useState<GeneratedQuoteDraft | null>(null);
 
   // Fetch primary contact when client changes
   const { data: primaryContact } = usePrimaryContact(quoteData.client_id || undefined);
@@ -119,6 +137,9 @@ export default function QuoteBuilder() {
         contact_name: quoteData.contact_name || undefined,
         contact_email: quoteData.contact_email || undefined,
       });
+      if (generatedDraft) {
+        await applyGeneratedDraft(newQuote.id, generatedDraft);
+      }
       navigate(`/quotes/${newQuote.id}`, { replace: true });
     } catch (error) {
       console.error('Error creating quote:', error);
@@ -177,6 +198,96 @@ export default function QuoteBuilder() {
     setQuoteData(prev => ({ ...prev, cover_image_url: url || '' }));
     if (id) {
       updateQuote({ id, updates: { cover_image_url: url } });
+    }
+  };
+
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const buildSectionHtml = (paragraphs: string[], bullets: string[]) => {
+    const safeParagraphs = paragraphs.map((text) => `<p>${escapeHtml(text)}</p>`).join('');
+    const safeBullets = bullets.length
+      ? `<ul>${bullets.map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>`
+      : '';
+    return `${safeParagraphs}${safeBullets}`;
+  };
+
+  const applyGeneratedDraft = async (quoteId: string, draft: GeneratedQuoteDraft) => {
+    const sections = [
+      { title: 'Context', paragraphs: draft.intro, bullets: [] },
+      { title: 'Recommended Approach', paragraphs: draft.approach, bullets: [] },
+      { title: 'Scope of Work', paragraphs: [], bullets: draft.scope },
+      { title: "What's Not Included", paragraphs: [], bullets: draft.not_included },
+      { title: 'Investment', paragraphs: draft.investment, bullets: [] },
+      { title: 'Next Steps', paragraphs: [], bullets: draft.next_steps },
+      { title: 'Assumptions', paragraphs: [], bullets: draft.assumptions },
+    ].filter((section) => section.paragraphs.length > 0 || section.bullets.length > 0);
+
+    for (let index = 0; index < sections.length; index += 1) {
+      const section = sections[index];
+      await addBlock({
+        quote_id: quoteId,
+        block_type: 'text',
+        order_index: index,
+        title: section.title,
+        content: buildSectionHtml(section.paragraphs, section.bullets),
+      });
+    }
+
+    if (draft.items.length > 0) {
+      await Promise.all(
+        draft.items.map((item, index) =>
+          addItem({
+            quote_id: quoteId,
+            description: item.description,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.quantity * item.rate,
+            is_optional: item.is_optional,
+            order_index: index,
+          })
+        )
+      );
+
+      const newTotal = draft.items
+        .filter((item) => !item.is_optional)
+        .reduce((sum, item) => sum + item.quantity * item.rate, 0);
+      await updateQuote({ id: quoteId, updates: { total_amount: newTotal } });
+    }
+  };
+
+  const handleGenerateFromTranscript = async () => {
+    if (!transcript.trim()) {
+      toast({ title: 'Error', description: 'Paste the transcript first', variant: 'destructive' });
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const draft = await generateFromTranscript({
+        userId: user?.id,
+        transcript,
+        title: quoteData.title || undefined,
+        project_type: quoteData.project_type || undefined,
+        client_name: selectedClient?.company || undefined,
+      });
+
+      setGeneratedDraft(draft as GeneratedQuoteDraft);
+      setQuoteData((prev) => ({
+        ...prev,
+        title: prev.title || draft.title || '',
+        project_type: prev.project_type || draft.project_type || '',
+      }));
+      toast({ title: 'Draft ready', description: 'Draft sections will be applied when you create the quote.' });
+    } catch (error) {
+      console.error('Error generating quote draft:', error);
+      toast({ title: 'Error', description: 'Failed to generate draft quote', variant: 'destructive' });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -329,9 +440,31 @@ export default function QuoteBuilder() {
             </div>
           </div>
           {!id && (
-            <Button onClick={handleCreateQuote} disabled={isSaving}>
-              Create Quote & Continue
-            </Button>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Transcript</Label>
+                <Textarea
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                  placeholder="Paste your meeting transcript or voice note here..."
+                  className="min-h-[140px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  We will draft sections and line items from this transcript. Edit anything before sending.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateFromTranscript}
+                  disabled={isGenerating}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isGenerating ? 'Generating...' : 'Convert to Quote'}
+                </Button>
+              </div>
+              <Button onClick={handleCreateQuote} disabled={isSaving}>
+                Create Quote & Continue
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
