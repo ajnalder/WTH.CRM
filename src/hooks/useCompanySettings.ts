@@ -25,14 +25,14 @@ export interface CompanySettings {
   updated_at: string;
 }
 
-export const useCompanySettings = () => {
+export const useCompanySettings = (userIdOverride?: string) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const settingsData = useConvexQuery(
     api.companySettings.get,
-    user ? { userId: user.id } : undefined
+    userIdOverride ? { userId: userIdOverride } : user ? { userId: user.id } : undefined
   ) as CompanySettings | null | undefined;
   const isLoading = settingsData === undefined;
   const settings = settingsData ?? null;

@@ -5,7 +5,11 @@ import { getUserId, nowIso } from "./_utils";
 export const get = query({
   args: { userId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const userId = await getUserId(ctx, args.userId);
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject ?? args.userId;
+    if (!userId) {
+      return null;
+    }
     const settings = await ctx.db
       .query("company_settings")
       .withIndex("by_user", (q) => q.eq("user_id", userId))

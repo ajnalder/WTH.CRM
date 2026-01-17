@@ -21,7 +21,7 @@ export default function PublicQuoteView() {
   const { blocks } = useQuoteBlocks(quote?.id);
   const { items, total } = useQuoteItems(quote?.id);
   const { logEvent } = useQuoteEvents();
-  const { settings } = useCompanySettings();
+  const { settings } = useCompanySettings(quote?.user_id);
   const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
   const updateQuoteMutation = useMutation(api.quotes.update);
 
