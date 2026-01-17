@@ -321,7 +321,7 @@ export const generateFromTranscript = action({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "kimi-k2-0905",
+        model: "moonshotai/kimi-k2-0905",
         temperature: 0.2,
         messages: [
           { role: "system", content: systemPrompt },
