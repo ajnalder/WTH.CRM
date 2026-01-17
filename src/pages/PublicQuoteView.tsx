@@ -118,6 +118,42 @@ export default function PublicQuoteView() {
   const isAccepted = quote.status === 'accepted';
   const optionalItems = items.filter((i) => i.is_optional);
   const requiredItems = items.filter((i) => !i.is_optional);
+  const normalizeBlockContent = (content: string) => {
+    if (typeof window === 'undefined') return content;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const output = doc.createElement('div');
+    let listEl: HTMLUListElement | null = null;
+
+    const flushList = () => {
+      if (listEl) {
+        output.appendChild(listEl);
+        listEl = null;
+      }
+    };
+
+    Array.from(doc.body.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === 'P') {
+        const text = node.textContent?.trim() ?? '';
+        const match = text.match(/^[-*•]\s+(.+)$/);
+        if (match) {
+          if (!listEl) {
+            listEl = doc.createElement('ul');
+          }
+          const li = doc.createElement('li');
+          li.textContent = match[1];
+          listEl.appendChild(li);
+          return;
+        }
+      }
+
+      flushList();
+      output.appendChild(node.cloneNode(true));
+    });
+
+    flushList();
+    return output.innerHTML;
+  };
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -159,7 +195,7 @@ export default function PublicQuoteView() {
               {block.block_type === 'text' && block.content && (
                 <div
                   className="prose prose-sm max-w-none prose-ul:pl-6 prose-ol:pl-6 prose-ul:list-disc prose-li:marker:text-muted-foreground"
-                  dangerouslySetInnerHTML={{ __html: block.content }}
+                  dangerouslySetInnerHTML={{ __html: normalizeBlockContent(block.content) }}
                 />
               )}
               {block.block_type === 'image' && block.image_url && (

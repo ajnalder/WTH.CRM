@@ -209,44 +209,66 @@ export default function QuoteBuilder() {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
-  const formatInline = (value: string) => {
-    const escaped = escapeHtml(value);
-    const match = escaped.match(/^([^:]{2,80}):\s*(.+)$/);
-    if (!match) {
-      return escaped;
-    }
-    return `<strong>${match[1]}</strong>: ${match[2]}`;
+  const formatInline = (value: string) => escapeHtml(value);
+
+  const isHeadingToken = (value: string) => {
+    const trimmed = value.trim();
+    if (/^(heading|section|group):/i.test(trimmed)) return true;
+    if (/[.!?]/.test(trimmed)) return false;
+    return trimmed.length > 0 && trimmed.length <= 48;
   };
 
-  const normalizeSection = (paragraphs: string[], bullets: string[]) => {
-    const nextParagraphs: string[] = [];
-    const nextBullets: string[] = [...bullets];
-    paragraphs.forEach((text) => {
-      const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-      if (lines.length === 1) {
-        nextParagraphs.push(lines[0]);
-        return;
-      }
+  const parseLines = (values: string[], defaultType: 'para' | 'bullet') => {
+    const tokens: Array<{ type: 'para' | 'bullet' | 'heading'; text: string }> = [];
+    values.forEach((entry) => {
+      const lines = entry.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       lines.forEach((line) => {
         if (/^[-*•]\s+/.test(line)) {
-          nextBullets.push(line.replace(/^[-*•]\s+/, '').trim());
+          tokens.push({ type: 'bullet', text: line.replace(/^[-*•]\s+/, '').trim() });
           return;
         }
-        nextParagraphs.push(line);
+        if (/^para:\s+/i.test(line)) {
+          tokens.push({ type: 'para', text: line.replace(/^para:\s+/i, '').trim() });
+          return;
+        }
+        if (/^(heading|section|group):\s+/i.test(line)) {
+          tokens.push({ type: 'heading', text: line.replace(/^(heading|section|group):\s+/i, '').trim() });
+          return;
+        }
+        if (defaultType === 'bullet' && isHeadingToken(line)) {
+          tokens.push({ type: 'heading', text: line });
+          return;
+        }
+        tokens.push({ type: defaultType, text: line });
       });
     });
-    return { paragraphs: nextParagraphs, bullets: nextBullets };
+    return tokens;
   };
 
   const buildSectionHtml = (paragraphs: string[], bullets: string[]) => {
-    const normalized = normalizeSection(paragraphs, bullets);
-    const safeParagraphs = normalized.paragraphs
-      .map((text) => `<p>${formatInline(text)}</p>`)
-      .join('');
-    const safeBullets = normalized.bullets.length
-      ? `<ul>${normalized.bullets.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`
-      : '';
-    return `${safeParagraphs}${safeBullets}`;
+    const tokens = [...parseLines(paragraphs, 'para'), ...parseLines(bullets, 'bullet')];
+    const parts: string[] = [];
+    const bulletBuffer: string[] = [];
+    const flushBullets = () => {
+      if (bulletBuffer.length === 0) return;
+      parts.push(`<ul>${bulletBuffer.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`);
+      bulletBuffer.length = 0;
+    };
+
+    tokens.forEach((token) => {
+      if (token.type === 'bullet') {
+        bulletBuffer.push(token.text);
+        return;
+      }
+      flushBullets();
+      if (token.type === 'heading') {
+        parts.push(`<p><strong>${formatInline(token.text)}</strong></p>`);
+        return;
+      }
+      parts.push(`<p>${formatInline(token.text)}</p>`);
+    });
+    flushBullets();
+    return parts.join('');
   };
 
   const applyGeneratedDraft = async (quoteId: string, draft: GeneratedQuoteDraft) => {
