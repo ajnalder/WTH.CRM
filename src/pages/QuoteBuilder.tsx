@@ -209,10 +209,42 @@ export default function QuoteBuilder() {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
+  const formatInline = (value: string) => {
+    const escaped = escapeHtml(value);
+    const match = escaped.match(/^([^:]{2,80}):\s*(.+)$/);
+    if (!match) {
+      return escaped;
+    }
+    return `<strong>${match[1]}</strong>: ${match[2]}`;
+  };
+
+  const normalizeSection = (paragraphs: string[], bullets: string[]) => {
+    const nextParagraphs: string[] = [];
+    const nextBullets: string[] = [...bullets];
+    paragraphs.forEach((text) => {
+      const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      if (lines.length === 1) {
+        nextParagraphs.push(lines[0]);
+        return;
+      }
+      lines.forEach((line) => {
+        if (/^[-*•]\s+/.test(line)) {
+          nextBullets.push(line.replace(/^[-*•]\s+/, '').trim());
+          return;
+        }
+        nextParagraphs.push(line);
+      });
+    });
+    return { paragraphs: nextParagraphs, bullets: nextBullets };
+  };
+
   const buildSectionHtml = (paragraphs: string[], bullets: string[]) => {
-    const safeParagraphs = paragraphs.map((text) => `<p>${escapeHtml(text)}</p>`).join('');
-    const safeBullets = bullets.length
-      ? `<ul>${bullets.map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>`
+    const normalized = normalizeSection(paragraphs, bullets);
+    const safeParagraphs = normalized.paragraphs
+      .map((text) => `<p>${formatInline(text)}</p>`)
+      .join('');
+    const safeBullets = normalized.bullets.length
+      ? `<ul>${normalized.bullets.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`
       : '';
     return `${safeParagraphs}${safeBullets}`;
   };

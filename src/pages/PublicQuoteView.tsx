@@ -158,7 +158,7 @@ export default function PublicQuoteView() {
               {block.title && <h2 className="text-xl font-semibold mb-4">{block.title}</h2>}
               {block.block_type === 'text' && block.content && (
                 <div
-                  className="prose prose-sm max-w-none"
+                  className="prose prose-sm max-w-none prose-ul:pl-6 prose-ol:pl-6 prose-ul:list-disc prose-li:marker:text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: block.content }}
                 />
               )}
