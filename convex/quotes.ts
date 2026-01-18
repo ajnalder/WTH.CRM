@@ -475,17 +475,27 @@ export const generateFromTranscript = action({
     const resolvedSections = sections.length > 0 ? sections : legacySections;
 
     const extractPrice = (text: string) => {
-      const matches = Array.from(text.matchAll(/(?:NZD|\\$)\\s?([\\d,]+(?:\\.\\d{1,2})?)/gi));
-      if (matches.length === 0) return null;
-      const values = matches
-        .map((match) => Number(match[1].replace(/,/g, "")))
-        .filter((value) => Number.isFinite(value) && value > 0);
+      const patterns = [
+        /(?:NZD|NZ\\$|\\$)\\s?([\\d,]+(?:\\.\\d{1,2})?)/gi,
+        /([\\d,]+(?:\\.\\d{1,2})?)\\s?(?:NZD|NZ\\$|dollars)/gi,
+        /([\\d,]+(?:\\.\\d{1,2})?)\\s?(?:\\+\\s?gst|plus\\s?gst|incl\\.?\\s?gst)/gi,
+      ];
+      const values: number[] = [];
+      patterns.forEach((pattern) => {
+        Array.from(text.matchAll(pattern)).forEach((match) => {
+          const value = Number(match[1].replace(/,/g, ""));
+          if (Number.isFinite(value) && value > 0) {
+            values.push(value);
+          }
+        });
+      });
       if (values.length === 0) return null;
       return Math.max(...values);
     };
 
+    const validItems = items.filter((item) => typeof item.rate === "number" && item.rate > 0);
     const enforcedItems =
-      items.length > 0
+      validItems.length > 0
         ? items
         : (() => {
             const detected = extractPrice(args.transcript);
