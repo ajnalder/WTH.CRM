@@ -1,6 +1,8 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { nowIso, getUserId } from "./_utils";
+import { api } from "./_generated/api";
+import { DEFAULT_BASE_PROMPT } from "./aiSettings";
 
 export const list = query({
   args: { userId: v.optional(v.string()) },
@@ -106,6 +108,8 @@ export const create = mutation({
     title: v.string(),
     project_type: v.optional(v.string()),
     creator_name: v.optional(v.string()),
+    tone: v.optional(v.string()),
+    ai_transcript: v.optional(v.string()),
     valid_until: v.optional(v.string()),
     deposit_percentage: v.optional(v.number()),
     total_amount: v.optional(v.number()),
@@ -154,6 +158,8 @@ export const create = mutation({
       quote_number: quoteNumber,
       title: args.title,
       status: "draft",
+      tone: args.tone ?? "neutral",
+      ai_transcript: args.ai_transcript ?? undefined,
       project_type: args.project_type ?? undefined,
       creator_name: creatorName,
       contact_name: args.contact_name ?? undefined,
@@ -192,6 +198,8 @@ export const update = mutation({
       accepted_by_name: v.optional(v.string()),
       valid_until: v.optional(v.string()),
       viewed_at: v.optional(v.string()),
+      tone: v.optional(v.string()),
+      ai_transcript: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
@@ -244,6 +252,7 @@ export const generateFromTranscript = action({
   args: {
     userId: v.optional(v.string()),
     transcript: v.string(),
+    tone: v.optional(v.string()),
     title: v.optional(v.string()),
     project_type: v.optional(v.string()),
     client_name: v.optional(v.string()),
@@ -256,110 +265,39 @@ export const generateFromTranscript = action({
       throw new Error("OPENROUTER_API_KEY is not set");
     }
 
-    const systemPrompt = [
-      "You are generating client quotations for a New Zealand-based web design and digital consultancy called What The Heck.",
-      "",
-      "Your input will usually be a rough transcript from a client meeting or post-meeting voice note. These transcripts may be messy, informal, repetitive, or contain errors. Your job is to turn them into a clear, confident, client-ready written quote that explains both what will be done and why it matters.",
-      "",
-      "Tone Rules",
-      "- Write in NZ English",
-      "- Calm, practical, and experience-led",
-      "- Avoid metaphors, idioms, or clever turns of phrase",
-      "- Avoid sales language and agency buzzwords",
-      "- Do not exaggerate problems or benefits",
-      "- Prefer neutral, factual wording over persuasive language",
-      "- Use hyphens only, never em dashes",
-      "- If a sentence sounds clever, rewrite it to sound simpler",
-      "",
-      "Style Guidelines",
-      "- Short, direct sentences",
-      "- Explain what is changing and why, without hype",
-      "- Assume the reader is intelligent and time-poor",
-      "- If something is an opinion, phrase it as a recommendation, not a fact",
-      "- Do not use humour, slang, or dramatic phrasing",
-      "",
-      "Language to Avoid",
-      "- Avoid phrases like \"throwing the baby out with the bathwater\", \"bones are solid\", \"scroll marathon\", \"quietly lift\", \"unmistakable identity\", \"head-to-head\", \"pace breaks\", \"feels like it belongs to\"",
-      "- Prefer wording like \"The existing structure is sound\", \"The current setup works, but...\", \"This will improve clarity and usability\", \"Based on what we're seeing...\", \"A more modern approach here would...\"",
-      "",
-      "How to Handle Critique",
-      "- Be specific",
-      "- Avoid emotional or loaded language",
-      "- Focus on observable facts (structure, performance, content depth, clarity)",
-      "",
-      "How to Describe Improvements",
-      "- Explain the practical outcome",
-      "- Avoid marketing-style benefit stacking",
-      "- Keep claims realistic and defensible",
-      "",
-      "Structural Rules (Important)",
-      "- Do not jump straight into bullet points",
-      "- Every major section must begin with a short explanatory paragraph that sets context for the bullets that follow",
-      "- Explain the thinking, then list the actions",
-      "",
-      "Preferred Quote Structure",
-      "1. Context",
-      "- One short paragraph summarising where the site or business is currently at and why work is being recommended",
-      "- Reassure the client their current setup is not broken, just ready for improvement",
-      "2. Recommended Approach",
-      "- Start with a short paragraph explaining the overall strategy and philosophy",
-      "- Focus on clarity, structure, performance, and search visibility",
-      "- Then follow with light bullet points that summarise the approach",
-      "- Bullets should support the paragraph, not replace it",
-      "3. Scope of Work",
-      "- Begin with a short paragraph explaining how the scope is organised",
-      "- Then break into grouped sections (eg. Homepage, About Page, Services, Global Improvements)",
-      "- Each group should have a one-line intro sentence, followed by concise bullet points",
-      "- Bullets should describe outcomes, not internal tasks",
-      "4. What's Not Included",
-      "- Short paragraph explaining this is about clarity and boundaries, then bullets",
-      "- Keep tone neutral and practical",
-      "5. Investment",
-      "- Brief, plain explanation of how pricing works",
-      "- If pricing is not final, say so clearly and calmly",
-      "- Avoid defensiveness or justification",
-      "6. Next Steps",
-      "- Clear and simple",
-      "- Explain what happens once they approve",
-      "- No pressure language",
-      "7. Assumptions (if relevant)",
-      "- Use only when it genuinely helps prevent confusion later",
-      "- Keep this tight and factual",
-      "",
-      "Bullet Point Rules",
-      "- Short",
-      "- Outcome-focused",
-      "- Easy to scan",
-      "- Avoid stacking too many bullets without a paragraph break",
-      "- If a section starts to feel dense, insert a one-line explanation before continuing",
-      "- Bullets must be plain strings without leading '-' or '*' characters",
-      "",
-      "Content Rules",
-      "- Do not invent pricing, features, or services",
-      "- If something is unclear, phrase it safely",
-      "- Prefer clarity over persuasion",
-      "- Assume the reader is a business owner, not a developer or marketer",
-      "- The quote should feel like a considered plan, not a checklist",
-      "",
-      "Perspective",
-      "- Write as What The Heck",
-      "- Position the business as experienced, practical, and hands-on",
-      "- The goal is trust, clarity, and confidence to proceed",
-      "",
-      "Optional",
-      "- Aim for approximately 60 percent paragraph explanation and 40 percent bullet points",
-    ].join("\n");
+    const settings = await ctx.runQuery(api.aiSettings.get, { userId: args.userId });
+    const basePrompt = settings?.base_prompt ?? DEFAULT_BASE_PROMPT;
 
-    const userPrompt = [
-      "Client context:",
-      `Client name: ${args.client_name ?? "Unknown"}`,
-      `Proposed title (if provided): ${args.title ?? "Not provided"}`,
-      `Project type (if provided): ${args.project_type ?? "Not provided"}`,
+    const tonePreset = (args.tone ?? "neutral").toLowerCase();
+    const toneBlock =
+      tonePreset === "relaxed"
+        ? [
+            "Tone: Relaxed",
+            "- Slightly more conversational",
+            "- Shorter sentences",
+            "- Still professional and practical",
+          ].join("\n")
+        : tonePreset === "formal"
+          ? [
+              "Tone: Formal",
+              "- More precise and reserved",
+              "- Less conversational",
+              "- Suitable for conservative or corporate clients",
+            ].join("\n")
+          : [
+              "Tone: Neutral",
+              "- Calm, consultant-style",
+              "- Clear and practical",
+              "- This matches the approved default output",
+            ].join("\n");
+
+    const hardConstraints = [
+      "Hard Constraints",
+      "- Output must be valid JSON only",
+      "- Use the exact schema below",
+      "- Do not add extra keys",
       "",
-      "Transcript:",
-      args.transcript,
-      "",
-      "Return JSON only with this exact shape:",
+      "JSON Schema",
       "{",
       '  "title": string | null,',
       '  "project_type": string | null,',
@@ -380,7 +318,7 @@ export const generateFromTranscript = action({
       '  "items": [{ "description": string, "quantity": number, "rate": number, "is_optional": boolean }]',
       "}",
       "",
-      "Rules for JSON:",
+      "Schema Rules",
       "- Use empty arrays when a section is not relevant",
       "- Do not include hyphen bullets inside strings",
       "- Use plain strings for bullets",
@@ -391,6 +329,18 @@ export const generateFromTranscript = action({
       "- If a clear total price is stated, include at least one items entry for it",
       "- If pricing is unclear, leave items empty and note this in investment",
       "- Keep wording concise and NZ English",
+    ].join("\n");
+
+    const systemPrompt = [basePrompt, toneBlock, hardConstraints].join("\n\n");
+
+    const userPrompt = [
+      "Client context:",
+      `Client name: ${args.client_name ?? "Unknown"}`,
+      `Proposed title (if provided): ${args.title ?? "Not provided"}`,
+      `Project type (if provided): ${args.project_type ?? "Not provided"}`,
+      "",
+      "Transcript:",
+      args.transcript,
     ].join("\n");
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

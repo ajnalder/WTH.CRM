@@ -79,6 +79,14 @@ export default defineSchema({
     updated_at: v.string(),
   }).index("by_user", ["user_id"]),
 
+  ai_settings: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    base_prompt: v.string(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_user", ["user_id"]),
+
   contacts: defineTable({
     id: v.string(),
     client_id: v.string(),
@@ -375,6 +383,8 @@ export default defineSchema({
     quote_number: v.string(),
     title: v.string(),
     status: v.string(),
+    tone: v.optional(v.string()),
+    ai_transcript: v.optional(v.string()),
     project_type: v.optional(v.string()),
     creator_name: v.optional(v.string()),
     contact_name: v.optional(v.string()),

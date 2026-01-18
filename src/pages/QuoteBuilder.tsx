@@ -63,6 +63,7 @@ export default function QuoteBuilder() {
     contact_name: '',
     contact_email: '',
     cover_image_url: '',
+    tone: 'neutral',
   });
   const [nextQuoteNumber, setNextQuoteNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -90,8 +91,10 @@ export default function QuoteBuilder() {
         contact_name: existingQuote.contact_name || '',
         contact_email: existingQuote.contact_email || '',
         cover_image_url: existingQuote.cover_image_url || '',
+        tone: existingQuote.tone || 'neutral',
       });
       setNextQuoteNumber(existingQuote.quote_number);
+      setTranscript(existingQuote.ai_transcript || '');
     }
   }, [existingQuote]);
 
@@ -141,6 +144,8 @@ export default function QuoteBuilder() {
         total_amount: 0,
         contact_name: quoteData.contact_name || undefined,
         contact_email: quoteData.contact_email || undefined,
+        tone: quoteData.tone,
+        ai_transcript: transcript.trim() || undefined,
       });
       if (generatedDraft) {
         await applyGeneratedDraft(newQuote.id, generatedDraft);
@@ -280,6 +285,11 @@ export default function QuoteBuilder() {
     }
   };
 
+  const clearQuoteContent = async () => {
+    await Promise.all(blocks.map((block) => deleteBlock(block.id)));
+    await Promise.all(items.map((item) => deleteItem(item.id)));
+  };
+
   const handleGenerateFromTranscript = async () => {
     if (!transcript.trim()) {
       toast({ title: 'Error', description: 'Paste the transcript first', variant: 'destructive' });
@@ -294,6 +304,7 @@ export default function QuoteBuilder() {
       const draft = await generateFromTranscript({
         userId: user?.id,
         transcript,
+        tone: quoteData.tone,
         title: quoteData.title || undefined,
         project_type: quoteData.project_type || undefined,
         client_name: selectedClient?.company || undefined,
@@ -318,12 +329,22 @@ export default function QuoteBuilder() {
           total_amount: 0,
           contact_name: quoteData.contact_name || undefined,
           contact_email: quoteData.contact_email || undefined,
+          tone: quoteData.tone,
+          ai_transcript: transcript.trim() || undefined,
         });
         await applyGeneratedDraft(newQuote.id, draft as GeneratedQuoteDraft);
         navigate(`/quotes/${newQuote.id}`, { replace: true });
         return;
       }
 
+      await updateQuote({
+        id,
+        updates: {
+          tone: quoteData.tone,
+          ai_transcript: transcript.trim() || undefined,
+        },
+      });
+      await clearQuoteContent();
       await applyGeneratedDraft(id, draft as GeneratedQuoteDraft);
       toast({ title: 'Draft applied', description: 'Draft sections have been added to the quote.' });
     } catch (error) {
@@ -481,31 +502,52 @@ export default function QuoteBuilder() {
                 onChange={(e) => setQuoteData({ ...quoteData, deposit_percentage: parseInt(e.target.value) || 50 })}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Quote Tone</Label>
+              <Select
+                value={quoteData.tone}
+                onValueChange={(value) => {
+                  setQuoteData({ ...quoteData, tone: value });
+                  if (id) {
+                    updateQuote({ id, updates: { tone: value } });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relaxed">Relaxed</SelectItem>
+                  <SelectItem value="neutral">Neutral</SelectItem>
+                  <SelectItem value="formal">Formal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {!id && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Transcript</Label>
-                <Textarea
-                  value={transcript}
-                  onChange={(e) => setTranscript(e.target.value)}
-                  placeholder="Paste your meeting transcript or voice note here..."
-                  className="min-h-[140px]"
-                />
-                <p className="text-xs text-muted-foreground">
-                  We will draft sections and line items from this transcript. Edit anything before sending.
-                </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Transcript</Label>
+              <Textarea
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+                placeholder="Paste your meeting transcript or voice note here..."
+                className="min-h-[140px]"
+              />
+              <p className="text-xs text-muted-foreground">
+                We will draft sections and line items from this transcript. Edit anything before sending.
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   onClick={handleGenerateFromTranscript}
                   disabled={isGenerating}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  {isGenerating ? 'Generating...' : 'Convert to Quote'}
+                  {isGenerating ? 'Generating...' : id ? 'Regenerate Quote' : 'Convert to Quote'}
                 </Button>
               </div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 

@@ -5,6 +5,8 @@ export interface Quote {
   quote_number: string;
   title: string;
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
+  tone?: 'relaxed' | 'neutral' | 'formal' | string;
+  ai_transcript?: string;
   valid_until?: string;
   total_amount: number;
   deposit_percentage: number;

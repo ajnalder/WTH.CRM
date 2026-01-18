@@ -48,6 +48,8 @@ export const useQuotes = () => {
     total_amount?: number;
     contact_name?: string;
     contact_email?: string;
+    tone?: string;
+    ai_transcript?: string;
   }) => {
     if (!user) throw new Error('Not authenticated');
 
@@ -59,6 +61,8 @@ export const useQuotes = () => {
         title: quoteData.title,
         project_type: quoteData.project_type,
         creator_name: user.fullName ?? undefined,
+        tone: quoteData.tone,
+        ai_transcript: quoteData.ai_transcript,
         valid_until: quoteData.valid_until,
         deposit_percentage: quoteData.deposit_percentage,
         total_amount: quoteData.total_amount,

@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CompanySettingsWithStorage } from '@/components/CompanySettingsWithStorage';
 import { TeamManagement } from '@/components/TeamManagement';
 import { XeroIntegrationCard } from '@/components/invoices/XeroIntegrationCard';
+import { AiPromptSettings } from '@/components/settings/AiPromptSettings';
 
 const Settings = () => {
   return (
@@ -16,6 +16,7 @@ const Settings = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           <CompanySettingsWithStorage />
+          <AiPromptSettings />
           <XeroIntegrationCard />
         </div>
 
