@@ -38,7 +38,7 @@ export const sendQuoteNotification = mutation({
     }
 
     if (!toEmail) {
-      throw new Error("Missing recipient email for quote notification");
+      return { success: false, skipped: true, reason: "Missing recipient email" };
     }
 
     const { subject, html } = buildContent(args.action, {
