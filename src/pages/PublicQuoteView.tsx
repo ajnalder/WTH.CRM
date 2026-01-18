@@ -13,7 +13,7 @@ import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useCompanyLogo } from '@/hooks/useCompanyLogo';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { format } from 'date-fns';
-import { useMutation } from 'convex/react';
+import { useAction, useMutation } from 'convex/react';
 import { api } from '@/integrations/convex/api';
 
 export default function PublicQuoteView() {
@@ -24,8 +24,8 @@ export default function PublicQuoteView() {
   const { logEvent } = useQuoteEvents();
   const { settings } = useCompanySettings(quote?.user_id);
   const { logo, logoInverse } = useCompanyLogo(quote?.user_id);
-  const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
-  const updateQuoteMutation = useMutation(api.quotes.update);
+  const sendQuoteNotification = useAction(api.quoteNotifications.sendQuoteNotification);
+  const updateQuoteMutation = useMutation(api.quotes.updatePublicByToken);
 
   const [clientName, setClientName] = useState('');
   const [isAccepting, setIsAccepting] = useState(false);
@@ -40,7 +40,7 @@ export default function PublicQuoteView() {
       // Update viewed_at if not already set
       if (!quote.viewed_at) {
         updateQuoteMutation({
-          id: quote.id,
+          token,
           updates: {
             viewed_at: new Date().toISOString(),
             status: 'viewed',
@@ -51,6 +51,8 @@ export default function PublicQuoteView() {
             sendQuoteNotification({
               userId: quote.user_id,
               quoteId: quote.id,
+              quoteToken: quote.public_token,
+              publicUrl: window.location.origin,
               quoteNumber: quote.quote_number,
               clientName: quote.clients?.company || 'Client',
               totalAmount: quote.total_amount,
@@ -70,7 +72,7 @@ export default function PublicQuoteView() {
       await logEvent({ quote_id: quote.id, event_type: 'accepted' });
 
       await updateQuoteMutation({
-        id: quote.id,
+        token: quote.public_token,
         updates: {
           status: 'accepted',
           accepted_at: new Date().toISOString(),
@@ -82,6 +84,8 @@ export default function PublicQuoteView() {
       await sendQuoteNotification({
         userId: quote.user_id,
         quoteId: quote.id,
+        quoteToken: quote.public_token,
+        publicUrl: window.location.origin,
         quoteNumber: quote.quote_number,
         clientName: quote.clients?.company || 'Client',
         totalAmount: quote.total_amount,

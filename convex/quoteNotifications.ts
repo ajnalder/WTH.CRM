@@ -1,14 +1,16 @@
-import { mutation } from "./_generated/server";
+import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
 
 type QuoteAction = "sent" | "viewed" | "accepted";
 
-export const sendQuoteNotification = mutation({
+export const sendQuoteNotification = action({
   args: {
     userId: v.optional(v.string()),
     toEmail: v.optional(v.string()),
     quoteId: v.string(),
+    quoteToken: v.optional(v.string()),
+    publicUrl: v.optional(v.string()),
     quoteNumber: v.string(),
     clientName: v.string(),
     totalAmount: v.number(),
@@ -41,11 +43,17 @@ export const sendQuoteNotification = mutation({
       return { success: false, skipped: true, reason: "Missing recipient email" };
     }
 
+    const quoteLink =
+      args.publicUrl && args.quoteToken
+        ? `${args.publicUrl.replace(/\\/$/, "")}/quote/view/${args.quoteToken}`
+        : null;
+
     const { subject, html } = buildContent(args.action, {
       clientName: args.clientName,
       quoteNumber: args.quoteNumber,
       totalAmount: args.totalAmount,
       acceptedByName: args.accepted_by_name,
+      quoteLink,
     });
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -74,9 +82,12 @@ export const sendQuoteNotification = mutation({
 
 function buildContent(
   action: QuoteAction,
-  opts: { clientName: string; quoteNumber: string; totalAmount: number; acceptedByName?: string },
+  opts: { clientName: string; quoteNumber: string; totalAmount: number; acceptedByName?: string; quoteLink?: string | null },
 ) {
   const formatter = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2 })} NZD`;
+  const linkHtml = opts.quoteLink
+    ? `<p><a href="${opts.quoteLink}">View quote</a></p>`
+    : "";
 
   if (action === "sent") {
     return {
@@ -85,6 +96,7 @@ function buildContent(
         <h2>Quote Sent</h2>
         <p>Your quote <strong>${opts.quoteNumber}</strong> has been sent to <strong>${opts.clientName}</strong>.</p>
         <p><strong>Total:</strong> ${formatter(opts.totalAmount)}</p>
+        ${linkHtml}
       `,
     };
   }
@@ -96,6 +108,7 @@ function buildContent(
         <h2>Quote Viewed</h2>
         <p><strong>${opts.clientName}</strong> viewed quote <strong>${opts.quoteNumber}</strong>.</p>
         <p><strong>Total:</strong> ${formatter(opts.totalAmount)}</p>
+        ${linkHtml}
       `,
     };
   }
@@ -107,6 +120,7 @@ function buildContent(
       <p><strong>${opts.clientName}</strong> accepted quote <strong>${opts.quoteNumber}</strong>.</p>
       <p><strong>Signed by:</strong> ${opts.acceptedByName || "Unknown"}</p>
       <p><strong>Total:</strong> ${formatter(opts.totalAmount)}</p>
+      ${linkHtml}
     `,
   };
 }

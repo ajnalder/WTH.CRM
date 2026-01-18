@@ -51,7 +51,7 @@ export default function QuoteBuilder() {
   const { blocks, addBlock, updateBlock, deleteBlock, reorderBlocks } = useQuoteBlocks(id);
   const { items, addItem, updateItem, deleteItem, total } = useQuoteItems(id);
   const { user } = useAuth();
-  const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
+  const sendQuoteNotification = useAction(api.quoteNotifications.sendQuoteNotification);
   const generateFromTranscript = useAction(api.quotes.generateFromTranscript);
 
   const [quoteData, setQuoteData] = useState({
@@ -189,8 +189,10 @@ export default function QuoteBuilder() {
       
       await sendQuoteNotification({
         userId: user?.id,
-        toEmail: user?.email || undefined,
+        toEmail: quoteData.contact_email || undefined,
         quoteId: id,
+        quoteToken: existingQuote.public_token,
+        publicUrl: window.location.origin,
         quoteNumber: existingQuote.quote_number,
         clientName: selectedClient?.company || 'Client',
         totalAmount: total,

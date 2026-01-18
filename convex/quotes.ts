@@ -189,6 +189,7 @@ export const update = mutation({
       title: v.optional(v.string()),
       project_type: v.optional(v.string()),
       status: v.optional(v.string()),
+      client_id: v.optional(v.string()),
       contact_name: v.optional(v.string()),
       contact_email: v.optional(v.string()),
       cover_image_url: v.optional(v.string()),
@@ -223,6 +224,32 @@ export const update = mutation({
       updated_at: nowIso(),
     };
 
+    await ctx.db.replace(quote._id, updated);
+    return updated;
+  },
+});
+
+export const updatePublicByToken = mutation({
+  args: {
+    token: v.string(),
+    updates: v.object({
+      status: v.optional(v.string()),
+      viewed_at: v.optional(v.string()),
+      accepted_at: v.optional(v.string()),
+      accepted_by_name: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const quote = await ctx.db
+      .query("quotes")
+      .withIndex("by_token", (q) => q.eq("public_token", args.token))
+      .unique();
+
+    if (!quote) {
+      throw new Error("Quote not found");
+    }
+
+    const updated = { ...quote, ...args.updates, updated_at: nowIso() };
     await ctx.db.replace(quote._id, updated);
     return updated;
   },
