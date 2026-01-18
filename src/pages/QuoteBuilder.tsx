@@ -291,7 +291,8 @@ export default function QuoteBuilder() {
   };
 
   const handleGenerateFromTranscript = async () => {
-    if (!transcript.trim()) {
+    const resolvedTranscript = transcript.trim() || existingQuote?.ai_transcript || '';
+    if (!resolvedTranscript) {
       toast({ title: 'Error', description: 'Paste the transcript first', variant: 'destructive' });
       return;
     }
@@ -303,7 +304,7 @@ export default function QuoteBuilder() {
     try {
       const draft = await generateFromTranscript({
         userId: user?.id,
-        transcript,
+        transcript: resolvedTranscript,
         tone: quoteData.tone,
         title: quoteData.title || undefined,
         project_type: quoteData.project_type || undefined,
@@ -330,7 +331,7 @@ export default function QuoteBuilder() {
           contact_name: quoteData.contact_name || undefined,
           contact_email: quoteData.contact_email || undefined,
           tone: quoteData.tone,
-          ai_transcript: transcript.trim() || undefined,
+          ai_transcript: resolvedTranscript,
         });
         await applyGeneratedDraft(newQuote.id, draft as GeneratedQuoteDraft);
         navigate(`/quotes/${newQuote.id}`, { replace: true });
@@ -341,7 +342,7 @@ export default function QuoteBuilder() {
         id,
         updates: {
           tone: quoteData.tone,
-          ai_transcript: transcript.trim() || undefined,
+          ai_transcript: resolvedTranscript,
         },
       });
       await clearQuoteContent();
