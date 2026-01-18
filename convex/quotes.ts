@@ -388,6 +388,7 @@ export const generateFromTranscript = action({
       "- Each section must start with at least one paragraph before any bullets",
       "- For Scope of Work, use multiple bullet_groups with headings like Homepage, About Page, Services, Global Improvements, etc.",
       "- Only include pricing in items/investment if it appears in the transcript",
+      "- If a clear total price is stated, include at least one items entry for it",
       "- If pricing is unclear, leave items empty and note this in investment",
       "- Keep wording concise and NZ English",
     ].join("\n");
@@ -496,11 +497,37 @@ export const generateFromTranscript = action({
 
     const resolvedSections = sections.length > 0 ? sections : legacySections;
 
+    const extractPrice = (text: string) => {
+      const matches = Array.from(text.matchAll(/(?:NZD|\\$)\\s?([\\d,]+(?:\\.\\d{1,2})?)/gi));
+      if (matches.length === 0) return null;
+      const values = matches
+        .map((match) => Number(match[1].replace(/,/g, "")))
+        .filter((value) => Number.isFinite(value) && value > 0);
+      if (values.length === 0) return null;
+      return Math.max(...values);
+    };
+
+    const enforcedItems =
+      items.length > 0
+        ? items
+        : (() => {
+            const detected = extractPrice(args.transcript);
+            if (!detected) return items;
+            return [
+              {
+                description: "Project fee",
+                quantity: 1,
+                rate: detected,
+                is_optional: false,
+              },
+            ];
+          })();
+
     return {
       title: typeof parsed.title === "string" ? parsed.title : null,
       project_type: typeof parsed.project_type === "string" ? parsed.project_type : null,
       sections: resolvedSections,
-      items,
+      items: enforcedItems,
     };
   },
 });
