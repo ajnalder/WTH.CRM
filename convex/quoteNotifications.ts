@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
+import { api } from "./_generated/api";
 
 type QuoteAction = "sent" | "viewed" | "accepted";
 
@@ -30,10 +31,7 @@ export const sendQuoteNotification = action({
     // Resolve recipient email: prefer provided, otherwise try profile
     let toEmail = args.toEmail;
     if (!toEmail && userId) {
-      const profile = await ctx.db
-        .query("profiles")
-        .filter((q: any) => q.eq(q.field("id"), userId))
-        .first();
+      const profile = await ctx.runQuery(api.profiles.getById, { id: userId, userId });
       if (profile?.email) {
         toEmail = profile.email;
       }
