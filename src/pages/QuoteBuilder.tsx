@@ -25,13 +25,16 @@ import { api } from '@/integrations/convex/api';
 type GeneratedQuoteDraft = {
   title: string | null;
   project_type: string | null;
-  intro: string[];
-  approach: string[];
-  scope: string[];
-  not_included: string[];
-  investment: string[];
-  next_steps: string[];
-  assumptions: string[];
+  sections: Array<{
+    id: string;
+    title: string;
+    paragraphs: string[];
+    bullet_groups: Array<{
+      heading: string | null;
+      paragraph: string | null;
+      bullets: string[];
+    }>;
+  }>;
   items: Array<{ description: string; quantity: number; rate: number; is_optional: boolean }>;
 };
 
@@ -211,76 +214,29 @@ export default function QuoteBuilder() {
 
   const formatInline = (value: string) => escapeHtml(value);
 
-  const isHeadingToken = (value: string) => {
-    const trimmed = value.trim();
-    if (/^(heading|section|group):/i.test(trimmed)) return true;
-    if (/[.!?]/.test(trimmed)) return false;
-    return trimmed.length > 0 && trimmed.length <= 48;
-  };
-
-  const parseLines = (values: string[], defaultType: 'para' | 'bullet') => {
-    const tokens: Array<{ type: 'para' | 'bullet' | 'heading'; text: string }> = [];
-    values.forEach((entry) => {
-      const lines = entry.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-      lines.forEach((line) => {
-        if (/^[-*•]\s+/.test(line)) {
-          tokens.push({ type: 'bullet', text: line.replace(/^[-*•]\s+/, '').trim() });
-          return;
-        }
-        if (/^para:\s+/i.test(line)) {
-          tokens.push({ type: 'para', text: line.replace(/^para:\s+/i, '').trim() });
-          return;
-        }
-        if (/^(heading|section|group):\s+/i.test(line)) {
-          tokens.push({ type: 'heading', text: line.replace(/^(heading|section|group):\s+/i, '').trim() });
-          return;
-        }
-        if (defaultType === 'bullet' && isHeadingToken(line)) {
-          tokens.push({ type: 'heading', text: line });
-          return;
-        }
-        tokens.push({ type: defaultType, text: line });
-      });
-    });
-    return tokens;
-  };
-
-  const buildSectionHtml = (paragraphs: string[], bullets: string[]) => {
-    const tokens = [...parseLines(paragraphs, 'para'), ...parseLines(bullets, 'bullet')];
+  const buildSectionHtml = (section: GeneratedQuoteDraft['sections'][number]) => {
     const parts: string[] = [];
-    const bulletBuffer: string[] = [];
-    const flushBullets = () => {
-      if (bulletBuffer.length === 0) return;
-      parts.push(`<ul>${bulletBuffer.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`);
-      bulletBuffer.length = 0;
-    };
-
-    tokens.forEach((token) => {
-      if (token.type === 'bullet') {
-        bulletBuffer.push(token.text);
-        return;
-      }
-      flushBullets();
-      if (token.type === 'heading') {
-        parts.push(`<p><strong>${formatInline(token.text)}</strong></p>`);
-        return;
-      }
-      parts.push(`<p>${formatInline(token.text)}</p>`);
+    section.paragraphs.forEach((text) => {
+      parts.push(`<p>${formatInline(text)}</p>`);
     });
-    flushBullets();
+    section.bullet_groups.forEach((group) => {
+      if (group.heading) {
+        parts.push(`<p><strong>${formatInline(group.heading)}</strong></p>`);
+      }
+      if (group.paragraph) {
+        parts.push(`<p>${formatInline(group.paragraph)}</p>`);
+      }
+      if (group.bullets.length > 0) {
+        parts.push(`<ul>${group.bullets.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`);
+      }
+    });
     return parts.join('');
   };
 
   const applyGeneratedDraft = async (quoteId: string, draft: GeneratedQuoteDraft) => {
-    const sections = [
-      { title: 'Context', paragraphs: draft.intro, bullets: [] },
-      { title: 'Recommended Approach', paragraphs: draft.approach, bullets: [] },
-      { title: 'Scope of Work', paragraphs: [], bullets: draft.scope },
-      { title: "What's Not Included", paragraphs: [], bullets: draft.not_included },
-      { title: 'Investment', paragraphs: draft.investment, bullets: [] },
-      { title: 'Next Steps', paragraphs: [], bullets: draft.next_steps },
-      { title: 'Assumptions', paragraphs: [], bullets: draft.assumptions },
-    ].filter((section) => section.paragraphs.length > 0 || section.bullets.length > 0);
+    const sections = draft.sections.filter(
+      (section) => section.paragraphs.length > 0 || section.bullet_groups.length > 0
+    );
 
     for (let index = 0; index < sections.length; index += 1) {
       const section = sections[index];
@@ -289,7 +245,7 @@ export default function QuoteBuilder() {
         block_type: 'text',
         order_index: index,
         title: section.title,
-        content: buildSectionHtml(section.paragraphs, section.bullets),
+        content: buildSectionHtml(section),
       });
     }
 

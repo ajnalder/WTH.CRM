@@ -303,10 +303,7 @@ export const generateFromTranscript = action({
       "- Easy to scan",
       "- Avoid stacking too many bullets without a paragraph break",
       "- If a section starts to feel dense, insert a one-line explanation before continuing",
-      "- Do not use hyphen-prefixed lines inside paragraph strings",
       "- Bullets must be plain strings without leading '-' or '*' characters",
-      "- If you need subsection headings, use entries that start with \"HEADING:\" and follow with bullet items",
-      "- If you need an extra paragraph inside a section, use entries that start with \"PARA:\"",
       "",
       "Content Rules",
       "- Do not invent pricing, features, or services",
@@ -337,13 +334,20 @@ export const generateFromTranscript = action({
       "{",
       '  "title": string | null,',
       '  "project_type": string | null,',
-      '  "intro": string[],',
-      '  "approach": string[],',
-      '  "scope": string[],',
-      '  "not_included": string[],',
-      '  "investment": string[],',
-      '  "next_steps": string[],',
-      '  "assumptions": string[],',
+      '  "sections": [',
+      "    {",
+      '      "id": string,',
+      '      "title": string,',
+      '      "paragraphs": string[],',
+      '      "bullet_groups": [',
+      "        {",
+      '          "heading": string | null,',
+      '          "paragraph": string | null,',
+      '          "bullets": string[]',
+      "        }",
+      "      ]",
+      "    }",
+      "  ],",
       '  "items": [{ "description": string, "quantity": number, "rate": number, "is_optional": boolean }]',
       "}",
       "",
@@ -351,8 +355,9 @@ export const generateFromTranscript = action({
       "- Use empty arrays when a section is not relevant",
       "- Do not include hyphen bullets inside strings",
       "- Use plain strings for bullets",
-      "- Use \"HEADING:\" entries for subgroup headings (e.g., \"HEADING: Homepage\")",
-      "- Use \"PARA:\" entries for extra explanatory paragraphs inside a section",
+      "- Section order must be: Context, Recommended Approach, Scope of Work, What's Not Included, Investment, Next Steps, Assumptions (omit sections that are not relevant)",
+      "- Each section must start with at least one paragraph before any bullets",
+      "- For Scope of Work, use multiple bullet_groups with headings like Homepage, About Page, Services, Global Improvements, etc.",
       "- Only include pricing in items/investment if it appears in the transcript",
       "- If pricing is unclear, leave items empty and note this in investment",
       "- Keep wording concise and NZ English",
@@ -388,16 +393,6 @@ export const generateFromTranscript = action({
     }
 
     const parsed = JSON.parse(content.slice(start, end + 1));
-    const asArray = (value: unknown) => {
-      if (Array.isArray(value)) {
-        return value.filter((item) => typeof item === "string");
-      }
-      if (typeof value === "string" && value.trim().length > 0) {
-        return [value.trim()];
-      }
-      return [];
-    };
-
     const items = Array.isArray(parsed.items)
       ? parsed.items
           .map((item: any) => ({
@@ -409,16 +404,38 @@ export const generateFromTranscript = action({
           .filter((item: any) => item.description && typeof item.rate === "number")
       : [];
 
+    const sections = Array.isArray(parsed.sections)
+      ? parsed.sections
+          .map((section: any) => {
+            const paragraphs = Array.isArray(section.paragraphs)
+              ? section.paragraphs.filter((entry: any) => typeof entry === "string" && entry.trim().length > 0)
+              : [];
+            const bulletGroups = Array.isArray(section.bullet_groups)
+              ? section.bullet_groups
+                  .map((group: any) => ({
+                    heading: typeof group.heading === "string" ? group.heading : null,
+                    paragraph: typeof group.paragraph === "string" ? group.paragraph : null,
+                    bullets: Array.isArray(group.bullets)
+                      ? group.bullets.filter((entry: any) => typeof entry === "string" && entry.trim().length > 0)
+                      : [],
+                  }))
+                  .filter((group: any) => group.paragraph || group.heading || group.bullets.length > 0)
+              : [];
+
+            return {
+              id: typeof section.id === "string" ? section.id : "",
+              title: typeof section.title === "string" ? section.title : "",
+              paragraphs,
+              bullet_groups: bulletGroups,
+            };
+          })
+          .filter((section: any) => section.title || section.paragraphs.length > 0 || section.bullet_groups.length > 0)
+      : [];
+
     return {
       title: typeof parsed.title === "string" ? parsed.title : null,
       project_type: typeof parsed.project_type === "string" ? parsed.project_type : null,
-      intro: asArray(parsed.intro),
-      approach: asArray(parsed.approach),
-      scope: asArray(parsed.scope),
-      not_included: asArray(parsed.not_included),
-      investment: asArray(parsed.investment),
-      next_steps: asArray(parsed.next_steps),
-      assumptions: asArray(parsed.assumptions),
+      sections,
       items,
     };
   },
