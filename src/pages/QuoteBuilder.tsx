@@ -13,6 +13,7 @@ import { useQuoteItems } from '@/hooks/useQuoteItems';
 import { useClients } from '@/hooks/useClients';
 import { usePrimaryContact } from '@/hooks/usePrimaryContact';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useCompanyLogo } from '@/hooks/useCompanyLogo';
 import { QuoteBlockEditor } from '@/components/quotes/QuoteBlockEditor';
 import { QuotePricingTable } from '@/components/quotes/QuotePricingTable';
 import { QuickClientDialog } from '@/components/quotes/QuickClientDialog';
@@ -44,6 +45,7 @@ export default function QuoteBuilder() {
   const { toast } = useToast();
   const { clients } = useClients();
   const { settings } = useCompanySettings();
+  const { logo, logoInverse } = useCompanyLogo();
   const { createQuote, updateQuote, generateNextQuoteNumber } = useQuotes();
   const { data: existingQuote, isLoading: quoteLoading } = useQuote(id);
   const { blocks, addBlock, updateBlock, deleteBlock, reorderBlocks } = useQuoteBlocks(id);
@@ -383,20 +385,20 @@ export default function QuoteBuilder() {
 
       {/* Quote Header Preview (only show when we have a client) */}
       {id && selectedClient && (
-        <QuoteHeader
-          clientName={selectedClient.company}
-          contactName={quoteData.contact_name}
-          title={quoteData.title}
-          projectType={quoteData.project_type}
-          creatorName={existingQuote?.creator_name}
-          creatorEmail={settings?.owner_name ? undefined : undefined}
-          coverImageUrl={quoteData.cover_image_url}
-          logoBase64={settings?.logo_base64}
-          logoInverseBase64={settings?.logo_inverse_base64}
-          companyName={settings?.company_name}
-          onCoverImageChange={handleCoverImageChange}
-          editable={true}
-        />
+          <QuoteHeader
+            clientName={selectedClient.company}
+            contactName={quoteData.contact_name}
+            title={quoteData.title}
+            projectType={quoteData.project_type}
+            creatorName={existingQuote?.creator_name || user?.fullName || settings?.owner_name}
+            creatorEmail={settings?.owner_name ? undefined : undefined}
+            coverImageUrl={quoteData.cover_image_url}
+            logoBase64={logo}
+            logoInverseBase64={logoInverse}
+            companyName={settings?.company_name}
+            onCoverImageChange={handleCoverImageChange}
+            editable={true}
+          />
       )}
 
       {/* Quote Details */}

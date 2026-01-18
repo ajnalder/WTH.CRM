@@ -10,6 +10,7 @@ import { useQuoteBlocks } from '@/hooks/useQuoteBlocks';
 import { useQuoteItems } from '@/hooks/useQuoteItems';
 import { useQuoteEvents } from '@/hooks/useQuoteEvents';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useCompanyLogo } from '@/hooks/useCompanyLogo';
 import { QuoteHeader } from '@/components/quotes/QuoteHeader';
 import { format } from 'date-fns';
 import { useMutation } from 'convex/react';
@@ -22,6 +23,7 @@ export default function PublicQuoteView() {
   const { items, total } = useQuoteItems(quote?.id);
   const { logEvent } = useQuoteEvents();
   const { settings } = useCompanySettings(quote?.user_id);
+  const { logo, logoInverse } = useCompanyLogo(quote?.user_id);
   const sendQuoteNotification = useMutation(api.quoteNotifications.sendQuoteNotification);
   const updateQuoteMutation = useMutation(api.quotes.update);
 
@@ -165,11 +167,11 @@ export default function PublicQuoteView() {
           contactName={quote.contact_name}
           title={quote.title}
           projectType={quote.project_type}
-          creatorName={quote.creator_name}
+          creatorName={quote.creator_name || settings?.owner_name}
           creatorEmail={quote.contact_email}
           coverImageUrl={quote.cover_image_url}
-          logoBase64={settings?.logo_base64}
-          logoInverseBase64={settings?.logo_inverse_base64}
+          logoBase64={logo}
+          logoInverseBase64={logoInverse}
           companyName={settings?.company_name}
           editable={false}
         />

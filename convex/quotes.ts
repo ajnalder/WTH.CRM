@@ -105,6 +105,7 @@ export const create = mutation({
     client_id: v.string(),
     title: v.string(),
     project_type: v.optional(v.string()),
+    creator_name: v.optional(v.string()),
     valid_until: v.optional(v.string()),
     deposit_percentage: v.optional(v.number()),
     total_amount: v.optional(v.number()),
@@ -119,6 +120,13 @@ export const create = mutation({
       .query("profiles")
       .filter((q) => q.eq(q.field("id"), userId))
       .first();
+    const identity = await ctx.auth.getUserIdentity();
+    const creatorName =
+      args.creator_name ??
+      profile?.full_name ??
+      identity?.name ??
+      identity?.nickname ??
+      undefined;
 
     // Generate next quote number
     const existingQuotes = await ctx.db
@@ -147,7 +155,7 @@ export const create = mutation({
       title: args.title,
       status: "draft",
       project_type: args.project_type ?? undefined,
-      creator_name: profile?.full_name ?? undefined,
+      creator_name: creatorName,
       contact_name: args.contact_name ?? undefined,
       contact_email: args.contact_email ?? undefined,
       cover_image_url: undefined,

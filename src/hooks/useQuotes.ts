@@ -58,6 +58,7 @@ export const useQuotes = () => {
         client_id: quoteData.client_id,
         title: quoteData.title,
         project_type: quoteData.project_type,
+        creator_name: user.fullName ?? undefined,
         valid_until: quoteData.valid_until,
         deposit_percentage: quoteData.deposit_percentage,
         total_amount: quoteData.total_amount,

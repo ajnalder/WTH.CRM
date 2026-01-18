@@ -4,8 +4,8 @@ import { useCompanySettings } from './useCompanySettings';
 /**
  * Hook to get company logo URL - supports both legacy base64 and new storage
  */
-export const useCompanyLogo = () => {
-  const { settings } = useCompanySettings();
+export const useCompanyLogo = (userIdOverride?: string) => {
+  const { settings } = useCompanySettings(userIdOverride);
 
   // Get URLs from storage if available
   const logoUrl = useFileUrl(settings?.logo_storage_id);
