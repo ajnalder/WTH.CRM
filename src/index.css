@@ -103,6 +103,15 @@
   }
 }
 
+.quote-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.quote-content li {
+  margin: 0.25rem 0;
+}
+
 /* Mobile-specific optimizations */
 @layer utilities {
   .touch-manipulation {

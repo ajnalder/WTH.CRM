@@ -227,7 +227,11 @@ export default function QuoteBuilder() {
         parts.push(`<p>${formatInline(group.paragraph)}</p>`);
       }
       if (group.bullets.length > 0) {
-        parts.push(`<ul>${group.bullets.map((text) => `<li>${formatInline(text)}</li>`).join('')}</ul>`);
+        parts.push(
+          `<ul class="list-disc pl-6">${group.bullets
+            .map((text) => `<li>${formatInline(text)}</li>`)
+            .join('')}</ul>`
+        );
       }
     });
     return parts.join('');

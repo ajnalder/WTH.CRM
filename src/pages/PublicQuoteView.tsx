@@ -139,6 +139,7 @@ export default function PublicQuoteView() {
         if (match) {
           if (!listEl) {
             listEl = doc.createElement('ul');
+            listEl.className = 'list-disc pl-6';
           }
           const li = doc.createElement('li');
           li.textContent = match[1];
@@ -194,7 +195,7 @@ export default function PublicQuoteView() {
               {block.title && <h2 className="text-xl font-semibold mb-4">{block.title}</h2>}
               {block.block_type === 'text' && block.content && (
                 <div
-                  className="prose prose-sm max-w-none prose-ul:pl-6 prose-ol:pl-6 prose-ul:list-disc prose-li:marker:text-muted-foreground"
+                  className="quote-content prose prose-sm max-w-none prose-li:marker:text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: normalizeBlockContent(block.content) }}
                 />
               )}
