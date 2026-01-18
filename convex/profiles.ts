@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getUserId, nowIso } from "./_utils";
 
@@ -77,5 +77,20 @@ export const updateTeamMember = mutation({
 
     const _id = await ctx.db.insert("profiles", profile);
     return (await ctx.db.get(_id)) ?? profile;
+  },
+});
+
+export const getById = query({
+  args: { id: v.string(), userId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx, args.userId);
+    if (args.id !== userId) {
+      return null;
+    }
+    const profile = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("id"), args.id))
+      .first();
+    return profile ?? null;
   },
 });
