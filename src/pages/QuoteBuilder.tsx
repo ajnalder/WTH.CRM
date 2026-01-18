@@ -290,8 +290,36 @@ export default function QuoteBuilder() {
     await Promise.all(items.map((item) => deleteItem(item.id)));
   };
 
+  const stripHtml = (value: string) => {
+    if (typeof window === 'undefined') return value;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(value, 'text/html');
+    return doc.body.textContent || '';
+  };
+
+  const buildFallbackTranscript = () => {
+    const sections = blocks
+      .map((block) => {
+        const title = block.title ? `${block.title}\n` : '';
+        const content = block.content ? stripHtml(block.content) : '';
+        const imageLine = block.block_type === 'image' ? 'Image block' : '';
+        return [title, content, imageLine].filter(Boolean).join('\n');
+      })
+      .filter(Boolean);
+
+    const pricing = items.map(
+      (item) =>
+        `Item: ${item.description} | Qty ${item.quantity} | Rate ${item.rate} | Optional ${item.is_optional ? 'yes' : 'no'}`
+    );
+
+    return [...sections, ...pricing].join('\n\n').trim();
+  };
+
   const handleGenerateFromTranscript = async () => {
-    const resolvedTranscript = transcript.trim() || existingQuote?.ai_transcript || '';
+    const storedTranscript = existingQuote?.ai_transcript;
+    const inputTranscript = transcript.trim();
+    const fallbackTranscript = buildFallbackTranscript();
+    const resolvedTranscript = inputTranscript || storedTranscript || fallbackTranscript;
     if (!resolvedTranscript) {
       toast({ title: 'Error', description: 'Paste the transcript first', variant: 'destructive' });
       return;
@@ -331,7 +359,7 @@ export default function QuoteBuilder() {
           contact_name: quoteData.contact_name || undefined,
           contact_email: quoteData.contact_email || undefined,
           tone: quoteData.tone,
-          ai_transcript: resolvedTranscript,
+          ai_transcript: inputTranscript || storedTranscript || undefined,
         });
         await applyGeneratedDraft(newQuote.id, draft as GeneratedQuoteDraft);
         navigate(`/quotes/${newQuote.id}`, { replace: true });
@@ -342,7 +370,7 @@ export default function QuoteBuilder() {
         id,
         updates: {
           tone: quoteData.tone,
-          ai_transcript: resolvedTranscript,
+          ai_transcript: inputTranscript || storedTranscript || undefined,
         },
       });
       await clearQuoteContent();
