@@ -237,6 +237,9 @@ export default function QuoteBuilder() {
     const sections = draft.sections.filter(
       (section) => section.paragraphs.length > 0 || section.bullet_groups.length > 0
     );
+    if (sections.length === 0) {
+      throw new Error('No sections generated');
+    }
 
     for (let index = 0; index < sections.length; index += 1) {
       const section = sections[index];

@@ -372,6 +372,7 @@ export const generateFromTranscript = action({
       body: JSON.stringify({
         model: "moonshotai/kimi-k2-0905",
         temperature: 0.2,
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -393,6 +394,16 @@ export const generateFromTranscript = action({
     }
 
     const parsed = JSON.parse(content.slice(start, end + 1));
+    const asArray = (value: unknown) => {
+      if (Array.isArray(value)) {
+        return value.filter((item) => typeof item === "string" && item.trim().length > 0);
+      }
+      if (typeof value === "string" && value.trim().length > 0) {
+        return [value.trim()];
+      }
+      return [];
+    };
+
     const items = Array.isArray(parsed.items)
       ? parsed.items
           .map((item: any) => ({
@@ -432,10 +443,34 @@ export const generateFromTranscript = action({
           .filter((section: any) => section.title || section.paragraphs.length > 0 || section.bullet_groups.length > 0)
       : [];
 
+    const legacySections = [
+      { title: "Context", paragraphs: asArray(parsed.intro), bullet_groups: [] },
+      { title: "Recommended Approach", paragraphs: asArray(parsed.approach), bullet_groups: [] },
+      {
+        title: "Scope of Work",
+        paragraphs: [],
+        bullet_groups: [{ heading: null, paragraph: null, bullets: asArray(parsed.scope) }],
+      },
+      {
+        title: "What's Not Included",
+        paragraphs: [],
+        bullet_groups: [{ heading: null, paragraph: null, bullets: asArray(parsed.not_included) }],
+      },
+      { title: "Investment", paragraphs: asArray(parsed.investment), bullet_groups: [] },
+      { title: "Next Steps", paragraphs: asArray(parsed.next_steps), bullet_groups: [] },
+      {
+        title: "Assumptions",
+        paragraphs: [],
+        bullet_groups: [{ heading: null, paragraph: null, bullets: asArray(parsed.assumptions) }],
+      },
+    ].filter((section) => section.paragraphs.length > 0 || section.bullet_groups.length > 0);
+
+    const resolvedSections = sections.length > 0 ? sections : legacySections;
+
     return {
       title: typeof parsed.title === "string" ? parsed.title : null,
       project_type: typeof parsed.project_type === "string" ? parsed.project_type : null,
-      sections,
+      sections: resolvedSections,
       items,
     };
   },
