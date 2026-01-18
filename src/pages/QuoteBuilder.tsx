@@ -276,6 +276,10 @@ export default function QuoteBuilder() {
       toast({ title: 'Error', description: 'Paste the transcript first', variant: 'destructive' });
       return;
     }
+    if (!quoteData.client_id) {
+      toast({ title: 'Error', description: 'Select a client first', variant: 'destructive' });
+      return;
+    }
     setIsGenerating(true);
     try {
       const draft = await generateFromTranscript({
@@ -287,12 +291,32 @@ export default function QuoteBuilder() {
       });
 
       setGeneratedDraft(draft as GeneratedQuoteDraft);
+      const nextTitle = quoteData.title || draft.title || '';
+      const nextProjectType = quoteData.project_type || draft.project_type || '';
       setQuoteData((prev) => ({
         ...prev,
-        title: prev.title || draft.title || '',
-        project_type: prev.project_type || draft.project_type || '',
+        title: nextTitle,
+        project_type: nextProjectType,
       }));
-      toast({ title: 'Draft ready', description: 'Draft sections will be applied when you create the quote.' });
+
+      if (!id) {
+        const newQuote = await createQuote({
+          client_id: quoteData.client_id,
+          title: nextTitle || 'Untitled quote',
+          project_type: nextProjectType || undefined,
+          valid_until: quoteData.valid_until || undefined,
+          deposit_percentage: quoteData.deposit_percentage,
+          total_amount: 0,
+          contact_name: quoteData.contact_name || undefined,
+          contact_email: quoteData.contact_email || undefined,
+        });
+        await applyGeneratedDraft(newQuote.id, draft as GeneratedQuoteDraft);
+        navigate(`/quotes/${newQuote.id}`, { replace: true });
+        return;
+      }
+
+      await applyGeneratedDraft(id, draft as GeneratedQuoteDraft);
+      toast({ title: 'Draft applied', description: 'Draft sections have been added to the quote.' });
     } catch (error) {
       console.error('Error generating quote draft:', error);
       toast({ title: 'Error', description: 'Failed to generate draft quote', variant: 'destructive' });
@@ -471,9 +495,6 @@ export default function QuoteBuilder() {
                   {isGenerating ? 'Generating...' : 'Convert to Quote'}
                 </Button>
               </div>
-              <Button onClick={handleCreateQuote} disabled={isSaving}>
-                Create Quote & Continue
-              </Button>
             </div>
           )}
         </CardContent>
