@@ -45,7 +45,7 @@ export const sendQuoteNotification = action({
 
     const quoteLink =
       args.publicUrl && args.quoteToken
-        ? `${args.publicUrl.replace(/\\/$/, "")}/quote/view/${args.quoteToken}`
+        ? `${args.publicUrl.replace(/\/$/, "")}/quote/view/${args.quoteToken}`
         : null;
 
     const { subject, html } = buildContent(args.action, {
