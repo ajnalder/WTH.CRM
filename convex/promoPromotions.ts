@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import {
   assertAdmin,
   assertValidPortalToken,
@@ -7,6 +7,7 @@ import {
 } from "./promoUtils";
 import { nowIso } from "./_utils";
 import { generateId } from "./promoUtils";
+import { api } from "./_generated/api";
 
 const PROMO_STATUSES = [
   "submitted",
@@ -38,6 +39,28 @@ function resolveProductLink(url: string) {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   const normalized = url.startsWith("/") ? url : `/${url}`;
   return `https://golf360.co.nz${normalized}`;
+}
+
+function buildCanvaBlocks(items: any[]) {
+  return items
+    .filter((item: any) => item.product)
+    .map((item: any) => {
+      const product = item.product;
+      const promoPrice = item.promo_price ?? product.price;
+      const showWas =
+        typeof product.compare_at_price === "number" &&
+        product.compare_at_price > promoPrice;
+
+      return {
+        productId: product.id,
+        name: product.short_title || product.title,
+        price: formatPrice(promoPrice),
+        wasPrice: showWas ? formatPrice(product.compare_at_price) : null,
+        bullets: product.bullet_points ?? [],
+        link: resolveProductLink(product.product_url),
+        imageUrl: product.image_url,
+      };
+    });
 }
 
 async function getPromotionById(ctx: any, promotionId: string) {
@@ -391,28 +414,68 @@ export const getCanvaPackForAdmin = query({
   handler: async (ctx, { promotionId }) => {
     await assertAdmin(ctx);
 
-    const result = await hydratePromotion(ctx, promotionId);
-    if (!result) return null;
+    const pack = await ctx.db
+      .query("promo_canva_packs")
+      .withIndex("by_promotion", (q) => q.eq("promotion_id", promotionId))
+      .first();
 
-    const blocks = result.items
-      .filter((item: any) => item.product)
-      .map((item: any) => {
-        const product = item.product;
-        const promoPrice = item.promo_price ?? product.price;
-        const showWas =
-          typeof product.compare_at_price === "number" &&
-          product.compare_at_price > promoPrice;
+    if (!pack) return null;
 
-        return {
-          productId: product.id,
-          name: product.short_title || product.title,
-          price: formatPrice(promoPrice),
-          wasPrice: showWas ? formatPrice(product.compare_at_price) : null,
-          bullets: product.bullet_points ?? [],
-          link: resolveProductLink(product.product_url),
-          imageUrl: product.image_url,
-        };
+    return { blocks: pack.blocks };
+  },
+});
+
+export const saveCanvaPack = mutation({
+  args: { promotionId: v.string(), blocks: v.any() },
+  handler: async (ctx, { promotionId, blocks }) => {
+    await assertAdmin(ctx);
+    const existing = await ctx.db
+      .query("promo_canva_packs")
+      .withIndex("by_promotion", (q) => q.eq("promotion_id", promotionId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        blocks,
+        updated_at: nowIso(),
       });
+      return { ok: true };
+    }
+
+    await ctx.db.insert("promo_canva_packs", {
+      id: generateId(),
+      promotion_id: promotionId,
+      blocks,
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
+  },
+});
+
+export const generateCanvaPackForAdmin = action({
+  args: { promotionId: v.string() },
+  handler: async (ctx, { promotionId }) => {
+    await assertAdmin(ctx);
+
+    await ctx.runAction(api.promoAi.generateBulletsForPromotion, {
+      promotionId,
+      force: true,
+    });
+
+    const result = await ctx.runQuery(api.promoPromotions.getPromotionForAdmin, {
+      promotionId,
+    });
+    if (!result) {
+      throw new Error("Promotion not found.");
+    }
+
+    const blocks = buildCanvaBlocks(result.items);
+    await ctx.runMutation(api.promoPromotions.saveCanvaPack, {
+      promotionId,
+      blocks,
+    });
 
     return { blocks };
   },

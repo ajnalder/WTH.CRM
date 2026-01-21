@@ -20,13 +20,19 @@ export default function PromoAdminPromotionDetail() {
     promoApi.promoPromotions.getPromotionForAdmin,
     id ? { promotionId: id } : "skip"
   );
-  const generateBulletsForPromotion = useAction(promoApi.promoAi.generateBulletsForPromotion);
+  const generateCanvaPack = useAction(promoApi.promoPromotions.generateCanvaPackForAdmin);
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
     showPack && id ? { promotionId: id } : "skip"
   );
 
   const blocks = useMemo(() => packData?.blocks ?? [], [packData]);
+
+  useEffect(() => {
+    if (packData?.blocks?.length) {
+      setShowPack(true);
+    }
+  }, [packData?.blocks?.length]);
 
   const handleTogglePack = async () => {
     if (!id) return;
@@ -36,24 +42,7 @@ export default function PromoAdminPromotionDetail() {
     }
     setLoadingPack(true);
     try {
-      const result = await generateBulletsForPromotion({ promotionId: id, force: true });
-      if (result?.missingDescriptionCount || result?.errorCount) {
-        const errorPreview = (result?.errorDetails ?? [])
-          .slice(0, 2)
-          .map((entry: { productId: string; status: string }) =>
-            `${entry.productId}: ${entry.status}`
-          )
-          .join(" | ");
-        toast({
-          title: "Some bullets were not generated",
-          description: `Missing descriptions: ${result.missingDescriptionCount ?? 0}, Errors: ${
-            result.errorCount ?? 0
-          }${errorPreview ? ` — ${errorPreview}` : ""}`,
-          variant: "destructive",
-        });
-      } else {
-        toast({ title: "Bullets generated for Canva pack" });
-      }
+      await generateCanvaPack({ promotionId: id });
       setShowPack(true);
     } catch (error: any) {
       toast({
@@ -110,6 +99,8 @@ export default function PromoAdminPromotionDetail() {
               ? "Generating Canva Pack..."
               : showPack
               ? "Hide Canva Pack"
+              : packData?.blocks?.length
+              ? "Regenerate Canva Pack"
               : "Generate Canva Pack"}
           </Button>
         </div>

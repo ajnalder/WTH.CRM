@@ -576,4 +576,12 @@ export default defineSchema({
     .index("by_promotion", ["promotion_id"])
     .index("by_product", ["product_id"])
     .index("by_public_id", ["id"]),
+
+  promo_canva_packs: defineTable({
+    id: v.string(),
+    promotion_id: v.string(),
+    blocks: v.any(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_promotion", ["promotion_id"]),
 });
