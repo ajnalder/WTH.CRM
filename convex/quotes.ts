@@ -493,7 +493,9 @@ export const generateFromTranscript = action({
       return Math.max(...values);
     };
 
-    const validItems = items.filter((item) => typeof item.rate === "number" && item.rate > 0);
+    const validItems = items.filter(
+      (item: { rate?: number }) => typeof item.rate === "number" && item.rate > 0
+    );
     const enforcedItems =
       validItems.length > 0
         ? items

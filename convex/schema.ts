@@ -499,4 +499,81 @@ export default defineSchema({
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_user", ["user_id"]),
+
+  promo_clients: defineTable({
+    id: v.string(),
+    name: v.string(),
+    portal_token_hash: v.optional(v.string()),
+    portal_token_created_at: v.optional(v.string()),
+    portal_token_rotated_at: v.optional(v.string()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_name", ["name"])
+    .index("by_public_id", ["id"]),
+
+  promo_products: defineTable({
+    id: v.string(),
+    client_id: v.string(),
+    external_source: v.string(),
+    external_id: v.optional(v.string()),
+    title: v.string(),
+    short_title: v.optional(v.string()),
+    handle: v.optional(v.string()),
+    product_url: v.string(),
+    image_url: v.string(),
+    price: v.number(),
+    compare_at_price: v.optional(v.number()),
+    vendor: v.optional(v.string()),
+    product_type: v.optional(v.string()),
+    tags: v.optional(v.string()),
+    description: v.optional(v.string()),
+    bullet_points: v.optional(v.array(v.string())),
+    collections: v.optional(v.array(v.string())),
+    status: v.optional(v.string()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_client", ["client_id"])
+    .index("by_client_title", ["client_id", "title"])
+    .index("by_public_id", ["id"])
+    .index("by_client_handle", ["client_id", "handle"])
+    .index("by_client_product_url", ["client_id", "product_url"])
+    .index("by_vendor", ["client_id", "vendor"])
+    .index("by_product_type", ["client_id", "product_type"])
+    .index("by_tags", ["client_id", "tags"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["client_id"],
+    }),
+
+  promo_promotions: defineTable({
+    id: v.string(),
+    client_id: v.string(),
+    name: v.string(),
+    note_to_andrew: v.optional(v.string()),
+    status: v.string(),
+    created_by: v.string(),
+    created_at: v.string(),
+    updated_at: v.string(),
+    submitted_at: v.optional(v.string()),
+  })
+    .index("by_client", ["client_id"])
+    .index("by_status", ["status"])
+    .index("by_public_id", ["id"]),
+
+  promo_promotion_items: defineTable({
+    id: v.string(),
+    promotion_id: v.string(),
+    product_id: v.string(),
+    position: v.number(),
+    promo_type: v.string(),
+    promo_value: v.optional(v.number()),
+    promo_price: v.optional(v.number()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_promotion", ["promotion_id"])
+    .index("by_product", ["product_id"])
+    .index("by_public_id", ["id"]),
 });

@@ -9,6 +9,7 @@
  */
 
 import type * as _utils from "../_utils.js";
+import type * as aiSettings from "../aiSettings.js";
 import type * as checklists from "../checklists.js";
 import type * as clients from "../clients.js";
 import type * as companySettings from "../companySettings.js";
@@ -28,6 +29,11 @@ import type * as profiles from "../profiles.js";
 import type * as projectNotes from "../projectNotes.js";
 import type * as projectTeamMembers from "../projectTeamMembers.js";
 import type * as projects from "../projects.js";
+import type * as promoAi from "../promoAi.js";
+import type * as promoClients from "../promoClients.js";
+import type * as promoProducts from "../promoProducts.js";
+import type * as promoPromotions from "../promoPromotions.js";
+import type * as promoUtils from "../promoUtils.js";
 import type * as quoteBlocks from "../quoteBlocks.js";
 import type * as quoteEvents from "../quoteEvents.js";
 import type * as quoteItems from "../quoteItems.js";
@@ -47,6 +53,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   _utils: typeof _utils;
+  aiSettings: typeof aiSettings;
   checklists: typeof checklists;
   clients: typeof clients;
   companySettings: typeof companySettings;
@@ -66,6 +73,11 @@ declare const fullApi: ApiFromModules<{
   projectNotes: typeof projectNotes;
   projectTeamMembers: typeof projectTeamMembers;
   projects: typeof projects;
+  promoAi: typeof promoAi;
+  promoClients: typeof promoClients;
+  promoProducts: typeof promoProducts;
+  promoPromotions: typeof promoPromotions;
+  promoUtils: typeof promoUtils;
   quoteBlocks: typeof quoteBlocks;
   quoteEvents: typeof quoteEvents;
   quoteItems: typeof quoteItems;

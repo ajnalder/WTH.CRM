@@ -71,3 +71,22 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## EDM Promo Builder (Golf 360)
+
+### Setup
+- Ensure `VITE_CONVEX_URL` and `VITE_CLERK_PUBLISHABLE_KEY` are set in your environment.
+- Add `CONVEX_OPENROUTER_API_KEY` in Convex for bullet generation.
+- Run `npm i` and `npm run dev`.
+
+### Admin workflow (Andrew)
+1. Visit `/admin` to seed the Golf 360 client record.
+2. Generate or rotate Scott's portal link from the dashboard.
+3. Import Shopify CSVs at `/admin/import`.
+4. Review promotions at `/admin/promotions/:id` and copy Canva packs.
+5. Apply collection rules with the rules CSV at `/admin/import` (manual collections are skipped).
+
+### Client workflow (Scott)
+1. Open the signed portal URL supplied by Andrew.
+2. Create a promotion, search products, add pricing, and submit.
+3. Track submitted promotions from the portal home.

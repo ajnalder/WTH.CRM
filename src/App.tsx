@@ -32,6 +32,12 @@ import SiteLaunch from "./pages/SiteLaunch";
 import Ideas from "./pages/Ideas";
 import Domains from "./pages/Domains";
 import EmailMarketing from "./pages/EmailMarketing";
+import PromoAdminDashboard from "./pages/PromoAdminDashboard";
+import PromoAdminImport from "./pages/PromoAdminImport";
+import PromoAdminPromotionDetail from "./pages/PromoAdminPromotionDetail";
+import PromoPortalHome from "./pages/PromoPortalHome";
+import PromoPortalNew from "./pages/PromoPortalNew";
+import PromoPortalPromotionDetail from "./pages/PromoPortalPromotionDetail";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +75,12 @@ const App = () => (
             <Route path="/ideas" element={<ProtectedRoute><PageWithSidebar><Ideas /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><PageWithSidebar><Reports /></PageWithSidebar></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><PageWithSidebar><Settings /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><PageWithSidebar><PromoAdminDashboard /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/admin/import" element={<ProtectedRoute><PageWithSidebar><PromoAdminImport /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/admin/promotions/:id" element={<ProtectedRoute><PageWithSidebar><PromoAdminPromotionDetail /></PageWithSidebar></ProtectedRoute>} />
+            <Route path="/p/:clientId" element={<PromoPortalHome />} />
+            <Route path="/p/:clientId/new" element={<PromoPortalNew />} />
+            <Route path="/p/:clientId/promotions/:id" element={<PromoPortalPromotionDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
