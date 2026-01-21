@@ -15,6 +15,7 @@ export default function PromoAdminPromotionDetail() {
   const { toast } = useToast();
   const [showPack, setShowPack] = useState(false);
   const [loadingPack, setLoadingPack] = useState(false);
+  const [packBlocks, setPackBlocks] = useState<any[]>([]);
 
   const promotionData = useQuery(
     promoApi.promoPromotions.getPromotionForAdmin,
@@ -26,10 +27,14 @@ export default function PromoAdminPromotionDetail() {
     showPack && id ? { promotionId: id } : "skip"
   );
 
-  const blocks = useMemo(() => packData?.blocks ?? [], [packData]);
+  const blocks = useMemo(
+    () => (packBlocks.length ? packBlocks : packData?.blocks ?? []),
+    [packBlocks, packData]
+  );
 
   useEffect(() => {
     if (packData?.blocks?.length) {
+      setPackBlocks(packData.blocks);
       setShowPack(true);
     }
   }, [packData?.blocks?.length]);
@@ -42,7 +47,10 @@ export default function PromoAdminPromotionDetail() {
     }
     setLoadingPack(true);
     try {
-      await generateCanvaPack({ promotionId: id });
+      const result = await generateCanvaPack({ promotionId: id });
+      if (result?.blocks?.length) {
+        setPackBlocks(result.blocks);
+      }
       setShowPack(true);
     } catch (error: any) {
       toast({
