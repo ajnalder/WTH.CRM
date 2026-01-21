@@ -24,7 +24,7 @@ export default function PromoAdminPromotionDetail() {
   const generateCanvaPack = useAction(promoApi.promoPromotions.generateCanvaPackForAdmin);
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
-    showPack && id ? { promotionId: id } : "skip"
+    id ? { promotionId: id } : "skip"
   );
 
   const blocks = useMemo(
