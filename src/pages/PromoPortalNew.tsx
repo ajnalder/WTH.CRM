@@ -337,7 +337,6 @@ export default function PromoPortalNew() {
                         src={product.image_url}
                         alt={product.title}
                         className="h-full w-full rounded object-cover"
-                        loading="eager"
                         decoding="async"
                         fallback={
                           <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">

@@ -1,6 +1,5 @@
 import { type ImgHTMLAttributes, type ReactNode, useEffect, useMemo, useState } from "react";
 import { buildImageProxyUrl, normalizeImageUrl } from "@/utils/promoImages";
-import { isIOS } from "@/utils/mobileDetection";
 
 type PromoImageProps = {
   src?: string | null;
@@ -10,6 +9,7 @@ type PromoImageProps = {
   decoding?: "async" | "auto" | "sync";
   referrerPolicy?: ImgHTMLAttributes<HTMLImageElement>["referrerPolicy"];
   fallback?: ReactNode;
+  preferProxy?: boolean;
 };
 
 export function PromoImage({
@@ -20,20 +20,17 @@ export function PromoImage({
   decoding = "async",
   referrerPolicy = "no-referrer",
   fallback = null,
+  preferProxy = false,
 }: PromoImageProps) {
   const normalized = useMemo(() => normalizeImageUrl(src), [src]);
   const proxyUrl = useMemo(() => buildImageProxyUrl(normalized), [normalized]);
-  const [useProxy, setUseProxy] = useState(() => {
-    return typeof navigator !== "undefined" && !!proxyUrl && isIOS();
-  });
+  const [useProxy, setUseProxy] = useState(() => preferProxy && !!proxyUrl);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const preferProxy =
-      typeof navigator !== "undefined" && !!proxyUrl && isIOS();
-    setUseProxy(preferProxy);
+    setUseProxy(preferProxy && !!proxyUrl);
     setFailed(false);
-  }, [normalized, proxyUrl]);
+  }, [normalized, preferProxy, proxyUrl]);
 
   if (!normalized || failed) {
     return <>{fallback}</>;

@@ -136,7 +136,6 @@ export default function PromoAdminPromotionDetail() {
                       src={product.image_url}
                       alt={product.title}
                       className="h-12 w-12 rounded object-cover"
-                      loading="eager"
                       decoding="async"
                       fallback={
                         <div className="flex h-12 w-12 items-center justify-center rounded border text-[10px] text-muted-foreground">
@@ -190,7 +189,6 @@ export default function PromoAdminPromotionDetail() {
                         src={block.imageUrl}
                         alt="Product"
                         className="h-auto w-full max-w-[600px] rounded-md border object-contain"
-                        loading="eager"
                         decoding="async"
                         fallback={
                           <div className="flex h-40 w-full max-w-[600px] items-center justify-center rounded-md border text-xs text-muted-foreground">
