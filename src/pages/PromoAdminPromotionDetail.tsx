@@ -184,7 +184,9 @@ export default function PromoAdminPromotionDetail() {
                         src={normalizeImageUrl(block.imageUrl)}
                         alt="Product"
                         className="h-auto w-full max-w-[600px] rounded-md border object-contain"
-                        loading="lazy"
+                        loading="eager"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
                       />
                     </div>
                   )}

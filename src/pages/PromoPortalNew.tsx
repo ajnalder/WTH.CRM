@@ -339,7 +339,9 @@ export default function PromoPortalNew() {
                           src={imageUrl}
                           alt={product.title}
                           className="h-full w-full rounded object-cover"
-                          loading="lazy"
+                          loading="eager"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
