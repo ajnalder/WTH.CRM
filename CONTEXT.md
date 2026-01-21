@@ -1,6 +1,6 @@
 Project Context (what-the-heck)
 
-Last updated: 2026-01-14
+Last updated: 2026-01-21
 
 Overview
 - Web app running on Vercel, currently pointed at Convex dev deployment.
@@ -18,6 +18,16 @@ Auth / deploy notes
 - Do NOT paste deploy keys into chat/logs.
 
 Recent changes (major)
+- EDM Promo Builder for Golf 360 (admin + portal):
+  - New Convex tables: promo_clients, promo_products, promo_promotions, promo_promotion_items, promo_canva_packs.
+  - Admin routes: /admin, /admin/import, /admin/promotions/:id.
+  - Portal routes: /p/:clientId, /p/:clientId/new, /p/:clientId/promotions/:id.
+  - CSV product import + rules-based collections (Collections Rules CSV with AND/OR/Match ANY parsing).
+  - Signed portal links with token rotate/generate.
+  - Promotions with draft submit flow, delete draft, resume edit.
+  - Canva pack generation persists per promotion; generates bullets via OpenRouter (model: moonshotai/kimi-k2) and renders pack as HTML blocks with bullets and image.
+  - Canva pack link resolves to https://golf360.co.nz when product URLs are relative.
+- UI tweaks: Promo tray, infinite scroll with cached list, two-column Canva pack layout (image + text).
 - GST: Added zero-rated option for invoices (gst_mode) with correct totals and labels.
 - Project detail: compact layout, invoices panel, and project notes/reminders system.
 - Client avatars: random gradient on create (not all blue).
@@ -29,6 +39,11 @@ Project notes + reminders
 - Reminders check runs every minute in-app.
 
 Files added/updated recently
+- New promo files:
+  - convex/promoAi.ts, convex/promoClients.ts, convex/promoProducts.ts, convex/promoPromotions.ts, convex/promoUtils.ts
+  - src/pages/PromoAdminDashboard.tsx, PromoAdminImport.tsx, PromoAdminPromotionDetail.tsx
+  - src/pages/PromoPortalHome.tsx, PromoPortalNew.tsx, PromoPortalPromotionDetail.tsx
+  - src/utils/promoCsv.ts, promoCollectionRules.ts, promoPricing.ts, promoImages.ts
 - convex/projectNotes.ts (new)
 - convex/schema.ts (project_notes table)
 - src/components/project/ProjectNotesPanel.tsx (new)
@@ -40,6 +55,7 @@ Files added/updated recently
 Known gotchas
 - If Vercel points to dev, the app will show dev data; Convex env vars do not affect frontend.
 - Convex deploys must target the same deployment as Vercel’s VITE_CONVEX_URL.
+- Mobile iOS in-app browsers sometimes show missing product images; attempted fixes include HTTPS normalization and eager loading with no-referrer.
 
 Workflow
 - After making changes, automatically commit and push to GitHub.
