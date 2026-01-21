@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPrice, computePromoPrice, formatSavings } from "@/utils/promoPricing";
+import { normalizeImageUrl } from "@/utils/promoImages";
 
 const promoApi = api as any;
 
@@ -329,13 +330,23 @@ export default function PromoPortalNew() {
               )}
               {productsPage.map((product: any) => {
                 const existing = itemMap.get(product.id);
+                const imageUrl = normalizeImageUrl(product.image_url);
                 return (
                   <div key={product.id} className="flex gap-3 rounded-md border p-3">
-                    <img
-                      src={product.image_url}
-                      alt={product.title}
-                      className="h-16 w-16 rounded object-cover"
-                    />
+                    <div className="h-16 w-16 rounded border bg-white">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={product.title}
+                          className="h-full w-full rounded object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          No image
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <p className="font-medium">{product.title}</p>
                       <p className="text-xs text-muted-foreground">

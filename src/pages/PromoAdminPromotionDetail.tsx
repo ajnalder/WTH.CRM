@@ -5,6 +5,7 @@ import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/utils/promoPricing";
+import { normalizeImageUrl } from "@/utils/promoImages";
 import { useToast } from "@/components/ui/use-toast";
 
 const promoApi = api as any;
@@ -180,7 +181,7 @@ export default function PromoAdminPromotionDetail() {
                   {block.imageUrl && (
                     <div className="flex items-start justify-center">
                       <img
-                        src={block.imageUrl}
+                        src={normalizeImageUrl(block.imageUrl)}
                         alt="Product"
                         className="h-auto w-full max-w-[600px] rounded-md border object-contain"
                         loading="lazy"
