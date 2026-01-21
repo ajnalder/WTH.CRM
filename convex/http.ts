@@ -3,6 +3,7 @@ import { httpAction } from "./_generated/server";
 import { api } from "./_generated/api";
 
 const http = httpRouter();
+const imageProxyHosts = new Set(["cdn.shopify.com"]);
 
 // Xero OAuth callback endpoint
 http.route({
@@ -64,6 +65,62 @@ http.route({
         { status: 500, headers: { "Content-Type": "text/html" } }
       );
     }
+  }),
+});
+
+http.route({
+  path: "/image-proxy",
+  method: "GET",
+  handler: httpAction(async (_ctx, request) => {
+    const requestUrl = new URL(request.url);
+    const target = requestUrl.searchParams.get("url");
+    if (!target) {
+      return new Response("Missing url", { status: 400 });
+    }
+
+    let targetUrl: URL;
+    try {
+      targetUrl = new URL(target);
+    } catch {
+      return new Response("Invalid url", { status: 400 });
+    }
+
+    if (!["https:", "http:"].includes(targetUrl.protocol)) {
+      return new Response("Invalid protocol", { status: 400 });
+    }
+    if (!imageProxyHosts.has(targetUrl.hostname)) {
+      return new Response("Host not allowed", { status: 403 });
+    }
+
+    let upstream: Response;
+    try {
+      upstream = await fetch(targetUrl.toString(), {
+        headers: {
+          Accept: "image/png,image/jpeg,image/*;q=0.8",
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
+    } catch (error) {
+      console.error("Image proxy fetch failed:", error);
+      return new Response("Upstream fetch failed", { status: 502 });
+    }
+
+    if (!upstream.ok || !upstream.body) {
+      return new Response("Upstream error", { status: 502 });
+    }
+
+    const headers = new Headers();
+    headers.set(
+      "Content-Type",
+      upstream.headers.get("content-type") ?? "application/octet-stream"
+    );
+    headers.set(
+      "Cache-Control",
+      upstream.headers.get("cache-control") ?? "public, max-age=86400"
+    );
+    headers.set("Access-Control-Allow-Origin", "*");
+
+    return new Response(upstream.body, { status: 200, headers });
   }),
 });
 

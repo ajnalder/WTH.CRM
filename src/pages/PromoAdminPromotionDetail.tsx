@@ -5,8 +5,8 @@ import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/utils/promoPricing";
-import { normalizeImageUrl } from "@/utils/promoImages";
 import { useToast } from "@/components/ui/use-toast";
+import { PromoImage } from "@/components/promo/PromoImage";
 
 const promoApi = api as any;
 
@@ -132,10 +132,17 @@ export default function PromoAdminPromotionDetail() {
               <div key={item.id} className="rounded-md border p-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img
+                    <PromoImage
                       src={product.image_url}
                       alt={product.title}
                       className="h-12 w-12 rounded object-cover"
+                      loading="eager"
+                      decoding="async"
+                      fallback={
+                        <div className="flex h-12 w-12 items-center justify-center rounded border text-[10px] text-muted-foreground">
+                          No image
+                        </div>
+                      }
                     />
                     <div>
                       <p className="font-medium">{product.title}</p>
@@ -179,13 +186,17 @@ export default function PromoAdminPromotionDetail() {
                 <div className="grid gap-4 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   {block.imageUrl && (
                     <div className="flex items-start justify-center">
-                      <img
-                        src={normalizeImageUrl(block.imageUrl)}
+                      <PromoImage
+                        src={block.imageUrl}
                         alt="Product"
                         className="h-auto w-full max-w-[600px] rounded-md border object-contain"
                         loading="eager"
                         decoding="async"
-                        referrerPolicy="no-referrer"
+                        fallback={
+                          <div className="flex h-40 w-full max-w-[600px] items-center justify-center rounded-md border text-xs text-muted-foreground">
+                            No image
+                          </div>
+                        }
                       />
                     </div>
                   )}
