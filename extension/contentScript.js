@@ -1,7 +1,6 @@
-import { config } from "./config.js";
-
 const addedFlag = "data-promo-extension-added";
 const buttonClass = "promo-extension-button";
+const config = window.PROMO_PICKER_CONFIG || {};
 
 function toText(html) {
   const div = document.createElement("div");
@@ -41,6 +40,9 @@ function buildPayloadFromJson(data) {
 }
 
 async function sendToPromo(product) {
+  if (!config.convexSiteUrl || !config.clientId || !config.token || !config.promotionId) {
+    throw new Error("Extension is not configured yet.");
+  }
   const response = await fetch(`${config.convexSiteUrl}/promo/extension-add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

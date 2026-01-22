@@ -20,6 +20,11 @@ the storefront directly into a promo.
 - Click "Add to promo" on product cards or the floating button on product pages.
 - The product is sent to the draft promotion.
 
+## Troubleshooting
+
+- If the extension icon is greyed out, open the extension menu and set
+  "Site access" to "On all sites" or specifically allow `golf360.co.nz`.
+
 ## Notes
 
 - The extension uses `/products/{handle}.js` for clean product data.
