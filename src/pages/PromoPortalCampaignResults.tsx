@@ -30,7 +30,8 @@ function formatDate(value?: string) {
 
 function formatRate(value?: number) {
   if (typeof value !== "number") return "—";
-  return `${value.toFixed(2)}%`;
+  const percent = value <= 1 ? value * 100 : value;
+  return `${percent.toFixed(2)}%`;
 }
 
 function formatCurrency(value?: number) {
