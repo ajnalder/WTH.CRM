@@ -48,6 +48,9 @@ export default function PromoPortalCampaignResults() {
   const token = searchParams.get("token") ?? "";
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<{ path: string; keys: string[] } | null>(
+    null
+  );
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -118,8 +121,12 @@ export default function PromoPortalCampaignResults() {
     if (!clientId || !token || !id) return;
     setIsRefreshing(true);
     setRefreshError(null);
+    setDebugInfo(null);
     try {
-      await refreshResults({ clientId, token, promotionId: id });
+      const response = await refreshResults({ clientId, token, promotionId: id });
+      if (response?.debug?.path && Array.isArray(response.debug.keys)) {
+        setDebugInfo({ path: response.debug.path, keys: response.debug.keys });
+      }
     } catch (error: any) {
       setRefreshError(error.message ?? "Failed to refresh results.");
     } finally {
@@ -161,6 +168,13 @@ export default function PromoPortalCampaignResults() {
           </div>
           {refreshError && (
             <p className="text-sm text-red-600">{refreshError}</p>
+          )}
+          {debugInfo && (
+            <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <p className="font-semibold">Debug (Klaviyo keys)</p>
+              <p>Path: {debugInfo.path}</p>
+              <p className="mt-1 break-words">Keys: {debugInfo.keys.join(", ")}</p>
+            </div>
           )}
           {!hasLinkedCampaign && (
             <p className="text-sm text-muted-foreground">

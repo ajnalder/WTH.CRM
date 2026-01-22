@@ -168,6 +168,10 @@ type KlaviyoMetricSnapshot = {
   clickRate?: number;
   placedOrderValue?: number;
   placedOrderCount?: number;
+  debug?: {
+    path: string;
+    keys: string[];
+  };
 };
 
 async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnapshot> {
@@ -179,12 +183,16 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
   ];
 
   let lastError: Error | null = null;
+  let lastDebug: { path: string; keys: string[] } | undefined;
   for (const path of paths) {
     try {
       const data = await klaviyoGet(path);
       const { metrics, candidates } = extractMetrics(data);
       if (isDev()) {
-        console.log("Klaviyo metrics keys", path, Object.keys(candidates).slice(0, 80));
+        lastDebug = {
+          path,
+          keys: Object.keys(candidates).slice(0, 120),
+        };
       }
       if (
         metrics.openRate !== undefined ||
@@ -192,7 +200,7 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
         metrics.placedOrderValue !== undefined ||
         metrics.placedOrderCount !== undefined
       ) {
-        return metrics;
+        return { ...metrics, debug: lastDebug };
       }
     } catch (error: any) {
       lastError = error;
@@ -203,7 +211,9 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
     console.warn("Klaviyo metrics fetch failed:", lastError.message);
   }
 
-  return {};
+  return {
+    debug: lastDebug,
+  };
 }
 
 function resolveMessageId(campaign: KlaviyoCampaign) {
@@ -277,5 +287,6 @@ export async function fetchCampaignResults(campaignId: string) {
         "orders",
       ]),
     refreshedAt: nowIso(),
+    debug: metrics.debug,
   };
 }

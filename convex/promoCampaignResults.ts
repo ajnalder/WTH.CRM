@@ -132,7 +132,12 @@ export const refreshResultsForPortal = action({
       promotionId,
     });
 
-    return { ok: true, results: results?.results ?? [], refreshedAt: fetched.refreshedAt };
+    return {
+      ok: true,
+      results: results?.results ?? [],
+      refreshedAt: fetched.refreshedAt,
+      debug: fetched.debug ?? null,
+    };
   },
 });
 
