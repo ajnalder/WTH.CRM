@@ -109,6 +109,13 @@ export default function PromoPortalHome() {
                     <span className="text-xs text-muted-foreground">
                       {promo.submitted_at ? "Submitted" : "Draft"}
                     </span>
+                    {promo.status !== "draft" && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/p/${clientId}/promotions/${promo.id}/results?token=${token}`}>
+                          See results
+                        </Link>
+                      </Button>
+                    )}
                     {promo.status === "draft" && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

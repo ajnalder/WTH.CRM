@@ -38,6 +38,7 @@ import PromoAdminPromotionDetail from "./pages/PromoAdminPromotionDetail";
 import PromoPortalHome from "./pages/PromoPortalHome";
 import PromoPortalNew from "./pages/PromoPortalNew";
 import PromoPortalPromotionDetail from "./pages/PromoPortalPromotionDetail";
+import PromoPortalCampaignResults from "./pages/PromoPortalCampaignResults";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,10 @@ const App = () => (
             <Route path="/p/:clientId" element={<PromoPortalHome />} />
             <Route path="/p/:clientId/new" element={<PromoPortalNew />} />
             <Route path="/p/:clientId/promotions/:id" element={<PromoPortalPromotionDetail />} />
+            <Route
+              path="/p/:clientId/promotions/:id/results"
+              element={<PromoPortalCampaignResults />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

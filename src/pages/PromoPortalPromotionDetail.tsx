@@ -75,9 +75,18 @@ export default function PromoPortalPromotionDetail() {
             <h1 className="text-2xl font-semibold">{promotion.name}</h1>
             <p className="text-sm text-muted-foreground">Status: {promotion.status}</p>
           </div>
-          <Button asChild variant="outline">
-            <Link to={`/p/${clientId}?token=${token}`}>Back</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {promotion.status !== "draft" && (
+              <Button asChild variant="default">
+                <Link to={`/p/${clientId}/promotions/${id}/results?token=${token}`}>
+                  See results
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="outline">
+              <Link to={`/p/${clientId}?token=${token}`}>Back</Link>
+            </Button>
+          </div>
         </div>
 
         <Card className="p-4 space-y-3">
