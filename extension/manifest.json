@@ -5,10 +5,8 @@
   "description": "Add Shopify products to a promo directly from the storefront.",
   "permissions": ["storage", "activeTab", "scripting"],
   "action": {
-    "default_title": "Promo Picker"
-  },
-  "side_panel": {
-    "default_path": "sidepanel.html"
+    "default_title": "Promo Picker",
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"

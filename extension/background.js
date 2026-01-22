@@ -1,17 +1,19 @@
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id) return;
+async function injectPicker(tabId) {
+  await chrome.scripting.insertCSS({
+    target: { tabId },
+    files: ["styles.css"],
+  });
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ["config.js", "contentScript.js"],
+  });
+}
 
-  try {
-    await chrome.sidePanel.open({ tabId: tab.id });
-    await chrome.scripting.insertCSS({
-      target: { tabId: tab.id },
-      files: ["styles.css"],
-    });
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ["config.js", "contentScript.js"],
-    });
-  } catch (error) {
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message?.type !== "promo-picker:inject") return;
+  const tabId = sender.tab?.id;
+  if (!tabId) return;
+  injectPicker(tabId).catch((error) => {
     console.error("Promo Picker injection failed:", error);
-  }
+  });
 });

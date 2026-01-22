@@ -5,7 +5,7 @@ the storefront directly into a promo.
 
 ## Setup
 
-1. Open the extension side panel and set:
+1. Open the extension popup and set:
    - `convexSiteUrl` (e.g. `https://frugal-lyrebird-181.convex.site`)
    - `clientId` (promo client id)
    - `token` (portal token)
@@ -17,10 +17,10 @@ the storefront directly into a promo.
 ## Usage
 
 - Visit `https://www.golf360.co.nz`.
-- Click the extension icon to open the side panel.
+- Click the extension icon to open the popup.
 - Click "Add to promo" on product cards or the floating button on product pages.
 - The product is sent to the draft promotion.
-- If you don't see the button, click the extension icon once to inject it.
+- If you don't see the button, refresh the page.
 
 ## Troubleshooting
 
