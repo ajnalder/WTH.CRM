@@ -19,6 +19,7 @@ the storefront directly into a promo.
 - Visit `https://www.golf360.co.nz`.
 - Click "Add to promo" on product cards or the floating button on product pages.
 - The product is sent to the draft promotion.
+- If you don't see the button, click the extension icon once to inject it.
 
 ## Troubleshooting
 
