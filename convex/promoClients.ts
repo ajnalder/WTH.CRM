@@ -59,6 +59,20 @@ export const ensurePromoClientForCrm = mutation({
       return existing;
     }
 
+    const legacyMatch = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_name", (q) => q.eq("name", crmClient.company))
+      .filter((q) => q.eq(q.field("crm_client_id"), undefined))
+      .first();
+
+    if (legacyMatch) {
+      await ctx.db.patch(legacyMatch._id, {
+        crm_client_id: crmClientId,
+        updated_at: nowIso(),
+      });
+      return { ...legacyMatch, crm_client_id: crmClientId };
+    }
+
     const now = nowIso();
     const id = generateId();
     await ctx.db.insert("promo_clients", {
@@ -89,10 +103,17 @@ export const listCrmClientsForPromo = query({
 
     const results = [];
     for (const crmClient of crmClients) {
-      const promoClient = await ctx.db
+      let promoClient = await ctx.db
         .query("promo_clients")
         .withIndex("by_crm_client", (q) => q.eq("crm_client_id", crmClient.id))
         .first();
+      if (!promoClient) {
+        promoClient = await ctx.db
+          .query("promo_clients")
+          .withIndex("by_name", (q) => q.eq("name", crmClient.company))
+          .filter((q) => q.eq(q.field("crm_client_id"), undefined))
+          .first();
+      }
       results.push({
         crmClient: { id: crmClient.id, name: crmClient.company },
         promoClient: promoClient
