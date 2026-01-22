@@ -65,9 +65,7 @@ export async function fetchCampaign(campaignId: string) {
 }
 
 export async function fetchCampaignMessage(messageId: string) {
-  const data = await klaviyoGet(`/api/campaign-messages/${messageId}`, {
-    "additional_fields[campaign-message]": "stats,statistics,reporting",
-  });
+  const data = await klaviyoGet(`/api/campaign-messages/${messageId}`);
   return data?.data as KlaviyoCampaignMessage;
 }
 
@@ -183,9 +181,7 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
   let lastError: Error | null = null;
   for (const path of paths) {
     try {
-      const data = await klaviyoGet(path, {
-        "additional_fields[campaign-message]": "stats,statistics,reporting",
-      });
+      const data = await klaviyoGet(path);
       const { metrics, candidates } = extractMetrics(data);
       if (isDev()) {
         console.log("Klaviyo metrics keys", path, Object.keys(candidates).slice(0, 80));
