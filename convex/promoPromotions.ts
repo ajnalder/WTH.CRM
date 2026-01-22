@@ -454,14 +454,53 @@ export const saveCanvaPack = mutation({
   },
 });
 
+export const setGeneratedCampaignCopy = mutation({
+  args: {
+    promotionId: v.string(),
+    campaignTitle: v.string(),
+    subjectLines: v.array(v.string()),
+    previewTexts: v.array(v.string()),
+    openingParagraph: v.string(),
+    generatedAt: v.string(),
+  },
+  handler: async (
+    ctx,
+    {
+      promotionId,
+      campaignTitle,
+      subjectLines,
+      previewTexts,
+      openingParagraph,
+      generatedAt,
+    }
+  ) => {
+    await assertAdmin(ctx);
+
+    const promotion = await getPromotionById(ctx, promotionId);
+    if (!promotion) {
+      throw new Error("Promotion not found.");
+    }
+
+    await ctx.db.patch(promotion._id, {
+      generated_campaign_title: campaignTitle,
+      generated_subject_lines: subjectLines,
+      generated_preview_texts: previewTexts,
+      generated_opening_paragraph: openingParagraph,
+      generated_at: generatedAt,
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
+  },
+});
+
 export const generateCanvaPackForAdmin = action({
   args: { promotionId: v.string() },
   handler: async (ctx, { promotionId }) => {
     await assertAdmin(ctx);
 
-    await ctx.runAction(api.promoAi.generateBulletsForPromotion, {
+    await ctx.runAction(api.promoAi.generateCampaignCopyForPromotion, {
       promotionId,
-      force: true,
     });
 
     const result = await ctx.runQuery(api.promoPromotions.getPromotionForAdmin, {

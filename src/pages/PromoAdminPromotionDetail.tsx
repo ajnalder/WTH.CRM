@@ -31,6 +31,12 @@ export default function PromoAdminPromotionDetail() {
     () => (packBlocks.length ? packBlocks : packData?.blocks ?? []),
     [packBlocks, packData]
   );
+  const campaignCopy = promotionData?.promotion;
+  const hasCampaignCopy =
+    !!campaignCopy?.generated_campaign_title ||
+    !!campaignCopy?.generated_opening_paragraph ||
+    (campaignCopy?.generated_subject_lines?.length ?? 0) > 0 ||
+    (campaignCopy?.generated_preview_texts?.length ?? 0) > 0;
 
   useEffect(() => {
     if (packData?.blocks?.length) {
@@ -176,6 +182,38 @@ export default function PromoAdminPromotionDetail() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">Canva Pack</h2>
           </div>
+          {hasCampaignCopy && (
+            <div className="rounded-md border bg-white p-4 space-y-4">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">CAMPAIGN TITLE</p>
+                <p>{campaignCopy?.generated_campaign_title}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  SUBJECT LINE OPTIONS
+                </p>
+                <ul className="list-disc pl-5">
+                  {campaignCopy?.generated_subject_lines?.map((line: string) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  PREVIEW TEXT OPTIONS
+                </p>
+                <ul className="list-disc pl-5">
+                  {campaignCopy?.generated_preview_texts?.map((line: string) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">OPENING PARAGRAPH</p>
+                <p>{campaignCopy?.generated_opening_paragraph}</p>
+              </div>
+            </div>
+          )}
           {blocks.length === 0 && (
             <p className="text-sm text-muted-foreground">No blocks available yet.</p>
           )}

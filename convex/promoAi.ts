@@ -2,7 +2,9 @@
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { assertAdmin } from "./promoUtils";
+import { assertAdmin, computePromoPrice } from "./promoUtils";
+import { requestKimiCampaignCopy } from "../lib/kimi";
+import { nowIso } from "./_utils";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL_NAME = "moonshotai/kimi-k2";
@@ -40,6 +42,13 @@ function stripHtml(input: string) {
     .replace(/&#39;/gi, "'")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function resolveProductLink(url: string) {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const normalized = url.startsWith("/") ? url : `/${url}`;
+  return `https://golf360.co.nz${normalized}`;
 }
 
 function sentenceBullets(text: string) {
@@ -84,6 +93,79 @@ function fallbackBullets(
     .join(" ");
   if (!fallback) return [];
   return Array.from({ length: 3 }, () => fallback);
+}
+
+function normalizeLines(lines: unknown, expectedCount: number, label: string) {
+  if (!Array.isArray(lines)) {
+    throw new Error(`Invalid ${label} format.`);
+  }
+  const cleaned = lines
+    .map((line) => (typeof line === "string" ? line.trim() : ""))
+    .filter(Boolean);
+  if (cleaned.length !== expectedCount) {
+    throw new Error(`Expected ${expectedCount} ${label}.`);
+  }
+  return cleaned;
+}
+
+function normalizeCampaignCopy(payload: any, expectedProductIds: Set<string>) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Invalid campaign copy payload.");
+  }
+
+  const campaign = payload.campaign;
+  if (!campaign || typeof campaign !== "object") {
+    throw new Error("Missing campaign copy.");
+  }
+
+  const campaignTitle =
+    typeof campaign.campaign_title === "string" ? campaign.campaign_title.trim() : "";
+  const openingParagraph =
+    typeof campaign.opening_paragraph === "string" ? campaign.opening_paragraph.trim() : "";
+
+  if (!campaignTitle) {
+    throw new Error("Missing campaign title.");
+  }
+  if (!openingParagraph) {
+    throw new Error("Missing opening paragraph.");
+  }
+
+  const subjectLines = normalizeLines(campaign.subject_lines, 5, "subject lines");
+  const previewTexts = normalizeLines(campaign.preview_texts, 5, "preview texts");
+
+  if (!Array.isArray(payload.products)) {
+    throw new Error("Missing product bullets.");
+  }
+
+  const products = payload.products.map((entry: any) => {
+    const productId = typeof entry?.product_id === "string" ? entry.product_id.trim() : "";
+    if (!productId || !expectedProductIds.has(productId)) {
+      throw new Error("Invalid product id in Kimi response.");
+    }
+    const bullets = clampBullets(Array.isArray(entry.bullets) ? entry.bullets : []);
+    if (bullets.length !== 3) {
+      throw new Error(`Invalid bullets for product ${productId}.`);
+    }
+    return { productId, bullets };
+  });
+
+  const uniqueIds = new Set(products.map((entry: any) => entry.productId));
+  if (uniqueIds.size !== products.length) {
+    throw new Error("Duplicate product ids in Kimi response.");
+  }
+  for (const id of expectedProductIds) {
+    if (!uniqueIds.has(id)) {
+      throw new Error("Missing product bullets in Kimi response.");
+    }
+  }
+
+  return {
+    campaignTitle,
+    subjectLines,
+    previewTexts,
+    openingParagraph,
+    products,
+  };
 }
 
 async function requestBullets(description: string, apiKey: string) {
@@ -269,6 +351,124 @@ export const generateBulletsForPromotion = action({
       missingDescriptionCount,
       errorCount,
       errorDetails,
+    };
+  },
+});
+
+export const generateCampaignCopyForPromotion = action({
+  args: { promotionId: v.string() },
+  handler: async (ctx, { promotionId }) => {
+    await assertAdmin(ctx);
+
+    const promotionData = await ctx.runQuery(
+      "promoPromotions:getPromotionForAdmin" as any,
+      { promotionId }
+    );
+
+    if (!promotionData?.promotion || !promotionData?.items) {
+      throw new Error("Promotion not found.");
+    }
+
+    const client = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_public_id", (q) => q.eq("id", promotionData.promotion.client_id))
+      .first();
+
+    const clientName = client?.name || "Golf 360";
+    const promotionName = promotionData.promotion.name;
+    const promotionDate =
+      promotionData.promotion.submitted_at || promotionData.promotion.created_at || "";
+
+    const noteToAndrewRaw = promotionData.promotion.note_to_andrew ?? "";
+    const noteToAndrew = promotionDate
+      ? `${noteToAndrewRaw}${noteToAndrewRaw ? "\n" : ""}Promotion date: ${promotionDate}`
+      : noteToAndrewRaw;
+
+    const items = promotionData.items.filter((item: any) => item.product);
+    const selectedItems = items.slice(0, 5);
+    if (selectedItems.length === 0) {
+      throw new Error("No products selected for this promotion.");
+    }
+    const selectedProductIds = new Set(
+      selectedItems.map((item: any) => item.product.id)
+    );
+
+    const productsPayload = selectedItems.map((item: any) => {
+      const product = item.product;
+      const promoPrice =
+        item.promo_type === "none"
+          ? null
+          : computePromoPrice(product.price, item.promo_type, item.promo_value ?? null);
+
+      return {
+        product_id: product.id,
+        title: product.title,
+        shortTitle: product.short_title ?? "",
+        vendor: product.vendor ?? "",
+        current_price: product.price,
+        promo_price: promoPrice,
+        compare_at_price: product.compare_at_price ?? null,
+        product_url: resolveProductLink(product.product_url),
+        primary_image_url: product.image_url,
+        description: product.description ? stripHtml(product.description) : "",
+        product_type: product.product_type ?? "",
+        tags: product.tags ?? "",
+      };
+    });
+
+    const response = await requestKimiCampaignCopy({
+      clientName,
+      promotionName,
+      noteToAndrew,
+      products: productsPayload,
+    });
+
+    const normalized = normalizeCampaignCopy(response, selectedProductIds);
+
+    await ctx.runMutation("promoPromotions:setGeneratedCampaignCopy" as any, {
+      promotionId,
+      campaignTitle: normalized.campaignTitle,
+      subjectLines: normalized.subjectLines,
+      previewTexts: normalized.previewTexts,
+      openingParagraph: normalized.openingParagraph,
+      generatedAt: nowIso(),
+    });
+
+    for (const entry of normalized.products) {
+      await ctx.runMutation("promoProducts:setProductBullets" as any, {
+        productId: entry.productId,
+        bullets: entry.bullets,
+      });
+    }
+
+    for (const item of items) {
+      const product = item.product;
+      if (!product) continue;
+      if (selectedProductIds.has(product.id)) continue;
+      if (product.bullet_points?.length) continue;
+      const fallback = fallbackBullets(
+        product.description,
+        product.title,
+        product.vendor,
+        product.product_type
+      );
+      if (fallback.length === 3) {
+        await ctx.runMutation("promoProducts:setProductBullets" as any, {
+          productId: product.id,
+          bullets: fallback,
+        });
+      }
+    }
+
+    return {
+      ok: true,
+      campaign: {
+        campaignTitle: normalized.campaignTitle,
+        subjectLines: normalized.subjectLines,
+        previewTexts: normalized.previewTexts,
+        openingParagraph: normalized.openingParagraph,
+      },
+      productCount: normalized.products.length,
     };
   },
 });
