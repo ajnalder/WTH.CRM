@@ -105,6 +105,67 @@ export const importCsvRows = mutation({
   },
 });
 
+export const upsertProductFromExtension = mutation({
+  args: {
+    clientId: v.string(),
+    token: v.string(),
+    product: v.object({
+      title: v.string(),
+      short_title: v.optional(v.string()),
+      product_url: v.string(),
+      image_url: v.optional(v.string()),
+      price: v.number(),
+      compare_at_price: v.optional(v.number()),
+      vendor: v.optional(v.string()),
+      product_type: v.optional(v.string()),
+      tags: v.optional(v.string()),
+      description: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, { clientId, token, product }) => {
+    await assertValidPortalToken(ctx, clientId, token);
+
+    const now = nowIso();
+    const existing = await ctx.db
+      .query("promo_products")
+      .withIndex("by_client_product_url", (q) =>
+        q.eq("client_id", clientId).eq("product_url", product.product_url)
+      )
+      .first();
+
+    const payload = {
+      client_id: clientId,
+      external_source: "extension",
+      external_id: product.product_url,
+      title: product.title,
+      short_title: product.short_title ?? undefined,
+      product_url: product.product_url,
+      image_url: product.image_url ?? "",
+      price: product.price,
+      compare_at_price: product.compare_at_price ?? undefined,
+      vendor: product.vendor ?? undefined,
+      product_type: product.product_type ?? undefined,
+      tags: product.tags ?? undefined,
+      description: product.description?.slice(0, 4000) ?? undefined,
+      status: "active",
+      updated_at: now,
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, payload);
+      return { ok: true, productId: existing.id };
+    }
+
+    const id = generateId();
+    await ctx.db.insert("promo_products", {
+      id,
+      ...payload,
+      created_at: now,
+    });
+    return { ok: true, productId: id };
+  },
+});
+
 export const importCsv = action({
   args: {
     clientId: v.string(),

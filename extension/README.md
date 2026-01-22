@@ -1,0 +1,26 @@
+# Promo Picker Extension (PoC)
+
+This is a proof of concept Chrome extension that lets a client add products from
+the storefront directly into a promo.
+
+## Setup
+
+1. Open `extension/config.js` and set:
+   - `convexSiteUrl` (e.g. `https://frugal-lyrebird-181.convex.site`)
+   - `clientId` (promo client id)
+   - `token` (portal token)
+   - `promotionId` (draft promotion id)
+2. In Chrome, go to `chrome://extensions`.
+3. Enable "Developer mode".
+4. Click "Load unpacked" and select the `extension/` folder.
+
+## Usage
+
+- Visit `https://www.golf360.co.nz`.
+- Click "Add to promo" on product cards or the floating button on product pages.
+- The product is sent to the draft promotion.
+
+## Notes
+
+- The extension uses `/products/{handle}.js` for clean product data.
+- Only the domains listed in `manifest.json` are supported.

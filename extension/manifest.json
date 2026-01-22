@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Promo Picker",
+  "version": "0.1.0",
+  "description": "Add Shopify products to a promo directly from the storefront.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.golf360.co.nz/*", "https://golf360.co.nz/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.golf360.co.nz/*", "https://golf360.co.nz/*"],
+      "js": ["contentScript.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle",
+      "type": "module"
+    }
+  ]
+}

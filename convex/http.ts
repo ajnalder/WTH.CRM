@@ -4,6 +4,11 @@ import { api } from "./_generated/api";
 
 const http = httpRouter();
 const imageProxyHosts = new Set(["cdn.shopify.com"]);
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
 // Xero OAuth callback endpoint
 http.route({
@@ -121,6 +126,78 @@ http.route({
     headers.set("Access-Control-Allow-Origin", "*");
 
     return new Response(upstream.body, { status: 200, headers });
+  }),
+});
+
+http.route({
+  path: "/promo/extension-add",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/promo/extension-add",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    let payload: any;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400, headers: corsHeaders });
+    }
+
+    const { clientId, token, promotionId, product } = payload ?? {};
+    if (!clientId || !token || !promotionId || !product) {
+      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+    }
+
+    try {
+      const validation = await ctx.runQuery(api.promoClients.validatePortalToken, {
+        clientId,
+        token,
+      });
+      if (!validation?.valid) {
+        return new Response("Invalid token", { status: 401, headers: corsHeaders });
+      }
+
+      const promotion = await ctx.runQuery(api.promoPromotions.getPromotionForPortal, {
+        clientId,
+        token,
+        promotionId,
+      });
+      if (!promotion?.promotion) {
+        return new Response("Promotion not found", { status: 404, headers: corsHeaders });
+      }
+
+      if (promotion.promotion.status !== "draft") {
+        return new Response("Promotion is locked", { status: 409, headers: corsHeaders });
+      }
+
+      const upserted = await ctx.runMutation(api.promoProducts.upsertProductFromExtension, {
+        clientId,
+        token,
+        product,
+      });
+
+      await ctx.runMutation(api.promoPromotions.addPromotionItem, {
+        clientId,
+        token,
+        promotionId,
+        productId: upserted.productId,
+      });
+
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (error: any) {
+      return new Response(error.message ?? "Server error", {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
   }),
 });
 
