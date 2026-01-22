@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageWithSidebar } from "@/components/PageWithSidebar";
@@ -42,6 +42,14 @@ import PromoPortalCampaignResults from "./pages/PromoPortalCampaignResults";
 
 const queryClient = new QueryClient();
 
+const ReminderNotifierGate = () => {
+  const location = useLocation();
+  if (location.pathname.startsWith("/p/")) {
+    return null;
+  }
+  return <ReminderNotifier />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -49,7 +57,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
-          <ReminderNotifier />
+          <ReminderNotifierGate />
           <Routes>
             <Route path="/auth/*" element={<Auth />} />
             <Route path="/sign-up/*" element={<SignUp />} />
