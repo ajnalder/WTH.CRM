@@ -331,11 +331,13 @@ export const CompanySettingsWithStorage: React.FC = () => {
                     <SelectValue placeholder="Select default audience" />
                   </SelectTrigger>
                   <SelectContent>
-                    {audiences.map((audience, index) => (
-                      <SelectItem key={`${audience.id}-${index}`} value={audience.id}>
-                        {audience.label || audience.id}
-                      </SelectItem>
-                    ))}
+                    {audiences
+                      .filter((audience) => audience.id.trim())
+                      .map((audience, index) => (
+                        <SelectItem key={`${audience.id}-${index}`} value={audience.id}>
+                          {audience.label || audience.id}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
