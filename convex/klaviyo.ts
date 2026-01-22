@@ -179,6 +179,7 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Missing subject line or preview text for the campaign message.");
   }
 
+  const messageId = `msg_${crypto.randomUUID()}`;
   const payload = {
     data: {
       type: "campaign",
@@ -187,19 +188,6 @@ export async function createKlaviyoCampaignDraft(
         audiences: {
           included: [selectedAudienceId],
         },
-        "campaign-messages": [
-          {
-            type: "campaign-message",
-            attributes: {
-              channel: "email",
-              label: "Email",
-              subject: subjectLine,
-              preview_text: previewText,
-              from_email: fromEmail,
-              from_label: fromLabel,
-            },
-          },
-        ],
         send_strategy: {
           method: "immediate",
         },
@@ -207,7 +195,31 @@ export async function createKlaviyoCampaignDraft(
           use_smart_sending: true,
         },
       },
+      relationships: {
+        "campaign-messages": {
+          data: [
+            {
+              type: "campaign-message",
+              id: messageId,
+            },
+          ],
+        },
+      },
     },
+    included: [
+      {
+        type: "campaign-message",
+        id: messageId,
+        attributes: {
+          channel: "email",
+          label: "Email",
+          subject: subjectLine,
+          preview_text: previewText,
+          from_email: fromEmail,
+          from_label: fromLabel,
+        },
+      },
+    ],
   };
 
   const data = await klaviyoPost("/api/campaigns", payload, { authScheme: "apiKey" });
