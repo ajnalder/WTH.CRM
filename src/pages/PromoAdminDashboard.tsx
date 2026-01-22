@@ -19,9 +19,12 @@ export default function PromoAdminDashboard() {
   const { toast } = useToast();
   const [portalTokens, setPortalTokens] = useState<Record<string, string>>({});
   const [selectedPromoClientId, setSelectedPromoClientId] = useState("");
+  const [linkSelections, setLinkSelections] = useState<Record<string, string>>({});
 
   const crmClients = useQuery(promoApi.promoClients.listCrmClientsForPromo, {});
+  const promoClients = useQuery(promoApi.promoClients.listPromoClientsForAdmin, {});
   const ensurePromoClientForCrm = useMutation(promoApi.promoClients.ensurePromoClientForCrm);
+  const linkPromoClientToCrm = useMutation(promoApi.promoClients.linkPromoClientToCrm);
   const promotions = useQuery(
     promoApi.promoPromotions.listPromotionsForAdmin,
     selectedPromoClientId ? { clientId: selectedPromoClientId } : "skip"
@@ -29,16 +32,16 @@ export default function PromoAdminDashboard() {
   const generatePortalToken = useAction(promoApi.promoClients.generatePortalToken);
   const rotatePortalToken = useAction(promoApi.promoClients.rotatePortalToken);
 
-  const promoClients = useMemo(
+  const enabledPromoClients = useMemo(
     () => (crmClients ?? []).filter((entry: any) => entry.promoClient),
     [crmClients]
   );
 
   useEffect(() => {
-    if (!selectedPromoClientId && promoClients.length > 0) {
-      setSelectedPromoClientId(promoClients[0].promoClient.id);
+    if (!selectedPromoClientId && enabledPromoClients.length > 0) {
+      setSelectedPromoClientId(enabledPromoClients[0].promoClient.id);
     }
-  }, [promoClients, selectedPromoClientId]);
+  }, [enabledPromoClients, selectedPromoClientId]);
 
   const portalLink = useMemo(() => {
     if (!selectedPromoClientId) return "";
@@ -100,6 +103,24 @@ export default function PromoAdminDashboard() {
     }
   };
 
+  const handleLinkPromoClient = async (crmClientId: string) => {
+    const promoClientId = linkSelections[crmClientId];
+    if (!promoClientId) return;
+    try {
+      await linkPromoClientToCrm({ crmClientId, promoClientId });
+      toast({ title: "Data source linked" });
+      if (!selectedPromoClientId) {
+        setSelectedPromoClientId(promoClientId);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to link data source",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -124,6 +145,8 @@ export default function PromoAdminDashboard() {
             {crmClients.map((entry: any) => {
               const promoClient = entry.promoClient;
               const token = promoClient ? portalTokens[promoClient.id] : null;
+              const availableSources =
+                promoClients?.filter((client: any) => !client.crm_client_id) ?? [];
               return (
                 <div key={entry.crmClient.id} className="rounded-md border p-3 space-y-2">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -131,7 +154,7 @@ export default function PromoAdminDashboard() {
                       <p className="font-medium">{entry.crmClient.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {promoClient
-                          ? "Promo portal enabled."
+                          ? `Promo portal enabled. ${promoClient.product_count ?? 0} products loaded.`
                           : "Promo portal not enabled yet."}
                       </p>
                     </div>
@@ -156,9 +179,42 @@ export default function PromoAdminDashboard() {
                           </Button>
                         </>
                       ) : (
-                        <Button onClick={() => handleEnablePromoClient(entry.crmClient.id)}>
-                          Enable promo portal
-                        </Button>
+                        <>
+                          {availableSources.length > 0 && (
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                              <Select
+                                value={linkSelections[entry.crmClient.id] ?? ""}
+                                onValueChange={(value) =>
+                                  setLinkSelections((prev) => ({
+                                    ...prev,
+                                    [entry.crmClient.id]: value,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="w-full md:w-56">
+                                  <SelectValue placeholder="Link existing data" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableSources.map((client: any) => (
+                                    <SelectItem key={client.id} value={client.id}>
+                                      {client.name} ({client.product_count} products)
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleLinkPromoClient(entry.crmClient.id)}
+                                disabled={!linkSelections[entry.crmClient.id]}
+                              >
+                                Link data
+                              </Button>
+                            </div>
+                          )}
+                          <Button onClick={() => handleEnablePromoClient(entry.crmClient.id)}>
+                            Enable promo portal
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -184,13 +240,13 @@ export default function PromoAdminDashboard() {
           <Select
             value={selectedPromoClientId}
             onValueChange={setSelectedPromoClientId}
-            disabled={promoClients.length === 0}
+            disabled={enabledPromoClients.length === 0}
           >
             <SelectTrigger className="w-full md:w-64">
               <SelectValue placeholder="Select promo client" />
             </SelectTrigger>
             <SelectContent>
-              {promoClients.map((entry: any) => (
+              {enabledPromoClients.map((entry: any) => (
                 <SelectItem key={entry.promoClient.id} value={entry.promoClient.id}>
                   {entry.crmClient.name}
                 </SelectItem>

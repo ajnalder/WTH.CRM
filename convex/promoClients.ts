@@ -114,6 +114,15 @@ export const listCrmClientsForPromo = query({
           .filter((q) => q.eq(q.field("crm_client_id"), undefined))
           .first();
       }
+
+      let productCount = 0;
+      if (promoClient) {
+        const products = await ctx.db
+          .query("promo_products")
+          .withIndex("by_client", (q) => q.eq("client_id", promoClient.id))
+          .collect();
+        productCount = products.length;
+      }
       results.push({
         crmClient: { id: crmClient.id, name: crmClient.company },
         promoClient: promoClient
@@ -121,12 +130,72 @@ export const listCrmClientsForPromo = query({
               id: promoClient.id,
               name: promoClient.name,
               portal_token_hash: promoClient.portal_token_hash ?? undefined,
+              product_count: productCount,
             }
           : null,
       });
     }
 
     return results;
+  },
+});
+
+export const listPromoClientsForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertAdmin(ctx);
+    const promoClients = await ctx.db.query("promo_clients").collect();
+    const results = [];
+    for (const client of promoClients) {
+      const products = await ctx.db
+        .query("promo_products")
+        .withIndex("by_client", (q) => q.eq("client_id", client.id))
+        .collect();
+      results.push({
+        id: client.id,
+        name: client.name,
+        crm_client_id: client.crm_client_id ?? null,
+        portal_token_hash: client.portal_token_hash ?? null,
+        product_count: products.length,
+      });
+    }
+    return results;
+  },
+});
+
+export const linkPromoClientToCrm = mutation({
+  args: { crmClientId: v.string(), promoClientId: v.string() },
+  handler: async (ctx, { crmClientId, promoClientId }) => {
+    await assertAdmin(ctx);
+    const userId = await getUserId(ctx);
+
+    const crmClient = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", crmClientId))
+      .first();
+    if (!crmClient || crmClient.user_id !== userId) {
+      throw new Error("Client not found.");
+    }
+
+    const promoClient = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_public_id", (q) => q.eq("id", promoClientId))
+      .first();
+    if (!promoClient) {
+      throw new Error("Promo client not found.");
+    }
+
+    if (promoClient.crm_client_id && promoClient.crm_client_id !== crmClientId) {
+      throw new Error("Promo client is already linked to another CRM client.");
+    }
+
+    await ctx.db.patch(promoClient._id, {
+      crm_client_id: crmClientId,
+      name: crmClient.company,
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
   },
 });
 
