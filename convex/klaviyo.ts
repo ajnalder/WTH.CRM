@@ -162,6 +162,38 @@ function getKlaviyoFromSettings() {
   };
 }
 
+async function createKlaviyoCampaignMessage(payload: {
+  campaignId: string;
+  subjectLine: string;
+  previewText: string;
+  fromEmail: string;
+  fromLabel: string;
+}) {
+  const messagePayload = {
+    data: {
+      type: "campaign-message",
+      attributes: {
+        channel: "email",
+        label: "Email",
+        subject: payload.subjectLine,
+        preview_text: payload.previewText,
+        from_email: payload.fromEmail,
+        from_label: payload.fromLabel,
+      },
+      relationships: {
+        campaign: {
+          data: {
+            type: "campaign",
+            id: payload.campaignId,
+          },
+        },
+      },
+    },
+  };
+
+  await klaviyoPost("/api/campaign-messages", messagePayload, { authScheme: "apiKey" });
+}
+
 export async function createKlaviyoCampaignDraft(
   name: string,
   options?: KlaviyoCampaignDraftOptions,
@@ -179,7 +211,6 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Missing subject line or preview text for the campaign message.");
   }
 
-  const messageId = `msg_${crypto.randomUUID()}`;
   const payload = {
     data: {
       type: "campaign",
@@ -195,31 +226,7 @@ export async function createKlaviyoCampaignDraft(
           use_smart_sending: true,
         },
       },
-      relationships: {
-        "campaign-messages": {
-          data: [
-            {
-              type: "campaign-message",
-              id: messageId,
-            },
-          ],
-        },
-      },
     },
-    included: [
-      {
-        type: "campaign-message",
-        id: messageId,
-        attributes: {
-          channel: "email",
-          label: "Email",
-          subject: subjectLine,
-          preview_text: previewText,
-          from_email: fromEmail,
-          from_label: fromLabel,
-        },
-      },
-    ],
   };
 
   const data = await klaviyoPost("/api/campaigns", payload, { authScheme: "apiKey" });
@@ -227,6 +234,14 @@ export async function createKlaviyoCampaignDraft(
   if (!campaignId) {
     throw new Error("Klaviyo campaign creation failed.");
   }
+
+  await createKlaviyoCampaignMessage({
+    campaignId,
+    subjectLine,
+    previewText,
+    fromEmail,
+    fromLabel,
+  });
 
   return { campaignId };
 }
