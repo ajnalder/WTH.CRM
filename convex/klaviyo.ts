@@ -188,12 +188,10 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
     try {
       const data = await klaviyoGet(path);
       const { metrics, candidates } = extractMetrics(data);
-      if (isDev()) {
-        lastDebug = {
-          path,
-          keys: Object.keys(candidates).slice(0, 120),
-        };
-      }
+    lastDebug = {
+      path,
+      keys: Object.keys(candidates).slice(0, 120),
+    };
       if (
         metrics.openRate !== undefined ||
         metrics.clickRate !== undefined ||
