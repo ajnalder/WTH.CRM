@@ -79,7 +79,8 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 - Add `CONVEX_OPENROUTER_API_KEY` in Convex for bullet generation.
 - Add `KLAVIYO_PRIVATE_API_KEY` in Convex for campaign results syncing.
 - Add `KLAVIYO_PLACED_ORDER_METRIC_ID` in Convex for placed order reporting.
-- Add `KLAVIYO_CAMPAIGN_AUDIENCE_ID` in Convex for campaign creation (list or segment ID).
+- Add `KLAVIYO_CAMPAIGN_AUDIENCE_ID` (or comma-separated `KLAVIYO_CAMPAIGN_AUDIENCE_IDS`) in Convex for campaign creation.
+- Optional: set `KLAVIYO_CAMPAIGN_AUDIENCE_LABELS` or `KLAVIYO_CAMPAIGN_AUDIENCES_JSON` for friendly audience names.
 - Run `npm i` and `npm run dev`.
 
 ### Campaign copy generation

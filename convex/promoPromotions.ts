@@ -6,7 +6,7 @@ import {
   computePromoPrice,
 } from "./promoUtils";
 import { nowIso } from "./_utils";
-import { createKlaviyoCampaignDraft } from "./klaviyo";
+import { createKlaviyoCampaignDraft, getKlaviyoAudienceOptions } from "./klaviyo";
 import { generateId } from "./promoUtils";
 import { api } from "./_generated/api";
 
@@ -407,6 +407,40 @@ export const setKlaviyoCampaignId = mutation({
   },
 });
 
+export const setKlaviyoCampaignSelections = mutation({
+  args: {
+    promotionId: v.string(),
+    selectedSubjectLine: v.optional(v.string()),
+    selectedPreviewText: v.optional(v.string()),
+    selectedAudienceId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx);
+
+    const promotion = await getPromotionById(ctx, args.promotionId);
+    if (!promotion) {
+      throw new Error("Promotion not found.");
+    }
+
+    await ctx.db.patch(promotion._id, {
+      selected_subject_line: args.selectedSubjectLine?.trim() || undefined,
+      selected_preview_text: args.selectedPreviewText?.trim() || undefined,
+      selected_audience_id: args.selectedAudienceId?.trim() || undefined,
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
+  },
+});
+
+export const getKlaviyoAudienceOptionsForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertAdmin(ctx);
+    return getKlaviyoAudienceOptions();
+  },
+});
+
 export const createKlaviyoCampaignForPromotion = action({
   args: { promotionId: v.string() },
   handler: async (ctx, { promotionId }) => {
@@ -424,7 +458,10 @@ export const createKlaviyoCampaignForPromotion = action({
     const name =
       promotion.generated_campaign_title?.trim() || promotion.name || "Promotion Campaign";
 
-    const { campaignId } = await createKlaviyoCampaignDraft(name);
+    const { campaignId } = await createKlaviyoCampaignDraft(
+      name,
+      promotion.selected_audience_id,
+    );
     await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
       promotionId,
       campaignId,

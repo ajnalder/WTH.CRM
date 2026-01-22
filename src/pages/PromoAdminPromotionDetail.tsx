@@ -5,6 +5,13 @@ import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatPrice } from "@/utils/promoPricing";
 import { useToast } from "@/components/ui/use-toast";
 import { PromoImage } from "@/components/promo/PromoImage";
@@ -20,6 +27,10 @@ export default function PromoAdminPromotionDetail() {
   const [packCampaign, setPackCampaign] = useState<any | null>(null);
   const [klaviyoCampaignId, setKlaviyoCampaignId] = useState("");
   const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
+  const [selectedSubjectLine, setSelectedSubjectLine] = useState("");
+  const [selectedPreviewText, setSelectedPreviewText] = useState("");
+  const [selectedAudienceId, setSelectedAudienceId] = useState("");
+  const [isSavingSelections, setIsSavingSelections] = useState(false);
 
   const promotionData = useQuery(
     promoApi.promoPromotions.getPromotionForAdmin,
@@ -27,9 +38,13 @@ export default function PromoAdminPromotionDetail() {
   );
   const generateCanvaPack = useAction(promoApi.promoPromotions.generateCanvaPackForAdmin);
   const saveKlaviyoCampaignId = useMutation(promoApi.promoPromotions.setKlaviyoCampaignId);
+  const saveKlaviyoSelections = useMutation(
+    promoApi.promoPromotions.setKlaviyoCampaignSelections
+  );
   const createKlaviyoCampaign = useAction(
     promoApi.promoPromotions.createKlaviyoCampaignForPromotion
   );
+  const audienceOptions = useQuery(promoApi.promoPromotions.getKlaviyoAudienceOptionsForAdmin);
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
     id ? { promotionId: id } : "skip"
@@ -60,7 +75,16 @@ export default function PromoAdminPromotionDetail() {
     if (promotionData?.promotion?.klaviyo_campaign_id) {
       setKlaviyoCampaignId(promotionData.promotion.klaviyo_campaign_id);
     }
-  }, [promotionData?.promotion?.klaviyo_campaign_id]);
+    if (promotionData?.promotion?.selected_subject_line) {
+      setSelectedSubjectLine(promotionData.promotion.selected_subject_line);
+    }
+    if (promotionData?.promotion?.selected_preview_text) {
+      setSelectedPreviewText(promotionData.promotion.selected_preview_text);
+    }
+    if (promotionData?.promotion?.selected_audience_id) {
+      setSelectedAudienceId(promotionData.promotion.selected_audience_id);
+    }
+  }, [promotionData?.promotion]);
 
   const handleTogglePack = async () => {
     if (!id) return;
@@ -129,6 +153,31 @@ export default function PromoAdminPromotionDetail() {
     }
   };
 
+  const handleSaveSelections = async () => {
+    if (!id) return;
+    setIsSavingSelections(true);
+    try {
+      await saveKlaviyoSelections({
+        promotionId: id,
+        selectedSubjectLine: selectedSubjectLine || undefined,
+        selectedPreviewText: selectedPreviewText || undefined,
+        selectedAudienceId: selectedAudienceId || undefined,
+      });
+      toast({
+        title: "Klaviyo selections saved",
+        description: "Subject, preview, and audience updated.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to save selections",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSelections(false);
+    }
+  };
+
   if (!promotionData) {
     return (
       <div className="space-y-4">
@@ -185,6 +234,80 @@ export default function PromoAdminPromotionDetail() {
         )}
         <div className="rounded-md border bg-muted/30 p-3 space-y-2">
           <p className="text-sm font-medium">Klaviyo campaign ID</p>
+          <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Subject line
+                </p>
+                <Select
+                  value={selectedSubjectLine}
+                  onValueChange={setSelectedSubjectLine}
+                  disabled={(campaignCopy?.generated_subject_lines ?? []).length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subject line" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(campaignCopy?.generated_subject_lines ?? []).map((line: string) => (
+                      <SelectItem key={line} value={line}>
+                        {line}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Preview text
+                </p>
+                <Select
+                  value={selectedPreviewText}
+                  onValueChange={setSelectedPreviewText}
+                  disabled={(campaignCopy?.generated_preview_texts ?? []).length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select preview text" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(campaignCopy?.generated_preview_texts ?? []).map((line: string) => (
+                      <SelectItem key={line} value={line}>
+                        {line}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">Audience</p>
+                <Select
+                  value={selectedAudienceId}
+                  onValueChange={setSelectedAudienceId}
+                  disabled={(audienceOptions ?? []).length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(audienceOptions ?? []).map((option: any) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Button
+                variant="outline"
+                onClick={handleSaveSelections}
+                disabled={isSavingSelections}
+              >
+                {isSavingSelections ? "Saving..." : "Save selections"}
+              </Button>
+            </div>
+          </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
             <Input
               value={klaviyoCampaignId}
@@ -206,7 +329,8 @@ export default function PromoAdminPromotionDetail() {
           </div>
           <p className="text-xs text-muted-foreground">
             Results are read-only and synced from Klaviyo without modifying campaigns.
-            Creating a campaign only makes a draft in Klaviyo.
+            Creating a campaign only makes a draft in Klaviyo. If no audience is selected,
+            the first configured audience is used.
           </p>
         </div>
         <div className="space-y-3">

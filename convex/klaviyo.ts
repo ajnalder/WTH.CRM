@@ -111,15 +111,52 @@ function getKlaviyoCampaignAudienceIds() {
   return ids;
 }
 
-export async function createKlaviyoCampaignDraft(name: string) {
-  const audienceIds = getKlaviyoCampaignAudienceIds();
+function getKlaviyoCampaignAudienceOptions() {
+  const json = process.env.KLAVIYO_CAMPAIGN_AUDIENCES_JSON;
+  if (json) {
+    try {
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null;
+            const id = typeof entry.id === "string" ? entry.id.trim() : "";
+            const label =
+              typeof entry.label === "string" ? entry.label.trim() : "";
+            if (!id) return null;
+            return { id, label: label || id };
+          })
+          .filter(Boolean) as { id: string; label: string }[];
+      }
+    } catch {
+      throw new Error("KLAVIYO_CAMPAIGN_AUDIENCES_JSON is invalid JSON.");
+    }
+  }
+
+  const ids = getKlaviyoCampaignAudienceIds();
+  const labels = (process.env.KLAVIYO_CAMPAIGN_AUDIENCE_LABELS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return ids.map((id, index) => ({
+    id,
+    label: labels[index] || id,
+  }));
+}
+
+export async function createKlaviyoCampaignDraft(name: string, audienceId?: string) {
+  const options = getKlaviyoCampaignAudienceOptions();
+  const selectedAudienceId = audienceId?.trim() || options[0]?.id;
+  if (!selectedAudienceId) {
+    throw new Error("No Klaviyo audience ID available.");
+  }
   const payload = {
     data: {
       type: "campaign",
       attributes: {
         name,
         audiences: {
-          included: audienceIds,
+          included: [selectedAudienceId],
         },
         send_strategy: {
           method: "immediate",
@@ -138,6 +175,10 @@ export async function createKlaviyoCampaignDraft(name: string) {
   }
 
   return { campaignId };
+}
+
+export function getKlaviyoAudienceOptions() {
+  return getKlaviyoCampaignAudienceOptions();
 }
 
 export async function fetchCampaign(campaignId: string) {
