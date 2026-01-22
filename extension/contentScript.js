@@ -1,6 +1,16 @@
 const addedFlag = "data-promo-extension-added";
 const buttonClass = "promo-extension-button";
 const config = window.PROMO_PICKER_CONFIG || {};
+const productCardSelectors = [
+  "[data-product-id]",
+  "[data-product-handle]",
+  ".product-card",
+  ".product-item",
+  ".grid__item",
+  ".card",
+  "li",
+  "article",
+];
 
 function toText(html) {
   const div = document.createElement("div");
@@ -95,7 +105,10 @@ async function handleAdd(url) {
 }
 
 function addButtonToLink(link) {
-  const parent = link.closest("li, article, div") || link.parentElement;
+  const parent =
+    productCardSelectors
+      .map((selector) => link.closest(selector))
+      .find((node) => !!node) || link.parentElement;
   if (!parent || parent.getAttribute(addedFlag)) return;
 
   parent.setAttribute(addedFlag, "true");
@@ -115,6 +128,9 @@ function addButtonToLink(link) {
 }
 
 function addButtons() {
+  if (extractHandle(window.location.href)) {
+    return;
+  }
   const links = Array.from(document.querySelectorAll("a[href*=\"/products/\"]"));
   links.forEach(addButtonToLink);
 }
