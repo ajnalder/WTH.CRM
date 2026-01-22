@@ -18,22 +18,21 @@ export type KimiCampaignResponse = {
   }>;
 };
 
-const DEFAULT_KIMI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_MODEL = "moonshotai/kimi-k2";
 
 function isDev() {
   return process.env.NODE_ENV !== "production";
 }
 
 function getKimiConfig() {
-  const endpoint = process.env.KIMI_API_URL || DEFAULT_KIMI_ENDPOINT;
-  const apiKey = process.env.KIMI_API_KEY;
-  const model = process.env.KIMI_MODEL;
+  const endpoint = OPENROUTER_ENDPOINT;
+  const apiKey =
+    process.env.CONVEX_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
+  const model = OPENROUTER_MODEL;
 
   if (!apiKey) {
-    throw new Error("Missing KIMI_API_KEY");
-  }
-  if (!model) {
-    throw new Error("Missing KIMI_MODEL");
+    throw new Error("Missing OpenRouter API key.");
   }
 
   return { endpoint, apiKey, model };

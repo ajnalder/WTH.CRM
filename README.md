@@ -77,13 +77,10 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 ### Setup
 - Ensure `VITE_CONVEX_URL` and `VITE_CLERK_PUBLISHABLE_KEY` are set in your environment.
 - Add `CONVEX_OPENROUTER_API_KEY` in Convex for bullet generation.
-- Add `KIMI_API_URL`, `KIMI_API_KEY`, and `KIMI_MODEL` in Convex for campaign copy generation.
 - Run `npm i` and `npm run dev`.
 
 ### Campaign copy generation
-- Set `KIMI_API_URL` to your Kimi endpoint (OpenRouter-compatible URL).
-- Set `KIMI_API_KEY` to your API key.
-- Set `KIMI_MODEL` to the Kimi K2 model ID (for example: `moonshotai/kimi-k2`).
+- Uses the existing OpenRouter key (`CONVEX_OPENROUTER_API_KEY` or `OPENROUTER_API_KEY`).
 - Run "Generate" on a submitted promo to generate campaign copy + bullets.
 
 ### Admin workflow (Andrew)
