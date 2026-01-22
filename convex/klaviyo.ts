@@ -168,7 +168,7 @@ export async function createKlaviyoCampaignDraft(name: string, audienceId?: stri
     },
   };
 
-  const data = await klaviyoPost("/api/campaigns", payload, { authScheme: "bearer" });
+  const data = await klaviyoPost("/api/campaigns", payload, { authScheme: "apiKey" });
   const campaignId = data?.data?.id as string | undefined;
   if (!campaignId) {
     throw new Error("Klaviyo campaign creation failed.");
