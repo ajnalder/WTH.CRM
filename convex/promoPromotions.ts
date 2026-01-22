@@ -139,6 +139,27 @@ export const listPromotionsForAdmin = query({
   },
 });
 
+export const listIncomingPromotionsForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertAdmin(ctx);
+
+    const promotions = await ctx.db.query("promo_promotions").collect();
+    const promoClients = await ctx.db.query("promo_clients").collect();
+
+    const clientNameById = new Map(
+      promoClients.map((client) => [client.id, client.name])
+    );
+
+    return promotions
+      .map((promotion) => ({
+        ...promotion,
+        client_name: clientNameById.get(promotion.client_id) || "Unknown client",
+      }))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+});
+
 export const createPromotion = mutation({
   args: {
     clientId: v.string(),
