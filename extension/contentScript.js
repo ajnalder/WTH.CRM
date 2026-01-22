@@ -49,17 +49,22 @@ function buildPayloadFromJson(data) {
   };
 }
 
-async function sendToPromo(product) {
-  if (!config.convexSiteUrl || !config.clientId || !config.token || !config.promotionId) {
+async function sendToPromo(product, currentConfig) {
+  if (
+    !currentConfig.convexSiteUrl ||
+    !currentConfig.clientId ||
+    !currentConfig.token ||
+    !currentConfig.promotionId
+  ) {
     throw new Error("Extension is not configured yet.");
   }
-  const response = await fetch(`${config.convexSiteUrl}/promo/extension-add`, {
+  const response = await fetch(`${currentConfig.convexSiteUrl}/promo/extension-add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      clientId: config.clientId,
-      token: config.token,
-      promotionId: config.promotionId,
+      clientId: currentConfig.clientId,
+      token: currentConfig.token,
+      promotionId: currentConfig.promotionId,
       product,
     }),
   });
@@ -87,13 +92,31 @@ function showToast(message, isError = false) {
   setTimeout(() => toast.remove(), 2500);
 }
 
-function formatConfigHint() {
+function formatConfigHint(current) {
   const missing = [];
-  if (!config.convexSiteUrl) missing.push("convexSiteUrl");
-  if (!config.clientId) missing.push("clientId");
-  if (!config.token) missing.push("token");
-  if (!config.promotionId) missing.push("promotionId");
+  if (!current.convexSiteUrl) missing.push("convexSiteUrl");
+  if (!current.clientId) missing.push("clientId");
+  if (!current.token) missing.push("token");
+  if (!current.promotionId) missing.push("promotionId");
   return missing.length ? `Missing: ${missing.join(", ")}` : null;
+}
+
+async function getConfig() {
+  if (chrome?.storage?.sync) {
+    const stored = await chrome.storage.sync.get([
+      "convexSiteUrl",
+      "clientId",
+      "token",
+      "promotionId",
+    ]);
+    return {
+      convexSiteUrl: stored.convexSiteUrl || config.convexSiteUrl,
+      clientId: stored.clientId || config.clientId,
+      token: stored.token || config.token,
+      promotionId: stored.promotionId || config.promotionId,
+    };
+  }
+  return { ...config };
 }
 
 async function handleAdd(url) {
@@ -104,14 +127,15 @@ async function handleAdd(url) {
   }
 
   try {
-    const configHint = formatConfigHint();
+    const currentConfig = await getConfig();
+    const configHint = formatConfigHint(currentConfig);
     if (configHint) {
       showToast(configHint, true);
       return;
     }
     const data = await fetchProductJson(handle);
     const product = buildPayloadFromJson(data);
-    await sendToPromo(product);
+    await sendToPromo(product, currentConfig);
     showToast("Added to promo");
   } catch (error) {
     const message =
