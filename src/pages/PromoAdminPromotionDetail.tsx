@@ -19,6 +19,7 @@ export default function PromoAdminPromotionDetail() {
   const [packBlocks, setPackBlocks] = useState<any[]>([]);
   const [packCampaign, setPackCampaign] = useState<any | null>(null);
   const [klaviyoCampaignId, setKlaviyoCampaignId] = useState("");
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
 
   const promotionData = useQuery(
     promoApi.promoPromotions.getPromotionForAdmin,
@@ -26,6 +27,9 @@ export default function PromoAdminPromotionDetail() {
   );
   const generateCanvaPack = useAction(promoApi.promoPromotions.generateCanvaPackForAdmin);
   const saveKlaviyoCampaignId = useMutation(promoApi.promoPromotions.setKlaviyoCampaignId);
+  const createKlaviyoCampaign = useAction(
+    promoApi.promoPromotions.createKlaviyoCampaignForPromotion
+  );
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
     id ? { promotionId: id } : "skip"
@@ -102,6 +106,29 @@ export default function PromoAdminPromotionDetail() {
     }
   };
 
+  const handleCreateKlaviyoCampaign = async () => {
+    if (!id) return;
+    setIsCreatingCampaign(true);
+    try {
+      const result = await createKlaviyoCampaign({ promotionId: id });
+      if (result?.campaignId) {
+        setKlaviyoCampaignId(result.campaignId);
+      }
+      toast({
+        title: "Klaviyo campaign created",
+        description: "Draft campaign created and linked to this promotion.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to create campaign",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingCampaign(false);
+    }
+  };
+
   if (!promotionData) {
     return (
       <div className="space-y-4">
@@ -171,9 +198,15 @@ export default function PromoAdminPromotionDetail() {
             >
               Save ID
             </Button>
+            {!klaviyoCampaignId.trim() && (
+              <Button onClick={handleCreateKlaviyoCampaign} disabled={isCreatingCampaign}>
+                {isCreatingCampaign ? "Creating..." : "Create in Klaviyo"}
+              </Button>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             Results are read-only and synced from Klaviyo without modifying campaigns.
+            Creating a campaign only makes a draft in Klaviyo.
           </p>
         </div>
         <div className="space-y-3">

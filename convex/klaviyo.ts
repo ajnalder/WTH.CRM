@@ -66,14 +66,19 @@ async function klaviyoGet(path: string, params?: Record<string, string>) {
   return JSON.parse(text);
 }
 
-async function klaviyoPost(path: string, body: unknown) {
+async function klaviyoPost(
+  path: string,
+  body: unknown,
+  options?: { authScheme?: "apiKey" | "bearer" },
+) {
   const { apiKey, baseUrl, revision } = getKlaviyoConfig();
   const url = `${baseUrl}${path}`;
+  const authScheme = options?.authScheme ?? "apiKey";
 
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Klaviyo-API-Key ${apiKey}`,
+      Authorization: authScheme === "bearer" ? `Bearer ${apiKey}` : `Klaviyo-API-Key ${apiKey}`,
       Accept: "application/json",
       revision,
       "Content-Type": "application/vnd.api+json",
@@ -87,6 +92,52 @@ async function klaviyoPost(path: string, body: unknown) {
   }
 
   return JSON.parse(text);
+}
+
+function getKlaviyoCampaignAudienceIds() {
+  const raw =
+    process.env.KLAVIYO_CAMPAIGN_AUDIENCE_ID ||
+    process.env.KLAVIYO_CAMPAIGN_AUDIENCE_IDS ||
+    "";
+  const ids = raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (!ids.length) {
+    throw new Error(
+      "Missing KLAVIYO_CAMPAIGN_AUDIENCE_ID (or KLAVIYO_CAMPAIGN_AUDIENCE_IDS).",
+    );
+  }
+  return ids;
+}
+
+export async function createKlaviyoCampaignDraft(name: string) {
+  const audienceIds = getKlaviyoCampaignAudienceIds();
+  const payload = {
+    data: {
+      type: "campaign",
+      attributes: {
+        name,
+        audiences: {
+          included: audienceIds,
+        },
+        send_strategy: {
+          method: "immediate",
+        },
+        send_options: {
+          use_smart_sending: true,
+        },
+      },
+    },
+  };
+
+  const data = await klaviyoPost("/api/campaigns", payload, { authScheme: "bearer" });
+  const campaignId = data?.data?.id as string | undefined;
+  if (!campaignId) {
+    throw new Error("Klaviyo campaign creation failed.");
+  }
+
+  return { campaignId };
 }
 
 export async function fetchCampaign(campaignId: string) {

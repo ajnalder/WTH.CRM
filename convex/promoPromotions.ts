@@ -6,6 +6,7 @@ import {
   computePromoPrice,
 } from "./promoUtils";
 import { nowIso } from "./_utils";
+import { createKlaviyoCampaignDraft } from "./klaviyo";
 import { generateId } from "./promoUtils";
 import { api } from "./_generated/api";
 
@@ -403,6 +404,33 @@ export const setKlaviyoCampaignId = mutation({
     });
 
     return { ok: true };
+  },
+});
+
+export const createKlaviyoCampaignForPromotion = action({
+  args: { promotionId: v.string() },
+  handler: async (ctx, { promotionId }) => {
+    await assertAdmin(ctx);
+
+    const promotion = await getPromotionById(ctx, promotionId);
+    if (!promotion) {
+      throw new Error("Promotion not found.");
+    }
+
+    if (promotion.klaviyo_campaign_id) {
+      throw new Error("Klaviyo campaign ID already linked.");
+    }
+
+    const name =
+      promotion.generated_campaign_title?.trim() || promotion.name || "Promotion Campaign";
+
+    const { campaignId } = await createKlaviyoCampaignDraft(name);
+    await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
+      promotionId,
+      campaignId,
+    });
+
+    return { ok: true, campaignId };
   },
 });
 
