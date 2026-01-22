@@ -144,12 +144,41 @@ function getKlaviyoCampaignAudienceOptions() {
   }));
 }
 
-export async function createKlaviyoCampaignDraft(name: string, audienceId?: string) {
-  const options = getKlaviyoCampaignAudienceOptions();
-  const selectedAudienceId = audienceId?.trim() || options[0]?.id;
+type KlaviyoCampaignDraftOptions = {
+  audienceId?: string;
+  subjectLine?: string;
+  previewText?: string;
+};
+
+function getKlaviyoFromSettings() {
+  const fromEmail = process.env.KLAVIYO_FROM_EMAIL;
+  if (!fromEmail) {
+    throw new Error("Missing KLAVIYO_FROM_EMAIL.");
+  }
+
+  return {
+    fromEmail,
+    fromLabel: process.env.KLAVIYO_FROM_LABEL || "Golf 360",
+  };
+}
+
+export async function createKlaviyoCampaignDraft(
+  name: string,
+  options?: KlaviyoCampaignDraftOptions,
+) {
+  const audienceOptions = getKlaviyoCampaignAudienceOptions();
+  const selectedAudienceId = options?.audienceId?.trim() || audienceOptions[0]?.id;
   if (!selectedAudienceId) {
     throw new Error("No Klaviyo audience ID available.");
   }
+
+  const { fromEmail, fromLabel } = getKlaviyoFromSettings();
+  const subjectLine = options?.subjectLine?.trim();
+  const previewText = options?.previewText?.trim();
+  if (!subjectLine || !previewText) {
+    throw new Error("Missing subject line or preview text for the campaign message.");
+  }
+
   const payload = {
     data: {
       type: "campaign",
@@ -158,6 +187,19 @@ export async function createKlaviyoCampaignDraft(name: string, audienceId?: stri
         audiences: {
           included: [selectedAudienceId],
         },
+        "campaign-messages": [
+          {
+            type: "campaign-message",
+            attributes: {
+              channel: "email",
+              label: "Email",
+              subject: subjectLine,
+              preview_text: previewText,
+              from_email: fromEmail,
+              from_label: fromLabel,
+            },
+          },
+        ],
         send_strategy: {
           method: "immediate",
         },

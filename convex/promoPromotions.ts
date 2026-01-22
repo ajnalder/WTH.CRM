@@ -460,11 +460,22 @@ export const createKlaviyoCampaignForPromotion = action({
 
     const name =
       promotion.generated_campaign_title?.trim() || promotion.name || "Promotion Campaign";
+    const subjectLine =
+      promotion.selected_subject_line ||
+      promotion.generated_subject_lines?.[0] ||
+      promotion.name;
+    const previewText =
+      promotion.selected_preview_text || promotion.generated_preview_texts?.[0];
 
-    const { campaignId } = await createKlaviyoCampaignDraft(
-      name,
-      promotion.selected_audience_id,
-    );
+    if (!subjectLine || !previewText) {
+      throw new Error("Select a subject line and preview text before creating the campaign.");
+    }
+
+    const { campaignId } = await createKlaviyoCampaignDraft(name, {
+      audienceId: promotion.selected_audience_id,
+      subjectLine,
+      previewText,
+    });
     await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
       promotionId,
       campaignId,
