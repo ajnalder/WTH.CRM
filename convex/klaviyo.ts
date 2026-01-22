@@ -192,12 +192,16 @@ export async function createKlaviyoCampaignDraft(
             {
               type: "campaign-message",
               attributes: {
-                channel: "email",
-                label: "Email",
-                subject: subjectLine,
-                preview_text: previewText,
-                from_email: fromEmail,
-                from_label: fromLabel,
+                definition: {
+                  channel: "email",
+                  label: "Email",
+                  content: {
+                    subject: subjectLine,
+                    preview_text: previewText,
+                    from_email: fromEmail,
+                    from_label: fromLabel,
+                  },
+                },
               },
             },
           ],
