@@ -31,6 +31,15 @@ function getKlaviyoConfig() {
   };
 }
 
+function getKlaviyoReportingConfig() {
+  const conversionMetricId = process.env.KLAVIYO_PLACED_ORDER_METRIC_ID;
+  if (!conversionMetricId) {
+    throw new Error("Missing KLAVIYO_PLACED_ORDER_METRIC_ID");
+  }
+
+  return { conversionMetricId };
+}
+
 async function klaviyoGet(path: string, params?: Record<string, string>) {
   const { apiKey, baseUrl, revision } = getKlaviyoConfig();
   const url = new URL(`${baseUrl}${path}`);
@@ -47,6 +56,29 @@ async function klaviyoGet(path: string, params?: Record<string, string>) {
       Accept: "application/json",
       revision,
     },
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`Klaviyo error ${response.status}: ${text}`);
+  }
+
+  return JSON.parse(text);
+}
+
+async function klaviyoPost(path: string, body: unknown) {
+  const { apiKey, baseUrl, revision } = getKlaviyoConfig();
+  const url = `${baseUrl}${path}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Klaviyo-API-Key ${apiKey}`,
+      Accept: "application/json",
+      revision,
+      "Content-Type": "application/vnd.api+json",
+    },
+    body: JSON.stringify(body),
   });
 
   const text = await response.text();
@@ -176,6 +208,15 @@ type KlaviyoMetricSnapshot = {
   }[];
 };
 
+type KlaviyoReportResult = {
+  groupings?: {
+    campaign_id?: string;
+    campaign_message_id?: string;
+    send_channel?: string;
+  };
+  statistics?: Record<string, number>;
+};
+
 type KlaviyoResponse = {
   ok: boolean;
   status: number | null;
@@ -205,6 +246,68 @@ async function klaviyoTryGet(path: string): Promise<KlaviyoResponse> {
   } catch {
     return { ok: false, status: null };
   }
+}
+
+function buildTimeframe(sendDate?: string) {
+  if (!sendDate) {
+    return { key: "last_365_days" };
+  }
+
+  const sendTime = Date.parse(sendDate);
+  if (!Number.isFinite(sendTime)) {
+    return { key: "last_365_days" };
+  }
+
+  const start = new Date(sendTime - 1000 * 60 * 60 * 24);
+  return {
+    start: start.toISOString(),
+    end: new Date().toISOString(),
+  };
+}
+
+async function fetchCampaignValuesReport(
+  campaignId: string,
+  sendDate?: string,
+): Promise<KlaviyoMetricSnapshot> {
+  const { conversionMetricId } = getKlaviyoReportingConfig();
+  const payload = {
+    data: {
+      type: "campaign-values-report",
+      attributes: {
+        statistics: [
+          "open_rate",
+          "click_rate",
+          "conversions",
+          "conversion_value",
+          "recipients",
+        ],
+        timeframe: buildTimeframe(sendDate),
+        conversion_metric_id: conversionMetricId,
+        group_by: ["campaign_id", "campaign_message_id", "send_channel"],
+        filter: `and(equals(campaign_id,"${campaignId}"),equals(send_channel,"email"))`,
+      },
+    },
+  };
+
+  const data = await klaviyoPost("/api/campaign-values-reports", payload);
+  const results = (data?.data?.attributes?.results as KlaviyoReportResult[]) || [];
+  const matching = results.find((result) => result.groupings?.campaign_id === campaignId);
+  const stats = matching?.statistics || {};
+
+  return {
+    openRate: stats.open_rate,
+    clickRate: stats.click_rate,
+    placedOrderCount: stats.conversions,
+    placedOrderValue: stats.conversion_value,
+    debug: [
+      {
+        path: "/api/campaign-values-reports",
+        status: 200,
+        ok: true,
+        keys: Object.keys(stats).slice(0, 120),
+      },
+    ],
+  };
 }
 
 async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnapshot> {
@@ -285,7 +388,15 @@ export async function fetchCampaignResults(campaignId: string) {
 
   const message = await fetchCampaignMessage(messageId);
   const messageAttrs = message?.attributes ?? {};
-  const metrics = await fetchMessageMetrics(messageId);
+  let metrics: KlaviyoMetricSnapshot;
+  try {
+    metrics = await fetchCampaignValuesReport(campaign.id, sendDate);
+  } catch (error) {
+    if (isDev()) {
+      console.warn("Klaviyo reporting API failed.", error);
+    }
+    metrics = await fetchMessageMetrics(messageId);
+  }
 
   return {
     campaignId: campaign.id,
