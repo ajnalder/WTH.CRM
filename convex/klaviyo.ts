@@ -14,6 +14,10 @@ type KlaviyoCampaignMessage = {
   attributes?: Record<string, any>;
 };
 
+function isDev() {
+  return process.env.NODE_ENV !== "production";
+}
+
 function getKlaviyoConfig() {
   const apiKey = process.env.KLAVIYO_PRIVATE_API_KEY;
   if (!apiKey) {
@@ -156,7 +160,16 @@ function extractMetrics(data: any) {
   return { openRate, clickRate, placedOrderValue, placedOrderCount, sendDate, status };
 }
 
-async function fetchMessageMetrics(messageId: string) {
+type KlaviyoMetricSnapshot = {
+  status?: string;
+  sendDate?: string;
+  openRate?: number;
+  clickRate?: number;
+  placedOrderValue?: number;
+  placedOrderCount?: number;
+};
+
+async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnapshot> {
   const paths = [
     `/api/campaign-messages/${messageId}`,
     `/api/campaign-messages/${messageId}/reporting`,
