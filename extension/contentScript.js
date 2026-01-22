@@ -87,6 +87,15 @@ function showToast(message, isError = false) {
   setTimeout(() => toast.remove(), 2500);
 }
 
+function formatConfigHint() {
+  const missing = [];
+  if (!config.convexSiteUrl) missing.push("convexSiteUrl");
+  if (!config.clientId) missing.push("clientId");
+  if (!config.token) missing.push("token");
+  if (!config.promotionId) missing.push("promotionId");
+  return missing.length ? `Missing: ${missing.join(", ")}` : null;
+}
+
 async function handleAdd(url) {
   const handle = extractHandle(url);
   if (!handle) {
@@ -95,12 +104,21 @@ async function handleAdd(url) {
   }
 
   try {
+    const configHint = formatConfigHint();
+    if (configHint) {
+      showToast(configHint, true);
+      return;
+    }
     const data = await fetchProductJson(handle);
     const product = buildPayloadFromJson(data);
     await sendToPromo(product);
     showToast("Added to promo");
   } catch (error) {
-    showToast(error.message || "Failed to add", true);
+    const message =
+      error?.message && error.message.length < 120
+        ? error.message
+        : "Failed to add";
+    showToast(message, true);
   }
 }
 

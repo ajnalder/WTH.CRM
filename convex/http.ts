@@ -148,10 +148,10 @@ http.route({
       return new Response("Invalid JSON", { status: 400, headers: corsHeaders });
     }
 
-    const { clientId, token, promotionId, product } = payload ?? {};
-    if (!clientId || !token || !promotionId || !product) {
+      const { clientId, token, promotionId, product } = payload ?? {};
+      if (!clientId || !token || !promotionId || !product) {
       return new Response("Missing required fields", { status: 400, headers: corsHeaders });
-    }
+      }
 
     try {
       const validation = await ctx.runQuery(api.promoClients.validatePortalToken, {
@@ -159,7 +159,10 @@ http.route({
         token,
       });
       if (!validation?.valid) {
-        return new Response("Invalid token", { status: 401, headers: corsHeaders });
+        return new Response(
+          `Invalid token (clientId=${clientId})`,
+          { status: 401, headers: corsHeaders }
+        );
       }
 
       const promotion = await ctx.runQuery(api.promoPromotions.getPromotionForPortal, {
