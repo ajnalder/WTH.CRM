@@ -78,10 +78,8 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 - Ensure `VITE_CONVEX_URL` and `VITE_CLERK_PUBLISHABLE_KEY` are set in your environment.
 - Add `CONVEX_OPENROUTER_API_KEY` in Convex for bullet generation.
 - Add `KLAVIYO_PRIVATE_API_KEY` in Convex for campaign results syncing.
-- Add `KLAVIYO_PLACED_ORDER_METRIC_ID` in Convex for placed order reporting.
-- Add `KLAVIYO_CAMPAIGN_AUDIENCE_ID` (or comma-separated `KLAVIYO_CAMPAIGN_AUDIENCE_IDS`) in Convex for campaign creation.
-- Optional: set `KLAVIYO_CAMPAIGN_AUDIENCE_LABELS` or `KLAVIYO_CAMPAIGN_AUDIENCES_JSON` for friendly audience names.
-- Add `KLAVIYO_FROM_EMAIL` (and optional `KLAVIYO_FROM_LABEL`) for campaign message creation.
+- Configure Klaviyo settings in the app Settings page (from email, audiences, placed order metric ID).
+- Optional fallback: set `KLAVIYO_PLACED_ORDER_METRIC_ID` in Convex if settings are empty.
 - Run `npm i` and `npm run dev`.
 
 ### Campaign copy generation

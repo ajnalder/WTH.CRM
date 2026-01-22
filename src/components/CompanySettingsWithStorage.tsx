@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileUrl } from '@/hooks/useFiles';
@@ -21,7 +28,17 @@ export const CompanySettingsWithStorage: React.FC = () => {
     gst_number: settings?.gst_number || '125-651-445',
     bank_details: settings?.bank_details || 'Direct Credit - Mackay Distribution 2018 Limited',
     bank_account: settings?.bank_account || '06-0556-0955531-00',
+    klaviyo_from_email: settings?.klaviyo_from_email || '',
+    klaviyo_from_label: settings?.klaviyo_from_label || '',
+    klaviyo_default_audience_id: settings?.klaviyo_default_audience_id || '',
+    klaviyo_placed_order_metric_id: settings?.klaviyo_placed_order_metric_id || '',
   });
+  const [audiences, setAudiences] = useState<{ id: string; label: string }[]>(
+    settings?.klaviyo_audiences?.map((audience) => ({
+      id: audience.id,
+      label: audience.label || '',
+    })) || []
+  );
 
   // Get logo URLs from storage IDs (if using new storage system)
   const logoUrl = useFileUrl(settings?.logo_storage_id);
@@ -42,7 +59,17 @@ export const CompanySettingsWithStorage: React.FC = () => {
         gst_number: settings.gst_number || '',
         bank_details: settings.bank_details || '',
         bank_account: settings.bank_account || '',
+        klaviyo_from_email: settings.klaviyo_from_email || '',
+        klaviyo_from_label: settings.klaviyo_from_label || '',
+        klaviyo_default_audience_id: settings.klaviyo_default_audience_id || '',
+        klaviyo_placed_order_metric_id: settings.klaviyo_placed_order_metric_id || '',
       });
+      setAudiences(
+        settings.klaviyo_audiences?.map((audience) => ({
+          id: audience.id,
+          label: audience.label || '',
+        })) || []
+      );
     }
   }, [settings]);
 
@@ -97,7 +124,17 @@ export const CompanySettingsWithStorage: React.FC = () => {
   };
 
   const handleSave = () => {
-    updateSettings(formData);
+    const cleanedAudiences = audiences
+      .map((audience) => ({
+        id: audience.id.trim(),
+        label: audience.label.trim() || undefined,
+      }))
+      .filter((audience) => audience.id);
+
+    updateSettings({
+      ...formData,
+      klaviyo_audiences: cleanedAudiences,
+    });
   };
 
   if (isLoading) {
@@ -253,6 +290,119 @@ export const CompanySettingsWithStorage: React.FC = () => {
               value={formData.bank_account}
               onChange={(e) => handleInputChange('bank_account', e.target.value)}
             />
+          </div>
+
+          <div className="border-t pt-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Klaviyo Settings</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage sender details and audience options for campaign creation.
+              </p>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="klaviyo_from_email">From email</Label>
+                <Input
+                  id="klaviyo_from_email"
+                  value={formData.klaviyo_from_email}
+                  onChange={(e) => handleInputChange('klaviyo_from_email', e.target.value)}
+                  placeholder="edm@golf360.co.nz"
+                />
+              </div>
+              <div>
+                <Label htmlFor="klaviyo_from_label">From label</Label>
+                <Input
+                  id="klaviyo_from_label"
+                  value={formData.klaviyo_from_label}
+                  onChange={(e) => handleInputChange('klaviyo_from_label', e.target.value)}
+                  placeholder="Golf 360"
+                />
+              </div>
+              <div>
+                <Label htmlFor="klaviyo_default_audience_id">Default audience</Label>
+                <Select
+                  value={formData.klaviyo_default_audience_id}
+                  onValueChange={(value) =>
+                    handleInputChange('klaviyo_default_audience_id', value)
+                  }
+                  disabled={audiences.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select default audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {audiences.map((audience, index) => (
+                      <SelectItem key={`${audience.id}-${index}`} value={audience.id}>
+                        {audience.label || audience.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="klaviyo_placed_order_metric_id">Placed order metric ID</Label>
+                <Input
+                  id="klaviyo_placed_order_metric_id"
+                  value={formData.klaviyo_placed_order_metric_id}
+                  onChange={(e) =>
+                    handleInputChange('klaviyo_placed_order_metric_id', e.target.value)
+                  }
+                  placeholder="RESQ6t"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Audiences</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setAudiences((prev) => [...prev, { id: '', label: '' }])
+                  }
+                >
+                  Add audience
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {audiences.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No audiences yet. Add at least one to enable Klaviyo creation.
+                  </p>
+                )}
+                {audiences.map((audience, index) => (
+                  <div key={`audience-${index}`} className="grid gap-2 md:grid-cols-3">
+                    <Input
+                      value={audience.label}
+                      onChange={(e) => {
+                        const next = [...audiences];
+                        next[index] = { ...next[index], label: e.target.value };
+                        setAudiences(next);
+                      }}
+                      placeholder="Audience name"
+                    />
+                    <Input
+                      value={audience.id}
+                      onChange={(e) => {
+                        const next = [...audiences];
+                        next[index] = { ...next[index], id: e.target.value };
+                        setAudiences(next);
+                      }}
+                      placeholder="Audience ID"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setAudiences((prev) => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <Button onClick={handleSave} disabled={isUpdating} className="w-full">

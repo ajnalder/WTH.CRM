@@ -31,8 +31,9 @@ function getKlaviyoConfig() {
   };
 }
 
-function getKlaviyoReportingConfig() {
-  const conversionMetricId = process.env.KLAVIYO_PLACED_ORDER_METRIC_ID;
+function getKlaviyoReportingConfig(overrideMetricId?: string) {
+  const conversionMetricId =
+    overrideMetricId?.trim() || process.env.KLAVIYO_PLACED_ORDER_METRIC_ID;
   if (!conversionMetricId) {
     throw new Error("Missing KLAVIYO_PLACED_ORDER_METRIC_ID");
   }
@@ -94,85 +95,36 @@ async function klaviyoPost(
   return JSON.parse(text);
 }
 
-function getKlaviyoCampaignAudienceIds() {
-  const raw =
-    process.env.KLAVIYO_CAMPAIGN_AUDIENCE_ID ||
-    process.env.KLAVIYO_CAMPAIGN_AUDIENCE_IDS ||
-    "";
-  const ids = raw
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  if (!ids.length) {
-    throw new Error(
-      "Missing KLAVIYO_CAMPAIGN_AUDIENCE_ID (or KLAVIYO_CAMPAIGN_AUDIENCE_IDS).",
-    );
-  }
-  return ids;
-}
-
-function getKlaviyoCampaignAudienceOptions() {
-  const json = process.env.KLAVIYO_CAMPAIGN_AUDIENCES_JSON;
-  if (json) {
-    try {
-      const parsed = JSON.parse(json);
-      if (Array.isArray(parsed)) {
-        return parsed
-          .map((entry) => {
-            if (!entry || typeof entry !== "object") return null;
-            const id = typeof entry.id === "string" ? entry.id.trim() : "";
-            const label =
-              typeof entry.label === "string" ? entry.label.trim() : "";
-            if (!id) return null;
-            return { id, label: label || id };
-          })
-          .filter(Boolean) as { id: string; label: string }[];
-      }
-    } catch {
-      throw new Error("KLAVIYO_CAMPAIGN_AUDIENCES_JSON is invalid JSON.");
-    }
-  }
-
-  const ids = getKlaviyoCampaignAudienceIds();
-  const labels = (process.env.KLAVIYO_CAMPAIGN_AUDIENCE_LABELS || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  return ids.map((id, index) => ({
-    id,
-    label: labels[index] || id,
-  }));
-}
+export type KlaviyoAudienceOption = { id: string; label?: string };
 
 type KlaviyoCampaignDraftOptions = {
   audienceId?: string;
   subjectLine?: string;
   previewText?: string;
+  fromEmail?: string;
+  fromLabel?: string;
+  audienceOptions?: KlaviyoAudienceOption[];
+  defaultAudienceId?: string;
 };
-
-function getKlaviyoFromSettings() {
-  const fromEmail = process.env.KLAVIYO_FROM_EMAIL;
-  if (!fromEmail) {
-    throw new Error("Missing KLAVIYO_FROM_EMAIL.");
-  }
-
-  return {
-    fromEmail,
-    fromLabel: process.env.KLAVIYO_FROM_LABEL || "Golf 360",
-  };
-}
 
 export async function createKlaviyoCampaignDraft(
   name: string,
   options?: KlaviyoCampaignDraftOptions,
 ) {
-  const audienceOptions = getKlaviyoCampaignAudienceOptions();
-  const selectedAudienceId = options?.audienceId?.trim() || audienceOptions[0]?.id;
+  const audienceOptions = options?.audienceOptions ?? [];
+  const selectedAudienceId =
+    options?.audienceId?.trim() ||
+    options?.defaultAudienceId?.trim() ||
+    audienceOptions[0]?.id;
   if (!selectedAudienceId) {
     throw new Error("No Klaviyo audience ID available.");
   }
 
-  const { fromEmail, fromLabel } = getKlaviyoFromSettings();
+  const fromEmail = options?.fromEmail?.trim();
+  if (!fromEmail) {
+    throw new Error("Missing Klaviyo from email.");
+  }
+  const fromLabel = options?.fromLabel?.trim() || "Golf 360";
   const subjectLine = options?.subjectLine?.trim();
   const previewText = options?.previewText?.trim();
   if (!subjectLine || !previewText) {
@@ -225,8 +177,15 @@ export async function createKlaviyoCampaignDraft(
   return { campaignId };
 }
 
-export function getKlaviyoAudienceOptions() {
-  return getKlaviyoCampaignAudienceOptions();
+export function getKlaviyoAudienceOptions(settings?: {
+  klaviyo_audiences?: { id: string; label?: string }[] | null;
+}) {
+  return (
+    settings?.klaviyo_audiences?.map((audience) => ({
+      id: audience.id,
+      label: audience.label || audience.id,
+    })) ?? []
+  );
 }
 
 export async function fetchCampaign(campaignId: string) {
@@ -408,8 +367,9 @@ function buildTimeframe(sendDate?: string) {
 async function fetchCampaignValuesReport(
   campaignId: string,
   sendDate?: string,
+  placedOrderMetricId?: string,
 ): Promise<KlaviyoMetricSnapshot> {
-  const { conversionMetricId } = getKlaviyoReportingConfig();
+  const { conversionMetricId } = getKlaviyoReportingConfig(placedOrderMetricId);
   const payload = {
     data: {
       type: "campaign-values-report",
@@ -500,7 +460,10 @@ function resolveMessageId(campaign: KlaviyoCampaign) {
   return undefined;
 }
 
-export async function fetchCampaignResults(campaignId: string) {
+export async function fetchCampaignResults(
+  campaignId: string,
+  options?: { placedOrderMetricId?: string },
+) {
   const campaign = await fetchCampaign(campaignId);
   if (!campaign?.id) {
     throw new Error("Campaign not found.");
@@ -530,7 +493,11 @@ export async function fetchCampaignResults(campaignId: string) {
   const messageAttrs = message?.attributes ?? {};
   let metrics: KlaviyoMetricSnapshot;
   try {
-    metrics = await fetchCampaignValuesReport(campaign.id, sendDate);
+    metrics = await fetchCampaignValuesReport(
+      campaign.id,
+      sendDate,
+      options?.placedOrderMetricId,
+    );
   } catch (error) {
     if (isDev()) {
       console.warn("Klaviyo reporting API failed.", error);

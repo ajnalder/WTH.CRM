@@ -35,6 +35,11 @@ export const upsert = mutation({
       bank_account: v.optional(v.string()),
       owner_name: v.optional(v.string()),
       xero_account_code: v.optional(v.string()),
+      klaviyo_from_email: v.optional(v.string()),
+      klaviyo_from_label: v.optional(v.string()),
+      klaviyo_default_audience_id: v.optional(v.string()),
+      klaviyo_audiences: v.optional(v.array(v.object({ id: v.string(), label: v.optional(v.string()) }))),
+      klaviyo_placed_order_metric_id: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
@@ -70,6 +75,11 @@ export const upsert = mutation({
       bank_account: args.updates.bank_account ?? undefined,
       owner_name: args.updates.owner_name ?? undefined,
       xero_account_code: args.updates.xero_account_code ?? undefined,
+      klaviyo_from_email: args.updates.klaviyo_from_email ?? undefined,
+      klaviyo_from_label: args.updates.klaviyo_from_label ?? undefined,
+      klaviyo_default_audience_id: args.updates.klaviyo_default_audience_id ?? undefined,
+      klaviyo_audiences: args.updates.klaviyo_audiences ?? undefined,
+      klaviyo_placed_order_metric_id: args.updates.klaviyo_placed_order_metric_id ?? undefined,
     };
 
     const _id = await ctx.db.insert("company_settings", settings);

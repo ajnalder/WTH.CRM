@@ -21,6 +21,11 @@ export interface CompanySettings {
   bank_account?: string;
   owner_name?: string;
   xero_account_code?: string;
+  klaviyo_from_email?: string;
+  klaviyo_from_label?: string;
+  klaviyo_default_audience_id?: string;
+  klaviyo_audiences?: { id: string; label?: string }[];
+  klaviyo_placed_order_metric_id?: string;
   created_at: string;
   updated_at: string;
 }

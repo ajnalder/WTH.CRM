@@ -437,7 +437,17 @@ export const getKlaviyoAudienceOptionsForAdmin = query({
   args: {},
   handler: async (ctx) => {
     await assertAdmin(ctx);
-    return getKlaviyoAudienceOptions();
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity?.subject) {
+      return [];
+    }
+
+    const settings = await ctx.db
+      .query("company_settings")
+      .withIndex("by_user", (q) => q.eq("user_id", identity.subject))
+      .first();
+
+    return getKlaviyoAudienceOptions(settings ?? undefined);
   },
 });
 
@@ -471,10 +481,17 @@ export const createKlaviyoCampaignForPromotion = action({
       throw new Error("Select a subject line and preview text before creating the campaign.");
     }
 
+    const settings = await ctx.runQuery("companySettings:get" as any, {});
+    const audienceOptions = getKlaviyoAudienceOptions(settings ?? undefined);
+
     const { campaignId } = await createKlaviyoCampaignDraft(name, {
       audienceId: promotion.selected_audience_id,
       subjectLine,
       previewText,
+      fromEmail: settings?.klaviyo_from_email,
+      fromLabel: settings?.klaviyo_from_label,
+      audienceOptions,
+      defaultAudienceId: settings?.klaviyo_default_audience_id,
     });
     await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
       promotionId,

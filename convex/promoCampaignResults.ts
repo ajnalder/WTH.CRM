@@ -164,7 +164,10 @@ export const refreshResultsForAdmin = action({
       throw new Error("Klaviyo campaign ID not linked yet.");
     }
 
-    const fetched = await fetchCampaignResults(campaignId);
+    const settings = await ctx.runQuery("companySettings:get" as any, {});
+    const fetched = await fetchCampaignResults(campaignId, {
+      placedOrderMetricId: settings?.klaviyo_placed_order_metric_id,
+    });
     await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
       promotionId,
       campaignId: fetched.campaignId,
