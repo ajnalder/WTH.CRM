@@ -446,7 +446,10 @@ export const createKlaviyoCampaignForPromotion = action({
   handler: async (ctx, { promotionId }) => {
     await assertAdmin(ctx);
 
-    const promotion = await getPromotionById(ctx, promotionId);
+    const promotionData = await ctx.runQuery("promoPromotions:getPromotionForAdmin" as any, {
+      promotionId,
+    });
+    const promotion = promotionData?.promotion;
     if (!promotion) {
       throw new Error("Promotion not found.");
     }
