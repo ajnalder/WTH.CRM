@@ -3,17 +3,15 @@ const clientIdInput = document.getElementById("clientId");
 const tokenInput = document.getElementById("token");
 const promotionIdInput = document.getElementById("promotionId");
 const saveBtn = document.getElementById("saveBtn");
-const portalFrame = document.getElementById("portalFrame");
-
 const defaultConfig = window.PROMO_PICKER_CONFIG || {};
 
 function buildPortalUrl(config) {
   if (!config.clientId || !config.token) return "";
-  const base = `https://wth-crm.vercel.app/p/${config.clientId}`;
-  const params = new URLSearchParams({ token: config.token });
-  if (config.promotionId) {
-    params.set("promotionId", config.promotionId);
+  if (!config.promotionId) {
+    return `https://wth-crm.vercel.app/p/${config.clientId}/new?token=${config.token}`;
   }
+  const base = `https://wth-crm.vercel.app/p/${config.clientId}/promotions/${config.promotionId}`;
+  const params = new URLSearchParams({ token: config.token });
   return `${base}?${params.toString()}`;
 }
 
@@ -34,10 +32,6 @@ async function loadConfig() {
   clientIdInput.value = config.clientId;
   tokenInput.value = config.token;
   promotionIdInput.value = config.promotionId;
-  const url = buildPortalUrl(config);
-  if (url) {
-    portalFrame.src = url;
-  }
 }
 
 saveBtn.addEventListener("click", async () => {
@@ -50,7 +44,7 @@ saveBtn.addEventListener("click", async () => {
   await chrome.storage.sync.set(config);
   const url = buildPortalUrl(config);
   if (url) {
-    portalFrame.src = url;
+    await chrome.tabs.create({ url });
   }
 });
 

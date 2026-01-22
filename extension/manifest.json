@@ -3,7 +3,7 @@
   "name": "Promo Picker",
   "version": "0.1.0",
   "description": "Add Shopify products to a promo directly from the storefront.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "action": {
     "default_title": "Promo Picker",
     "default_popup": "popup.html"
@@ -14,7 +14,8 @@
   "host_permissions": [
     "https://www.golf360.co.nz/*",
     "https://golf360.co.nz/*",
-    "https://*.golf360.co.nz/*"
+    "https://*.golf360.co.nz/*",
+    "https://wth-crm.vercel.app/*"
   ],
   "content_scripts": [
     {

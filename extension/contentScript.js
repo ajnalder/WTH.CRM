@@ -101,6 +101,12 @@ function formatConfigHint(current) {
   return missing.length ? `Missing: ${missing.join(", ")}` : null;
 }
 
+function openPromoPortal(currentConfig) {
+  if (!currentConfig.clientId || !currentConfig.token) return;
+  const url = `https://wth-crm.vercel.app/p/${currentConfig.clientId}/new?token=${currentConfig.token}`;
+  chrome.runtime?.sendMessage({ type: "promo-picker:open-portal", url });
+}
+
 async function getConfig() {
   if (chrome?.storage?.sync) {
     const stored = await chrome.storage.sync.get([
@@ -130,6 +136,9 @@ async function handleAdd(url) {
     const currentConfig = await getConfig();
     const configHint = formatConfigHint(currentConfig);
     if (configHint) {
+      if (!currentConfig.promotionId) {
+        openPromoPortal(currentConfig);
+      }
       showToast(configHint, true);
       return;
     }
