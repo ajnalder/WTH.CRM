@@ -199,6 +199,90 @@ export const linkPromoClientToCrm = mutation({
   },
 });
 
+export const migratePromoClientData = mutation({
+  args: {
+    crmClientId: v.string(),
+    fromPromoClientId: v.string(),
+    toPromoClientId: v.string(),
+  },
+  handler: async (ctx, { crmClientId, fromPromoClientId, toPromoClientId }) => {
+    await assertAdmin(ctx);
+    const userId = await getUserId(ctx);
+
+    if (fromPromoClientId === toPromoClientId) {
+      throw new Error("Source and destination are the same.");
+    }
+
+    const crmClient = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", crmClientId))
+      .first();
+    if (!crmClient || crmClient.user_id !== userId) {
+      throw new Error("Client not found.");
+    }
+
+    const source = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_public_id", (q) => q.eq("id", fromPromoClientId))
+      .first();
+    if (!source) {
+      throw new Error("Source promo client not found.");
+    }
+    if (source.crm_client_id && source.crm_client_id !== crmClientId) {
+      throw new Error("Source promo client is linked to another CRM client.");
+    }
+
+    const destination = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_public_id", (q) => q.eq("id", toPromoClientId))
+      .first();
+    if (!destination) {
+      throw new Error("Destination promo client not found.");
+    }
+
+    const now = nowIso();
+    await ctx.db.patch(destination._id, {
+      crm_client_id: crmClientId,
+      name: crmClient.company,
+      updated_at: now,
+    });
+    if (source.crm_client_id === crmClientId) {
+      await ctx.db.patch(source._id, {
+        crm_client_id: undefined,
+        updated_at: now,
+      });
+    }
+
+    const products = await ctx.db
+      .query("promo_products")
+      .withIndex("by_client", (q) => q.eq("client_id", fromPromoClientId))
+      .collect();
+    for (const product of products) {
+      await ctx.db.patch(product._id, {
+        client_id: toPromoClientId,
+        updated_at: now,
+      });
+    }
+
+    const promotions = await ctx.db
+      .query("promo_promotions")
+      .withIndex("by_client", (q) => q.eq("client_id", fromPromoClientId))
+      .collect();
+    for (const promotion of promotions) {
+      await ctx.db.patch(promotion._id, {
+        client_id: toPromoClientId,
+        updated_at: now,
+      });
+    }
+
+    return {
+      ok: true,
+      movedProducts: products.length,
+      movedPromotions: promotions.length,
+    };
+  },
+});
+
 export const getClientById = query({
   args: { clientId: v.string() },
   handler: async (ctx, { clientId }) => {

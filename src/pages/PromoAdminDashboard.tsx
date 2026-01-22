@@ -20,11 +20,13 @@ export default function PromoAdminDashboard() {
   const [portalTokens, setPortalTokens] = useState<Record<string, string>>({});
   const [selectedPromoClientId, setSelectedPromoClientId] = useState("");
   const [linkSelections, setLinkSelections] = useState<Record<string, string>>({});
+  const [migrateSelections, setMigrateSelections] = useState<Record<string, string>>({});
 
   const crmClients = useQuery(promoApi.promoClients.listCrmClientsForPromo, {});
   const promoClients = useQuery(promoApi.promoClients.listPromoClientsForAdmin, {});
   const ensurePromoClientForCrm = useMutation(promoApi.promoClients.ensurePromoClientForCrm);
   const linkPromoClientToCrm = useMutation(promoApi.promoClients.linkPromoClientToCrm);
+  const migratePromoClientData = useMutation(promoApi.promoClients.migratePromoClientData);
   const promotions = useQuery(
     promoApi.promoPromotions.listPromotionsForAdmin,
     selectedPromoClientId ? { clientId: selectedPromoClientId } : "skip"
@@ -121,6 +123,29 @@ export default function PromoAdminDashboard() {
     }
   };
 
+  const handleMigratePromoClient = async (crmClientId: string, toPromoClientId: string) => {
+    const fromPromoClientId = migrateSelections[crmClientId];
+    if (!fromPromoClientId) return;
+    try {
+      const result = await migratePromoClientData({
+        crmClientId,
+        fromPromoClientId,
+        toPromoClientId,
+      });
+      toast({
+        title: "Data moved",
+        description: `Moved ${result?.movedProducts ?? 0} products.`,
+      });
+      setMigrateSelections((prev) => ({ ...prev, [crmClientId]: "" }));
+    } catch (error: any) {
+      toast({
+        title: "Failed to move data",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -147,6 +172,10 @@ export default function PromoAdminDashboard() {
               const token = promoClient ? portalTokens[promoClient.id] : null;
               const availableSources =
                 promoClients?.filter((client: any) => !client.crm_client_id) ?? [];
+              const availableDataSources =
+                promoClients?.filter(
+                  (client: any) => client.id !== promoClient?.id && client.product_count > 0
+                ) ?? [];
               return (
                 <div key={entry.crmClient.id} className="rounded-md border p-3 space-y-2">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -218,6 +247,37 @@ export default function PromoAdminDashboard() {
                       )}
                     </div>
                   </div>
+                  {promoClient && availableDataSources.length > 0 && (
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                      <Select
+                        value={migrateSelections[entry.crmClient.id] ?? ""}
+                        onValueChange={(value) =>
+                          setMigrateSelections((prev) => ({
+                            ...prev,
+                            [entry.crmClient.id]: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-full md:w-64">
+                          <SelectValue placeholder="Move data from" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDataSources.map((client: any) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.name} ({client.product_count} products)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleMigratePromoClient(entry.crmClient.id, promoClient.id)}
+                        disabled={!migrateSelections[entry.crmClient.id]}
+                      >
+                        Move data
+                      </Button>
+                    </div>
+                  )}
                   {promoClient && (
                     <div className="rounded-md border bg-muted p-3 text-sm break-all">
                       {token
