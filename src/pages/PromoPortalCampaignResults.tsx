@@ -117,13 +117,18 @@ export default function PromoPortalCampaignResults() {
   const refreshedAt = resultsData?.refreshedAt as string | null;
   const hasLinkedCampaign = !!promotionData.promotion.klaviyo_campaign_id;
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (force = false) => {
     if (!clientId || !token || !id) return;
     setIsRefreshing(true);
     setRefreshError(null);
     setDebugInfo(null);
     try {
-      const response = await refreshResults({ clientId, token, promotionId: id });
+      const response = await refreshResults({
+        clientId,
+        token,
+        promotionId: id,
+        force,
+      });
       if (response?.debug?.path && Array.isArray(response.debug.keys)) {
         setDebugInfo({ path: response.debug.path, keys: response.debug.keys });
       }
@@ -161,8 +166,11 @@ export default function PromoPortalCampaignResults() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+              <Button variant="outline" onClick={() => handleRefresh(false)} disabled={isRefreshing}>
                 {isRefreshing ? "Refreshing..." : "Refresh results"}
+              </Button>
+              <Button variant="default" onClick={() => handleRefresh(true)} disabled={isRefreshing}>
+                Force refresh
               </Button>
             </div>
           </div>

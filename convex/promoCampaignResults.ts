@@ -83,8 +83,13 @@ export const upsertCampaignResult = mutation({
 });
 
 export const refreshResultsForPortal = action({
-  args: { clientId: v.string(), token: v.string(), promotionId: v.string() },
-  handler: async (ctx, { clientId, token, promotionId }) => {
+  args: {
+    clientId: v.string(),
+    token: v.string(),
+    promotionId: v.string(),
+    force: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { clientId, token, promotionId, force }) => {
     await ctx.runQuery("promoClients:validatePortalToken" as any, { clientId, token });
 
     const promotion = await ctx.runQuery("promoPromotions:getPromotionForPortal" as any, {
@@ -108,7 +113,7 @@ export const refreshResultsForPortal = action({
       promotionId,
     });
 
-    if (existing?.refreshedAt && isFresh(existing.refreshedAt)) {
+    if (!force && existing?.refreshedAt && isFresh(existing.refreshedAt)) {
       return { ok: true, results: existing.results, refreshedAt: existing.refreshedAt };
     }
 
