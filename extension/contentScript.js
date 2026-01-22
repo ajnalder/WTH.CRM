@@ -138,12 +138,26 @@ function addButtons() {
 function addProductPageButton() {
   const handle = extractHandle(window.location.href);
   if (!handle) return;
-  if (document.querySelector(`.${buttonClass}.promo-floating`)) return;
+  document.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
 
   const button = document.createElement("button");
   button.type = "button";
   button.className = `${buttonClass} promo-floating`;
   button.textContent = "Add to promo";
+  button.style.position = "fixed";
+  button.style.right = "24px";
+  button.style.bottom = "110px";
+  button.style.padding = "10px 16px";
+  button.style.borderRadius = "999px";
+  button.style.background = "#111827";
+  button.style.color = "#fff";
+  button.style.border = "none";
+  button.style.fontSize = "13px";
+  button.style.cursor = "pointer";
+  button.style.zIndex = "999999";
+  button.style.width = "auto";
+  button.style.height = "auto";
+  button.style.lineHeight = "1.1";
   button.addEventListener("click", () => handleAdd(window.location.href));
   document.body.appendChild(button);
 }
