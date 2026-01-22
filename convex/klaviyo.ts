@@ -162,38 +162,6 @@ function getKlaviyoFromSettings() {
   };
 }
 
-async function createKlaviyoCampaignMessage(payload: {
-  campaignId: string;
-  subjectLine: string;
-  previewText: string;
-  fromEmail: string;
-  fromLabel: string;
-}) {
-  const messagePayload = {
-    data: {
-      type: "campaign-message",
-      attributes: {
-        channel: "email",
-        label: "Email",
-        subject: payload.subjectLine,
-        preview_text: payload.previewText,
-        from_email: payload.fromEmail,
-        from_label: payload.fromLabel,
-      },
-      relationships: {
-        campaign: {
-          data: {
-            type: "campaign",
-            id: payload.campaignId,
-          },
-        },
-      },
-    },
-  };
-
-  await klaviyoPost("/api/campaign-messages", messagePayload, { authScheme: "apiKey" });
-}
-
 export async function createKlaviyoCampaignDraft(
   name: string,
   options?: KlaviyoCampaignDraftOptions,
@@ -219,6 +187,21 @@ export async function createKlaviyoCampaignDraft(
         audiences: {
           included: [selectedAudienceId],
         },
+        "campaign-messages": {
+          data: [
+            {
+              type: "campaign-message",
+              attributes: {
+                channel: "email",
+                label: "Email",
+                subject: subjectLine,
+                preview_text: previewText,
+                from_email: fromEmail,
+                from_label: fromLabel,
+              },
+            },
+          ],
+        },
         send_strategy: {
           method: "immediate",
         },
@@ -234,14 +217,6 @@ export async function createKlaviyoCampaignDraft(
   if (!campaignId) {
     throw new Error("Klaviyo campaign creation failed.");
   }
-
-  await createKlaviyoCampaignMessage({
-    campaignId,
-    subjectLine,
-    previewText,
-    fromEmail,
-    fromLabel,
-  });
 
   return { campaignId };
 }
