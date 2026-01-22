@@ -369,10 +369,9 @@ export const generateCampaignCopyForPromotion = action({
       throw new Error("Promotion not found.");
     }
 
-    const client = await ctx.db
-      .query("promo_clients")
-      .withIndex("by_public_id", (q) => q.eq("id", promotionData.promotion.client_id))
-      .first();
+    const client = await ctx.runQuery("promoClients:getClientById" as any, {
+      clientId: promotionData.promotion.client_id,
+    });
 
     const clientName = client?.name || "Golf 360";
     const promotionName = promotionData.promotion.name;
@@ -389,8 +388,8 @@ export const generateCampaignCopyForPromotion = action({
     if (selectedItems.length === 0) {
       throw new Error("No products selected for this promotion.");
     }
-    const selectedProductIds = new Set(
-      selectedItems.map((item: any) => item.product.id)
+    const selectedProductIds = new Set<string>(
+      selectedItems.map((item: any) => item.product.id as string)
     );
 
     const productsPayload = selectedItems.map((item: any) => {

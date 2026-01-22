@@ -509,16 +509,28 @@ export const setGeneratedCampaignCopy = mutation({
 
 export const generateCanvaPackForAdmin = action({
   args: { promotionId: v.string() },
-  handler: async (ctx, { promotionId }) => {
+  handler: async (
+    ctx,
+    { promotionId }
+  ): Promise<{
+    blocks: any[];
+    campaign: {
+      generated_campaign_title?: string;
+      generated_subject_lines?: string[];
+      generated_preview_texts?: string[];
+      generated_opening_paragraph?: string;
+      generated_at?: string;
+    };
+  }> => {
     await assertAdmin(ctx);
 
     await ctx.runAction(api.promoAi.generateCampaignCopyForPromotion, {
       promotionId,
     });
 
-    const result = await ctx.runQuery(api.promoPromotions.getPromotionForAdmin, {
+    const result = (await ctx.runQuery(api.promoPromotions.getPromotionForAdmin, {
       promotionId,
-    });
+    })) as any;
     if (!result) {
       throw new Error("Promotion not found.");
     }
