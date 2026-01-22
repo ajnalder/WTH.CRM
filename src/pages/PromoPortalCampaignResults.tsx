@@ -48,9 +48,9 @@ export default function PromoPortalCampaignResults() {
   const token = searchParams.get("token") ?? "";
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<{ path: string; keys: string[] } | null>(
-    null
-  );
+  const [debugInfo, setDebugInfo] = useState<
+    { path: string; status: number | null; ok: boolean; keys: string[] }[] | null
+  >(null);
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -129,8 +129,8 @@ export default function PromoPortalCampaignResults() {
         promotionId: id,
         force,
       });
-      if (response?.debug?.path && Array.isArray(response.debug.keys)) {
-        setDebugInfo({ path: response.debug.path, keys: response.debug.keys });
+      if (Array.isArray(response?.debug)) {
+        setDebugInfo(response.debug);
       }
     } catch (error: any) {
       setRefreshError(error.message ?? "Failed to refresh results.");
@@ -180,8 +180,18 @@ export default function PromoPortalCampaignResults() {
           {debugInfo && (
             <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
               <p className="font-semibold">Debug (Klaviyo keys)</p>
-              <p>Path: {debugInfo.path}</p>
-              <p className="mt-1 break-words">Keys: {debugInfo.keys.join(", ")}</p>
+              {debugInfo.length === 0 && <p>No debug data returned.</p>}
+              {debugInfo.map((entry) => (
+                <div key={entry.path} className="mt-2">
+                  <p>
+                    Path: {entry.path} ({entry.ok ? "ok" : "error"}
+                    {entry.status ? ` ${entry.status}` : ""})
+                  </p>
+                  <p className="mt-1 break-words">
+                    Keys: {entry.keys.length ? entry.keys.join(", ") : "—"}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
           {!hasLinkedCampaign && (

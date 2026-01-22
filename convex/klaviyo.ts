@@ -170,9 +170,42 @@ type KlaviyoMetricSnapshot = {
   placedOrderCount?: number;
   debug?: {
     path: string;
+    status: number | null;
+    ok: boolean;
     keys: string[];
-  };
+  }[];
 };
+
+type KlaviyoResponse = {
+  ok: boolean;
+  status: number | null;
+  data?: any;
+};
+
+async function klaviyoTryGet(path: string): Promise<KlaviyoResponse> {
+  const { apiKey, baseUrl, revision } = getKlaviyoConfig();
+  const url = `${baseUrl}${path}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Klaviyo-API-Key ${apiKey}`,
+        Accept: "application/json",
+        revision,
+      },
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      return { ok: false, status: response.status };
+    }
+
+    return { ok: true, status: response.status, data: JSON.parse(text) };
+  } catch {
+    return { ok: false, status: null };
+  }
+}
 
 async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnapshot> {
   const paths = [
@@ -182,35 +215,35 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
     `/api/campaign-message-reports/${messageId}`,
   ];
 
-  let lastError: Error | null = null;
-  let lastDebug: { path: string; keys: string[] } | undefined;
+  const debugEntries: {
+    path: string;
+    status: number | null;
+    ok: boolean;
+    keys: string[];
+  }[] = [];
   for (const path of paths) {
-    try {
-      const data = await klaviyoGet(path);
-      const { metrics, candidates } = extractMetrics(data);
-    lastDebug = {
-      path,
-      keys: Object.keys(candidates).slice(0, 120),
-    };
-      if (
-        metrics.openRate !== undefined ||
-        metrics.clickRate !== undefined ||
-        metrics.placedOrderValue !== undefined ||
-        metrics.placedOrderCount !== undefined
-      ) {
-        return { ...metrics, debug: lastDebug };
-      }
-    } catch (error: any) {
-      lastError = error;
+    const response = await klaviyoTryGet(path);
+    if (!response.ok || !response.data) {
+      debugEntries.push({ path, status: response.status, ok: false, keys: [] });
+      continue;
+    }
+
+    const { metrics, candidates } = extractMetrics(response.data);
+    const keys = Object.keys(candidates).slice(0, 120);
+    debugEntries.push({ path, status: response.status, ok: true, keys });
+
+    if (
+      metrics.openRate !== undefined ||
+      metrics.clickRate !== undefined ||
+      metrics.placedOrderValue !== undefined ||
+      metrics.placedOrderCount !== undefined
+    ) {
+      return { ...metrics, debug: debugEntries };
     }
   }
 
-  if (lastError && isDev()) {
-    console.warn("Klaviyo metrics fetch failed:", lastError.message);
-  }
-
   return {
-    debug: lastDebug,
+    debug: debugEntries,
   };
 }
 
