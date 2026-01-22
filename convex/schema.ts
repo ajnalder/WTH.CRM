@@ -557,6 +557,7 @@ export default defineSchema({
     generated_preview_texts: v.optional(v.array(v.string())),
     generated_opening_paragraph: v.optional(v.string()),
     generated_at: v.optional(v.string()),
+    klaviyo_campaign_id: v.optional(v.string()),
     status: v.string(),
     created_by: v.string(),
     created_at: v.string(),
@@ -589,4 +590,22 @@ export default defineSchema({
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_promotion", ["promotion_id"]),
+
+  promo_campaign_results: defineTable({
+    id: v.string(),
+    promotion_id: v.string(),
+    campaign_id: v.string(),
+    name: v.string(),
+    status: v.optional(v.string()),
+    send_date: v.optional(v.string()),
+    open_rate: v.optional(v.number()),
+    click_rate: v.optional(v.number()),
+    placed_order_value: v.optional(v.number()),
+    placed_order_count: v.optional(v.number()),
+    refreshed_at: v.string(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_promotion", ["promotion_id"])
+    .index("by_campaign", ["campaign_id"]),
 });

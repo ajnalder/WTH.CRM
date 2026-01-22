@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { Mail } from "lucide-react";
 import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
@@ -7,60 +8,19 @@ import { Card } from "@/components/ui/card";
 
 const promoApi = api as any;
 
-const mockCampaigns = [
-  {
-    id: "campaign-1",
-    name: "Hot Deals January",
-    status: "Sent",
-    sendDate: "2026-01-20T19:30:00+13:00",
-    openRate: 47.91,
-    clickRate: 2.66,
-    placedOrderValue: 3522.97,
-    placedOrderCount: 10,
-  },
-  {
-    id: "campaign-2",
-    name: "Get Some Balls",
-    status: "Sent",
-    sendDate: "2026-01-15T19:30:00+13:00",
-    openRate: 51.51,
-    clickRate: 2.31,
-    placedOrderValue: 5324.15,
-    placedOrderCount: 37,
-  },
-  {
-    id: "campaign-3",
-    name: "Tech Deals",
-    status: "Sent",
-    sendDate: "2026-01-09T19:30:00+13:00",
-    openRate: 51.22,
-    clickRate: 1.43,
-    placedOrderValue: 4873.2,
-    placedOrderCount: 35,
-  },
-  {
-    id: "campaign-4",
-    name: "Summer Golf Essentials",
-    status: "Sent",
-    sendDate: "2026-01-06T19:30:00+13:00",
-    openRate: 52.59,
-    clickRate: 1.85,
-    placedOrderValue: 12193.37,
-    placedOrderCount: 27,
-  },
-  {
-    id: "campaign-5",
-    name: "15% off last chance",
-    status: "Sent",
-    sendDate: "2025-12-30T19:30:00+13:00",
-    openRate: 38.13,
-    clickRate: 1.97,
-    placedOrderValue: 4165.65,
-    placedOrderCount: 33,
-  },
-];
+type CampaignResult = {
+  id: string;
+  name: string;
+  status?: string;
+  send_date?: string;
+  open_rate?: number;
+  click_rate?: number;
+  placed_order_value?: number;
+  placed_order_count?: number;
+};
 
-function formatDate(value: string) {
+function formatDate(value?: string) {
+  if (!value) return "—";
   const date = new Date(value);
   return new Intl.DateTimeFormat("en-NZ", {
     dateStyle: "medium",
@@ -68,11 +28,13 @@ function formatDate(value: string) {
   }).format(date);
 }
 
-function formatRate(value: number) {
+function formatRate(value?: number) {
+  if (typeof value !== "number") return "—";
   return `${value.toFixed(2)}%`;
 }
 
-function formatCurrency(value: number) {
+function formatCurrency(value?: number) {
+  if (typeof value !== "number") return "—";
   return new Intl.NumberFormat("en-NZ", {
     style: "currency",
     currency: "NZD",
@@ -84,6 +46,8 @@ export default function PromoPortalCampaignResults() {
   const { clientId, id } = useParams();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -96,6 +60,13 @@ export default function PromoPortalCampaignResults() {
       ? { clientId, token, promotionId: id }
       : "skip"
   );
+  const resultsData = useQuery(
+    promoApi.promoCampaignResults.getResultsForPortal,
+    clientId && token && id && validation?.valid
+      ? { clientId, token, promotionId: id }
+      : "skip"
+  );
+  const refreshResults = useAction(promoApi.promoCampaignResults.refreshResultsForPortal);
 
   if (!clientId || !token) {
     return (
@@ -139,6 +110,22 @@ export default function PromoPortalCampaignResults() {
   }
 
   const promotionName = promotionData.promotion.name;
+  const campaigns = (resultsData?.results ?? []) as CampaignResult[];
+  const refreshedAt = resultsData?.refreshedAt as string | null;
+  const hasLinkedCampaign = !!promotionData.promotion.klaviyo_campaign_id;
+
+  const handleRefresh = async () => {
+    if (!clientId || !token || !id) return;
+    setIsRefreshing(true);
+    setRefreshError(null);
+    try {
+      await refreshResults({ clientId, token, promotionId: id });
+    } catch (error: any) {
+      setRefreshError(error.message ?? "Failed to refresh results.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
@@ -158,14 +145,34 @@ export default function PromoPortalCampaignResults() {
             <div>
               <h2 className="text-lg font-medium">Recent campaigns</h2>
               <p className="text-sm text-muted-foreground">
-                Results are mocked for now and will connect to Klaviyo soon.
+                Results are read-only and pulled from Klaviyo.
               </p>
+              {refreshedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last updated: {formatDate(refreshedAt)}
+                </p>
+              )}
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Live soon
-            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+                {isRefreshing ? "Refreshing..." : "Refresh results"}
+              </Button>
+            </div>
           </div>
+          {refreshError && (
+            <p className="text-sm text-red-600">{refreshError}</p>
+          )}
+          {!hasLinkedCampaign && (
+            <p className="text-sm text-muted-foreground">
+              Campaign results are not linked yet. Ask Andrew to connect the Klaviyo
+              campaign ID.
+            </p>
+          )}
+          {hasLinkedCampaign && campaigns.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No results synced yet. Click “Refresh results” to fetch from Klaviyo.
+            </p>
+          )}
 
           <div className="hidden md:block">
             <div className="grid grid-cols-[minmax(0,2fr)_120px_140px_120px_120px_140px] gap-3 border-b px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -177,7 +184,7 @@ export default function PromoPortalCampaignResults() {
               <span>Placed order</span>
             </div>
             <div className="divide-y">
-              {mockCampaigns.map((campaign) => (
+              {campaigns.map((campaign) => (
                 <div
                   key={campaign.id}
                   className="grid grid-cols-[minmax(0,2fr)_120px_140px_120px_120px_140px] gap-3 px-3 py-3 text-sm"
@@ -192,31 +199,35 @@ export default function PromoPortalCampaignResults() {
                     </div>
                   </div>
                   <div>
-                    <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      {campaign.status}
-                    </span>
+                    {campaign.status ? (
+                      <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                        {campaign.status}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {formatDate(campaign.sendDate)}
+                    {formatDate(campaign.send_date)}
                   </div>
                   <div>
                     <p className="font-semibold text-primary">
-                      {formatRate(campaign.openRate)}
+                      {formatRate(campaign.open_rate)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Recipients</p>
+                    <p className="text-xs text-muted-foreground">Open rate</p>
                   </div>
                   <div>
                     <p className="font-semibold text-primary">
-                      {formatRate(campaign.clickRate)}
+                      {formatRate(campaign.click_rate)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Recipients</p>
+                    <p className="text-xs text-muted-foreground">Click rate</p>
                   </div>
                   <div>
                     <p className="font-semibold text-primary">
-                      {formatCurrency(campaign.placedOrderValue)}
+                      {formatCurrency(campaign.placed_order_value)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {campaign.placedOrderCount} orders
+                      {campaign.placed_order_count ?? "—"} orders
                     </p>
                   </div>
                 </div>
@@ -225,7 +236,7 @@ export default function PromoPortalCampaignResults() {
           </div>
 
           <div className="space-y-3 md:hidden">
-            {mockCampaigns.map((campaign) => (
+            {campaigns.map((campaign) => (
               <div key={campaign.id} className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
@@ -234,31 +245,37 @@ export default function PromoPortalCampaignResults() {
                   <div>
                     <p className="font-medium">{campaign.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDate(campaign.sendDate)}
+                      {formatDate(campaign.send_date)}
                     </p>
                   </div>
-                  <span className="ml-auto inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    {campaign.status}
-                  </span>
+                  {campaign.status ? (
+                    <span className="ml-auto inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      {campaign.status}
+                    </span>
+                  ) : (
+                    <span className="ml-auto text-xs text-muted-foreground">—</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <p className="text-xs text-muted-foreground">Open rate</p>
-                    <p className="font-semibold">{formatRate(campaign.openRate)}</p>
+                    <p className="font-semibold">{formatRate(campaign.open_rate)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Click rate</p>
-                    <p className="font-semibold">{formatRate(campaign.clickRate)}</p>
+                    <p className="font-semibold">{formatRate(campaign.click_rate)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Orders</p>
-                    <p className="font-semibold">{campaign.placedOrderCount}</p>
+                    <p className="font-semibold">
+                      {campaign.placed_order_count ?? "—"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Placed order value</span>
                   <span className="font-semibold">
-                    {formatCurrency(campaign.placedOrderValue)}
+                    {formatCurrency(campaign.placed_order_value)}
                   </span>
                 </div>
               </div>

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/utils/promoPricing";
 import { useToast } from "@/components/ui/use-toast";
 import { PromoImage } from "@/components/promo/PromoImage";
@@ -17,12 +18,14 @@ export default function PromoAdminPromotionDetail() {
   const [loadingPack, setLoadingPack] = useState(false);
   const [packBlocks, setPackBlocks] = useState<any[]>([]);
   const [packCampaign, setPackCampaign] = useState<any | null>(null);
+  const [klaviyoCampaignId, setKlaviyoCampaignId] = useState("");
 
   const promotionData = useQuery(
     promoApi.promoPromotions.getPromotionForAdmin,
     id ? { promotionId: id } : "skip"
   );
   const generateCanvaPack = useAction(promoApi.promoPromotions.generateCanvaPackForAdmin);
+  const saveKlaviyoCampaignId = useMutation(promoApi.promoPromotions.setKlaviyoCampaignId);
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
     id ? { promotionId: id } : "skip"
@@ -49,6 +52,12 @@ export default function PromoAdminPromotionDetail() {
     }
   }, [packData?.blocks?.length, packData?.campaign]);
 
+  useEffect(() => {
+    if (promotionData?.promotion?.klaviyo_campaign_id) {
+      setKlaviyoCampaignId(promotionData.promotion.klaviyo_campaign_id);
+    }
+  }, [promotionData?.promotion?.klaviyo_campaign_id]);
+
   const handleTogglePack = async () => {
     if (!id) return;
     if (showPack) {
@@ -73,6 +82,23 @@ export default function PromoAdminPromotionDetail() {
       });
     } finally {
       setLoadingPack(false);
+    }
+  };
+
+  const handleSaveCampaignId = async () => {
+    if (!id) return;
+    try {
+      await saveKlaviyoCampaignId({ promotionId: id, campaignId: klaviyoCampaignId });
+      toast({
+        title: "Klaviyo campaign linked",
+        description: "Campaign ID saved for results tracking.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to save campaign ID",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -130,6 +156,26 @@ export default function PromoAdminPromotionDetail() {
             Note to Andrew: {promotion.note_to_andrew}
           </p>
         )}
+        <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+          <p className="text-sm font-medium">Klaviyo campaign ID</p>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Input
+              value={klaviyoCampaignId}
+              onChange={(event) => setKlaviyoCampaignId(event.target.value)}
+              placeholder="Paste campaign ID from Klaviyo"
+            />
+            <Button
+              variant="outline"
+              onClick={handleSaveCampaignId}
+              disabled={!klaviyoCampaignId.trim()}
+            >
+              Save ID
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Results are read-only and synced from Klaviyo without modifying campaigns.
+          </p>
+        </div>
         <div className="space-y-3">
           {items.length === 0 && (
             <p className="text-sm text-muted-foreground">No products added.</p>

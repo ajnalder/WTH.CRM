@@ -387,6 +387,25 @@ export const deletePromotion = mutation({
   },
 });
 
+export const setKlaviyoCampaignId = mutation({
+  args: { promotionId: v.string(), campaignId: v.string() },
+  handler: async (ctx, { promotionId, campaignId }) => {
+    await assertAdmin(ctx);
+
+    const promotion = await getPromotionById(ctx, promotionId);
+    if (!promotion) {
+      throw new Error("Promotion not found.");
+    }
+
+    await ctx.db.patch(promotion._id, {
+      klaviyo_campaign_id: campaignId.trim(),
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
+  },
+});
+
 export const getPromotionForPortal = query({
   args: { clientId: v.string(), token: v.string(), promotionId: v.string() },
   handler: async (ctx, { clientId, token, promotionId }) => {
