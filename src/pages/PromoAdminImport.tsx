@@ -5,6 +5,13 @@ import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   parseCsvText,
   mapCsvRows,
   mapCollectionRows,
@@ -22,8 +29,8 @@ const promoApi = api as any;
 
 export default function PromoAdminImport() {
   const { toast } = useToast();
-  const client = useQuery(promoApi.promoClients.getDefaultClient, {});
-  const ensureDefaultClient = useMutation(promoApi.promoClients.ensureDefaultClient);
+  const crmClients = useQuery(promoApi.promoClients.listCrmClientsForPromo, {});
+  const [selectedClientId, setSelectedClientId] = useState("");
   const importCsvRows = useAction(promoApi.promoProducts.importCsv);
   const importCollections = useAction(promoApi.promoProducts.importCollections);
   const applyCollectionRules = useAction(promoApi.promoProducts.applyCollectionRules);
@@ -41,13 +48,20 @@ export default function PromoAdminImport() {
   const [collectionLoading, setCollectionLoading] = useState(false);
   const [rulesLoading, setRulesLoading] = useState(false);
 
-  const ready = rows.length > 0 && !!client;
-  const collectionReady = collectionRows.length > 0 && !!client;
-  const rulesReady = ruleRows.length > 0 && !!client;
+  const promoClients = useMemo(
+    () => (crmClients ?? []).filter((entry: any) => entry.promoClient),
+    [crmClients]
+  );
 
   useEffect(() => {
-    ensureDefaultClient().catch(() => null);
-  }, [ensureDefaultClient]);
+    if (!selectedClientId && promoClients.length > 0) {
+      setSelectedClientId(promoClients[0].promoClient.id);
+    }
+  }, [promoClients, selectedClientId]);
+
+  const ready = rows.length > 0 && !!selectedClientId;
+  const collectionReady = collectionRows.length > 0 && !!selectedClientId;
+  const rulesReady = ruleRows.length > 0 && !!selectedClientId;
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -88,10 +102,10 @@ export default function PromoAdminImport() {
   };
 
   const handleImport = async () => {
-    if (!client) return;
+    if (!selectedClientId) return;
     setLoading(true);
     try {
-      const summary = await importCsvRows({ clientId: client.id, rows });
+      const summary = await importCsvRows({ clientId: selectedClientId, rows });
       setResult(summary);
       toast({ title: "CSV import complete" });
     } catch (error: any) {
@@ -106,10 +120,10 @@ export default function PromoAdminImport() {
   };
 
   const handleCollectionImport = async () => {
-    if (!client) return;
+    if (!selectedClientId) return;
     setCollectionLoading(true);
     try {
-      const summary = await importCollections({ clientId: client.id, rows: collectionRows });
+      const summary = await importCollections({ clientId: selectedClientId, rows: collectionRows });
       setCollectionResult(summary);
       toast({ title: "Collection import complete" });
     } catch (error: any) {
@@ -127,10 +141,10 @@ export default function PromoAdminImport() {
   const collectionSkippedRows = useMemo(() => collectionResult?.skipped ?? [], [collectionResult]);
 
   const handleApplyRules = async () => {
-    if (!client) return;
+    if (!selectedClientId) return;
     setRulesLoading(true);
     try {
-      const summary = await applyCollectionRules({ clientId: client.id, rules: ruleRows });
+      const summary = await applyCollectionRules({ clientId: selectedClientId, rules: ruleRows });
       setRulesResult(summary);
       toast({ title: "Collection rules applied" });
     } catch (error: any) {
@@ -149,7 +163,7 @@ export default function PromoAdminImport() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Import Shopify Products</h1>
-          <p className="text-sm text-muted-foreground">Upload Golf 360 CSV exports.</p>
+          <p className="text-sm text-muted-foreground">Upload client CSV exports.</p>
         </div>
         <Button asChild variant="outline">
           <Link to="/admin">Back to dashboard</Link>
@@ -157,6 +171,30 @@ export default function PromoAdminImport() {
       </div>
 
       <Card className="p-4 space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Promo client</label>
+          <Select
+            value={selectedClientId}
+            onValueChange={setSelectedClientId}
+            disabled={promoClients.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select promo client" />
+            </SelectTrigger>
+            <SelectContent>
+              {promoClients.map((entry: any) => (
+                <SelectItem key={entry.promoClient.id} value={entry.promoClient.id}>
+                  {entry.crmClient.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {promoClients.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Enable a promo client from the admin dashboard before importing.
+            </p>
+          )}
+        </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">CSV file</label>
           <input

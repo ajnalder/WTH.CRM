@@ -5,43 +5,53 @@ import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const promoApi = api as any;
 
 export default function PromoAdminDashboard() {
   const { toast } = useToast();
-  const [portalToken, setPortalToken] = useState<string | null>(null);
+  const [portalTokens, setPortalTokens] = useState<Record<string, string>>({});
+  const [selectedPromoClientId, setSelectedPromoClientId] = useState("");
 
-  const ensureDefaultClient = useMutation(promoApi.promoClients.ensureDefaultClient);
-  const client = useQuery(promoApi.promoClients.getDefaultClient, {});
+  const crmClients = useQuery(promoApi.promoClients.listCrmClientsForPromo, {});
+  const ensurePromoClientForCrm = useMutation(promoApi.promoClients.ensurePromoClientForCrm);
   const promotions = useQuery(
     promoApi.promoPromotions.listPromotionsForAdmin,
-    client ? { clientId: client.id } : "skip"
+    selectedPromoClientId ? { clientId: selectedPromoClientId } : "skip"
   );
   const generatePortalToken = useAction(promoApi.promoClients.generatePortalToken);
   const rotatePortalToken = useAction(promoApi.promoClients.rotatePortalToken);
 
+  const promoClients = useMemo(
+    () => (crmClients ?? []).filter((entry: any) => entry.promoClient),
+    [crmClients]
+  );
+
   useEffect(() => {
-    ensureDefaultClient().catch(() => {
-      toast({
-        title: "Unable to seed Golf 360",
-        description: "Check Convex auth or permissions.",
-        variant: "destructive",
-      });
-    });
-  }, [ensureDefaultClient, toast]);
+    if (!selectedPromoClientId && promoClients.length > 0) {
+      setSelectedPromoClientId(promoClients[0].promoClient.id);
+    }
+  }, [promoClients, selectedPromoClientId]);
 
   const portalLink = useMemo(() => {
-    if (!client || !portalToken) return "";
+    if (!selectedPromoClientId) return "";
+    const token = portalTokens[selectedPromoClientId];
+    if (!token) return "";
     const baseUrl = window.location.origin;
-    return `${baseUrl}/p/${client.id}?token=${portalToken}`;
-  }, [client, portalToken]);
+    return `${baseUrl}/p/${selectedPromoClientId}?token=${token}`;
+  }, [portalTokens, selectedPromoClientId]);
 
-  const handleGenerate = async () => {
-    if (!client) return;
+  const handleGenerate = async (promoClientId: string) => {
     try {
-      const result = await generatePortalToken({ clientId: client.id });
-      setPortalToken(result.token);
+      const result = await generatePortalToken({ clientId: promoClientId });
+      setPortalTokens((prev) => ({ ...prev, [promoClientId]: result.token }));
       toast({ title: "Portal link generated", description: "Copy it below." });
     } catch (error: any) {
       toast({
@@ -52,11 +62,10 @@ export default function PromoAdminDashboard() {
     }
   };
 
-  const handleRotate = async () => {
-    if (!client) return;
+  const handleRotate = async (promoClientId: string) => {
     try {
-      const result = await rotatePortalToken({ clientId: client.id });
-      setPortalToken(result.token);
+      const result = await rotatePortalToken({ clientId: promoClientId });
+      setPortalTokens((prev) => ({ ...prev, [promoClientId]: result.token }));
       toast({ title: "Portal link rotated", description: "New token generated." });
     } catch (error: any) {
       toast({
@@ -67,10 +76,28 @@ export default function PromoAdminDashboard() {
     }
   };
 
-  const handleCopyPortalLink = async () => {
-    if (!portalLink) return;
-    await navigator.clipboard.writeText(portalLink);
+  const handleCopyPortalLink = async (promoClientId: string) => {
+    const token = portalTokens[promoClientId];
+    if (!token) return;
+    const baseUrl = window.location.origin;
+    await navigator.clipboard.writeText(`${baseUrl}/p/${promoClientId}?token=${token}`);
     toast({ title: "Portal link copied" });
+  };
+
+  const handleEnablePromoClient = async (crmClientId: string) => {
+    try {
+      const promoClient = await ensurePromoClientForCrm({ crmClientId });
+      if (promoClient?.id && !selectedPromoClientId) {
+        setSelectedPromoClientId(promoClient.id);
+      }
+      toast({ title: "Promo portal enabled" });
+    } catch (error: any) {
+      toast({
+        title: "Failed to enable promo portal",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -78,64 +105,128 @@ export default function PromoAdminDashboard() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">EDM Promo Builder</h1>
-          <p className="text-sm text-muted-foreground">Admin workspace for Golf 360</p>
+          <p className="text-sm text-muted-foreground">Admin workspace for promo clients</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link to="/admin/import">Import CSV</Link>
           </Button>
-          {client?.portal_token_hash ? (
-            <Button onClick={handleRotate}>Rotate portal link</Button>
-          ) : (
-            <Button onClick={handleGenerate}>Generate portal link</Button>
-          )}
         </div>
       </div>
 
       <Card className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-medium">Scott's Portal Link</h2>
-            <p className="text-sm text-muted-foreground">
-              {client?.portal_token_hash
-                ? "Token active. Rotate to issue a new link."
-                : "Generate a token to issue the first link."}
-            </p>
+        <h2 className="text-lg font-medium">Promo clients</h2>
+        {crmClients ? (
+          <div className="space-y-3">
+            {crmClients.length === 0 && (
+              <p className="text-sm text-muted-foreground">No CRM clients yet.</p>
+            )}
+            {crmClients.map((entry: any) => {
+              const promoClient = entry.promoClient;
+              const token = promoClient ? portalTokens[promoClient.id] : null;
+              return (
+                <div key={entry.crmClient.id} className="rounded-md border p-3 space-y-2">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="font-medium">{entry.crmClient.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {promoClient
+                          ? "Promo portal enabled."
+                          : "Promo portal not enabled yet."}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {promoClient ? (
+                        <>
+                          {promoClient.portal_token_hash ? (
+                            <Button onClick={() => handleRotate(promoClient.id)}>
+                              Rotate portal link
+                            </Button>
+                          ) : (
+                            <Button onClick={() => handleGenerate(promoClient.id)}>
+                              Generate portal link
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCopyPortalLink(promoClient.id)}
+                            disabled={!token}
+                          >
+                            Copy portal link
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => handleEnablePromoClient(entry.crmClient.id)}>
+                          Enable promo portal
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {promoClient && (
+                    <div className="rounded-md border bg-muted p-3 text-sm break-all">
+                      {token
+                        ? `${window.location.origin}/p/${promoClient.id}?token=${token}`
+                        : "No visible portal link yet."}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <Button variant="outline" onClick={handleCopyPortalLink} disabled={!portalLink}>
-            Copy portal link
-          </Button>
-        </div>
-        <div className="rounded-md border bg-muted p-3 text-sm break-all">
-          {portalLink || "No visible portal link yet."}
-        </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Loading clients...</p>
+        )}
       </Card>
 
       <Card className="p-4 space-y-4">
-        <h2 className="text-lg font-medium">Promotions</h2>
-        {promotions ? (
-          <div className="space-y-2">
-            {promotions.length === 0 && (
-              <p className="text-sm text-muted-foreground">No promotions yet.</p>
-            )}
-            {promotions.map((promo: any) => (
-              <Link
-                key={promo.id}
-                to={`/admin/promotions/${promo.id}`}
-                className="flex items-center justify-between rounded-md border p-3 hover:bg-muted"
-              >
-                <div>
-                  <p className="font-medium">{promo.name}</p>
-                  <p className="text-xs text-muted-foreground">Status: {promo.status}</p>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {promo.submitted_at ? "Submitted" : "Draft"}
-                </span>
-              </Link>
-            ))}
-          </div>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-medium">Promotions</h2>
+          <Select
+            value={selectedPromoClientId}
+            onValueChange={setSelectedPromoClientId}
+            disabled={promoClients.length === 0}
+          >
+            <SelectTrigger className="w-full md:w-64">
+              <SelectValue placeholder="Select promo client" />
+            </SelectTrigger>
+            <SelectContent>
+              {promoClients.map((entry: any) => (
+                <SelectItem key={entry.promoClient.id} value={entry.promoClient.id}>
+                  {entry.crmClient.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {selectedPromoClientId ? (
+          promotions ? (
+            <div className="space-y-2">
+              {promotions.length === 0 && (
+                <p className="text-sm text-muted-foreground">No promotions yet.</p>
+              )}
+              {promotions.map((promo: any) => (
+                <Link
+                  key={promo.id}
+                  to={`/admin/promotions/${promo.id}`}
+                  className="flex items-center justify-between rounded-md border p-3 hover:bg-muted"
+                >
+                  <div>
+                    <p className="font-medium">{promo.name}</p>
+                    <p className="text-xs text-muted-foreground">Status: {promo.status}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {promo.submitted_at ? "Submitted" : "Draft"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading promotions...</p>
+          )
         ) : (
-          <p className="text-sm text-muted-foreground">Loading promotions...</p>
+          <p className="text-sm text-muted-foreground">
+            Select a promo client to view promotions.
+          </p>
         )}
       </Card>
     </div>

@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
-import { nowIso } from "./_utils";
+import { getUserId, nowIso } from "./_utils";
 import { assertAdmin, hashToken, generateId, generateRawToken } from "./promoUtils";
 
 const DEFAULT_CLIENT_NAME = "Golf 360";
@@ -32,6 +32,80 @@ export const ensureDefaultClient = mutation({
       .query("promo_clients")
       .withIndex("by_public_id", (q) => q.eq("id", id))
       .first();
+  },
+});
+
+export const ensurePromoClientForCrm = mutation({
+  args: { crmClientId: v.string() },
+  handler: async (ctx, { crmClientId }) => {
+    await assertAdmin(ctx);
+    const userId = await getUserId(ctx);
+
+    const crmClient = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", crmClientId))
+      .first();
+
+    if (!crmClient || crmClient.user_id !== userId) {
+      throw new Error("Client not found.");
+    }
+
+    const existing = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_crm_client", (q) => q.eq("crm_client_id", crmClientId))
+      .first();
+
+    if (existing) {
+      return existing;
+    }
+
+    const now = nowIso();
+    const id = generateId();
+    await ctx.db.insert("promo_clients", {
+      id,
+      crm_client_id: crmClientId,
+      name: crmClient.company,
+      created_at: now,
+      updated_at: now,
+    });
+
+    return await ctx.db
+      .query("promo_clients")
+      .withIndex("by_public_id", (q) => q.eq("id", id))
+      .first();
+  },
+});
+
+export const listCrmClientsForPromo = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertAdmin(ctx);
+    const userId = await getUserId(ctx);
+
+    const crmClients = await ctx.db
+      .query("clients")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    const results = [];
+    for (const crmClient of crmClients) {
+      const promoClient = await ctx.db
+        .query("promo_clients")
+        .withIndex("by_crm_client", (q) => q.eq("crm_client_id", crmClient.id))
+        .first();
+      results.push({
+        crmClient: { id: crmClient.id, name: crmClient.company },
+        promoClient: promoClient
+          ? {
+              id: promoClient.id,
+              name: promoClient.name,
+              portal_token_hash: promoClient.portal_token_hash ?? undefined,
+            }
+          : null,
+      });
+    }
+
+    return results;
   },
 });
 

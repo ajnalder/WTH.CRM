@@ -117,7 +117,12 @@ export const refreshResultsForPortal = action({
       return { ok: true, results: existing.results, refreshedAt: existing.refreshedAt };
     }
 
-    const fetched = await fetchCampaignResults(campaignId);
+    const settings = await ctx.runQuery("companySettings:get" as any, {
+      userId: promotion.promotion.created_by,
+    });
+    const fetched = await fetchCampaignResults(campaignId, {
+      placedOrderMetricId: settings?.klaviyo_placed_order_metric_id,
+    });
     await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
       promotionId,
       campaignId: fetched.campaignId,

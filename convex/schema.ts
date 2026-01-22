@@ -507,6 +507,7 @@ export default defineSchema({
 
   promo_clients: defineTable({
     id: v.string(),
+    crm_client_id: v.optional(v.string()),
     name: v.string(),
     portal_token_hash: v.optional(v.string()),
     portal_token_created_at: v.optional(v.string()),
@@ -515,6 +516,7 @@ export default defineSchema({
     updated_at: v.string(),
   })
     .index("by_name", ["name"])
+    .index("by_crm_client", ["crm_client_id"])
     .index("by_public_id", ["id"]),
 
   promo_products: defineTable({
