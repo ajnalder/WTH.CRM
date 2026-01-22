@@ -157,7 +157,10 @@ function extractMetrics(data: any) {
   ]);
   const status = pickString(candidates as any, ["status", "state"]);
 
-  return { openRate, clickRate, placedOrderValue, placedOrderCount, sendDate, status };
+  return {
+    metrics: { openRate, clickRate, placedOrderValue, placedOrderCount, sendDate, status },
+    candidates,
+  };
 }
 
 type KlaviyoMetricSnapshot = {
@@ -183,7 +186,10 @@ async function fetchMessageMetrics(messageId: string): Promise<KlaviyoMetricSnap
       const data = await klaviyoGet(path, {
         "additional_fields[campaign-message]": "stats,statistics,reporting",
       });
-      const metrics = extractMetrics(data);
+      const { metrics, candidates } = extractMetrics(data);
+      if (isDev()) {
+        console.log("Klaviyo metrics keys", path, Object.keys(candidates).slice(0, 80));
+      }
       if (
         metrics.openRate !== undefined ||
         metrics.clickRate !== undefined ||
