@@ -50,6 +50,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   const [portalTokens, setPortalTokens] = useState<Record<string, string>>({});
   const [linkSelection, setLinkSelection] = useState("");
   const [migrateSelection, setMigrateSelection] = useState("");
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   const [settingsForm, setSettingsForm] = useState({
     klaviyo_from_email: client.klaviyo_from_email || "",
@@ -69,6 +70,9 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   const ensurePromoClientForCrm = useMutation(promoApi.promoClients.ensurePromoClientForCrm);
   const linkPromoClientToCrm = useMutation(promoApi.promoClients.linkPromoClientToCrm);
   const migratePromoClientData = useMutation(promoApi.promoClients.migratePromoClientData);
+  const backfillKlaviyoSettings = useMutation(
+    promoApi.promoClients.backfillKlaviyoSettingsToClient
+  );
   const generatePortalToken = useAction(promoApi.promoClients.generatePortalToken);
   const rotatePortalToken = useAction(promoApi.promoClients.rotatePortalToken);
 
@@ -154,6 +158,29 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
         klaviyo_audiences: cleanedAudiences,
       },
     });
+  };
+
+  const handleBackfillSettings = async () => {
+    setIsBackfilling(true);
+    try {
+      const result = await backfillKlaviyoSettings({ crmClientId: client.id });
+      if (!result?.ok) {
+        toast({
+          title: "No settings to import",
+          description: result?.reason ?? "Company settings not found.",
+        });
+        return;
+      }
+      toast({ title: "Klaviyo settings imported" });
+    } catch (error: any) {
+      toast({
+        title: "Failed to import settings",
+        description: error.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBackfilling(false);
+    }
   };
 
   const handleEnablePromoClient = async () => {
@@ -377,6 +404,14 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
 
       <Card className="p-4 space-y-4">
         <h2 className="text-lg font-medium">Klaviyo settings</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleBackfillSettings} disabled={isBackfilling}>
+            {isBackfilling ? "Importing..." : "Import existing settings"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Copies settings from the old global configuration into this client.
+          </p>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="klaviyo_from_email">From email</Label>

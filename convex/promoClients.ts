@@ -283,6 +283,42 @@ export const migratePromoClientData = mutation({
   },
 });
 
+export const backfillKlaviyoSettingsToClient = mutation({
+  args: { crmClientId: v.string() },
+  handler: async (ctx, { crmClientId }) => {
+    await assertAdmin(ctx);
+    const userId = await getUserId(ctx);
+
+    const crmClient = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", crmClientId))
+      .first();
+    if (!crmClient || crmClient.user_id !== userId) {
+      throw new Error("Client not found.");
+    }
+
+    const settings = await ctx.db
+      .query("company_settings")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .first();
+
+    if (!settings) {
+      return { ok: false, reason: "No company settings found." };
+    }
+
+    await ctx.db.patch(crmClient._id, {
+      klaviyo_from_email: settings.klaviyo_from_email ?? undefined,
+      klaviyo_from_label: settings.klaviyo_from_label ?? undefined,
+      klaviyo_default_audience_id: settings.klaviyo_default_audience_id ?? undefined,
+      klaviyo_audiences: settings.klaviyo_audiences ?? undefined,
+      klaviyo_placed_order_metric_id: settings.klaviyo_placed_order_metric_id ?? undefined,
+      updated_at: nowIso(),
+    });
+
+    return { ok: true };
+  },
+});
+
 export const getClientById = query({
   args: { clientId: v.string() },
   handler: async (ctx, { clientId }) => {
