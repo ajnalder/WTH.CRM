@@ -29,7 +29,6 @@ const navigationItems = [
   { icon: FileText, label: 'Quotes', path: '/quotes' },
   { icon: Receipt, label: 'Invoices', path: '/invoices' },
   { icon: Mail, label: 'Email Marketing', path: '/email-marketing' },
-  { icon: Mail, label: 'Klaviyo', path: '/admin' },
   { icon: Lightbulb, label: 'Ideas', path: '/ideas' },
   { icon: Rocket, label: 'Site Launch', path: '/site-launch' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },

@@ -55,6 +55,11 @@ export default defineSchema({
     projects_count: v.optional(v.number()),
     total_value: v.optional(v.number()),
     xero_contact_id: v.optional(v.string()),
+    klaviyo_from_email: v.optional(v.string()),
+    klaviyo_from_label: v.optional(v.string()),
+    klaviyo_default_audience_id: v.optional(v.string()),
+    klaviyo_audiences: v.optional(v.array(v.object({ id: v.string(), label: v.optional(v.string()) }))),
+    klaviyo_placed_order_metric_id: v.optional(v.string()),
   })
     .index("by_user", ["user_id"])
     .index("by_public_id", ["id"]),

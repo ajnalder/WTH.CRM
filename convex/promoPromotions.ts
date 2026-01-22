@@ -434,20 +434,32 @@ export const setKlaviyoCampaignSelections = mutation({
 });
 
 export const getKlaviyoAudienceOptionsForAdmin = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { promotionId: v.optional(v.string()), crmClientId: v.optional(v.string()) },
+  handler: async (ctx, { promotionId, crmClientId }) => {
     await assertAdmin(ctx);
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity?.subject) {
+    let resolvedCrmClientId = crmClientId;
+
+    if (!resolvedCrmClientId && promotionId) {
+      const promotion = await getPromotionById(ctx, promotionId);
+      if (promotion) {
+        const promoClient = await ctx.db
+          .query("promo_clients")
+          .withIndex("by_public_id", (q) => q.eq("id", promotion.client_id))
+          .first();
+        resolvedCrmClientId = promoClient?.crm_client_id ?? undefined;
+      }
+    }
+
+    if (!resolvedCrmClientId) {
       return [];
     }
 
-    const settings = await ctx.db
-      .query("company_settings")
-      .withIndex("by_user", (q) => q.eq("user_id", identity.subject))
+    const crmClient = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", resolvedCrmClientId))
       .first();
 
-    return getKlaviyoAudienceOptions(settings ?? undefined);
+    return getKlaviyoAudienceOptions(crmClient ?? undefined);
   },
 });
 
@@ -481,17 +493,23 @@ export const createKlaviyoCampaignForPromotion = action({
       throw new Error("Select a subject line and preview text before creating the campaign.");
     }
 
-    const settings = await ctx.runQuery("companySettings:get" as any, {});
-    const audienceOptions = getKlaviyoAudienceOptions(settings ?? undefined);
+    const promoClient = await ctx.runQuery("promoClients:getClientById" as any, {
+      clientId: promotion.client_id,
+    });
+    const crmClientId = promoClient?.crm_client_id;
+    const crmClient = crmClientId
+      ? await ctx.runQuery("clients:getById" as any, { id: crmClientId })
+      : null;
+    const audienceOptions = getKlaviyoAudienceOptions(crmClient ?? undefined);
 
     const { campaignId } = await createKlaviyoCampaignDraft(name, {
       audienceId: promotion.selected_audience_id,
       subjectLine,
       previewText,
-      fromEmail: settings?.klaviyo_from_email,
-      fromLabel: settings?.klaviyo_from_label,
+      fromEmail: crmClient?.klaviyo_from_email,
+      fromLabel: crmClient?.klaviyo_from_label,
       audienceOptions,
-      defaultAudienceId: settings?.klaviyo_default_audience_id,
+      defaultAudienceId: crmClient?.klaviyo_default_audience_id,
     });
     await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
       promotionId,

@@ -6,6 +6,7 @@ import DomainsTab from './DomainsTab';
 import HostingTab from './HostingTab';
 import ContactsTab from './ContactsTab';
 import InvoicesTab from './InvoicesTab';
+import ClientKlaviyoTab from './ClientKlaviyoTab';
 import { ClientDetailContextProps } from '@/types/clientDetail';
 
 interface ClientDetailContentProps extends ClientDetailContextProps {
@@ -32,6 +33,8 @@ const ClientDetailContent = ({ activeTab, ...props }: ClientDetailContentProps) 
       return <ContactsTab {...props} onAddContact={props.addContact} onUpdateContact={props.updateContact} onDeleteContact={props.deleteContact} />;
     case 'invoices':
       return <InvoicesTab client={client} />;
+    case 'klaviyo':
+      return <ClientKlaviyoTab client={client} />;
     default:
       return <ClientOverviewTab client={client} />;
   }

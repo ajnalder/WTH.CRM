@@ -20,6 +20,11 @@ export interface Client {
   created_at: string;
   updated_at: string;
   xero_contact_id: string | null;
+  klaviyo_from_email?: string | null;
+  klaviyo_from_label?: string | null;
+  klaviyo_default_audience_id?: string | null;
+  klaviyo_audiences?: { id: string; label?: string }[] | null;
+  klaviyo_placed_order_metric_id?: string | null;
 }
 
 export interface CreateClientData {

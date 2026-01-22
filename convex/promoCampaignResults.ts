@@ -117,11 +117,15 @@ export const refreshResultsForPortal = action({
       return { ok: true, results: existing.results, refreshedAt: existing.refreshedAt };
     }
 
-    const settings = await ctx.runQuery("companySettings:get" as any, {
-      userId: promotion.promotion.created_by,
+    const promoClient = await ctx.runQuery("promoClients:getClientById" as any, {
+      clientId: promotion.promotion.client_id,
     });
+    const crmClientId = promoClient?.crm_client_id;
+    const crmClient = crmClientId
+      ? await ctx.runQuery("clients:getByIdForPromo" as any, { id: crmClientId })
+      : null;
     const fetched = await fetchCampaignResults(campaignId, {
-      placedOrderMetricId: settings?.klaviyo_placed_order_metric_id,
+      placedOrderMetricId: crmClient?.klaviyo_placed_order_metric_id,
     });
     await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
       promotionId,
@@ -169,9 +173,15 @@ export const refreshResultsForAdmin = action({
       throw new Error("Klaviyo campaign ID not linked yet.");
     }
 
-    const settings = await ctx.runQuery("companySettings:get" as any, {});
+    const promoClient = await ctx.runQuery("promoClients:getClientById" as any, {
+      clientId: promotion.promotion.client_id,
+    });
+    const crmClientId = promoClient?.crm_client_id;
+    const crmClient = crmClientId
+      ? await ctx.runQuery("clients:getById" as any, { id: crmClientId })
+      : null;
     const fetched = await fetchCampaignResults(campaignId, {
-      placedOrderMetricId: settings?.klaviyo_placed_order_metric_id,
+      placedOrderMetricId: crmClient?.klaviyo_placed_order_metric_id,
     });
     await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
       promotionId,

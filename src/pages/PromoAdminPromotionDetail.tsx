@@ -44,7 +44,10 @@ export default function PromoAdminPromotionDetail() {
   const createKlaviyoCampaign = useAction(
     promoApi.promoPromotions.createKlaviyoCampaignForPromotion
   );
-  const audienceOptions = useQuery(promoApi.promoPromotions.getKlaviyoAudienceOptionsForAdmin);
+  const audienceOptions = useQuery(
+    promoApi.promoPromotions.getKlaviyoAudienceOptionsForAdmin,
+    id ? { promotionId: id } : "skip"
+  );
   const packData = useQuery(
     promoApi.promoPromotions.getCanvaPackForAdmin,
     id ? { promotionId: id } : "skip"

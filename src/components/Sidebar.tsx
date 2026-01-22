@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Folder, Calendar, Settings, BarChart3, CheckSquare, Mail } from 'lucide-react';
+import { Home, Folder, Calendar, Settings, BarChart3, CheckSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const navigationItems = [
@@ -9,7 +9,6 @@ const navigationItems = [
   { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
   { icon: BarChart3, label: 'Reports', path: '/reports' },
-  { icon: Mail, label: 'Klaviyo', path: '/admin' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
