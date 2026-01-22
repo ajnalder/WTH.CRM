@@ -27,9 +27,14 @@ function getKlaviyoConfig() {
   };
 }
 
-async function klaviyoGet(path: string) {
+async function klaviyoGet(path: string, params?: Record<string, string>) {
   const { apiKey, baseUrl, revision } = getKlaviyoConfig();
-  const url = `${baseUrl}${path}`;
+  const url = new URL(`${baseUrl}${path}`);
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) url.searchParams.set(key, value);
+    });
+  }
 
   const response = await fetch(url, {
     method: "GET",
@@ -49,12 +54,16 @@ async function klaviyoGet(path: string) {
 }
 
 export async function fetchCampaign(campaignId: string) {
-  const data = await klaviyoGet(`/api/campaigns/${campaignId}`);
+  const data = await klaviyoGet(`/api/campaigns/${campaignId}`, {
+    include: "campaign-messages",
+  });
   return data?.data as KlaviyoCampaign;
 }
 
 export async function fetchCampaignMessage(messageId: string) {
-  const data = await klaviyoGet(`/api/campaign-messages/${messageId}`);
+  const data = await klaviyoGet(`/api/campaign-messages/${messageId}`, {
+    "additional_fields[campaign-message]": "stats,statistics,reporting",
+  });
   return data?.data as KlaviyoCampaignMessage;
 }
 
@@ -78,6 +87,108 @@ function pickString(attributes: Record<string, any> | undefined, keys: string[])
     }
   }
   return undefined;
+}
+
+function collectMetricCandidates(source: any, output: Record<string, number | string>) {
+  if (!source || typeof source !== "object") return;
+  const stack = [source];
+  const seen = new Set<any>();
+
+  while (stack.length) {
+    const current = stack.pop();
+    if (!current || typeof current !== "object" || seen.has(current)) continue;
+    seen.add(current);
+
+    for (const [key, value] of Object.entries(current)) {
+      if (value && typeof value === "object") {
+        stack.push(value);
+      }
+
+      if (typeof value === "number" && Number.isFinite(value)) {
+        if (!output[key]) output[key] = value;
+      } else if (typeof value === "string" && value.trim()) {
+        if (!output[key]) output[key] = value.trim();
+      }
+    }
+  }
+}
+
+function extractMetrics(data: any) {
+  const candidates: Record<string, number | string> = {};
+  collectMetricCandidates(data, candidates);
+
+  const openRate = pickNumber(candidates as any, [
+    "open_rate",
+    "open_rate_unique",
+    "unique_open_rate",
+    "opens_rate",
+    "openRate",
+  ]);
+  const clickRate = pickNumber(candidates as any, [
+    "click_rate",
+    "click_rate_unique",
+    "unique_click_rate",
+    "clicks_rate",
+    "clickRate",
+  ]);
+  const placedOrderValue = pickNumber(candidates as any, [
+    "placed_order_value",
+    "placed_order_revenue",
+    "conversion_value",
+    "revenue",
+    "order_value",
+  ]);
+  const placedOrderCount = pickNumber(candidates as any, [
+    "placed_order_count",
+    "placed_orders",
+    "conversion_count",
+    "orders",
+    "order_count",
+  ]);
+  const sendDate = pickString(candidates as any, [
+    "send_time",
+    "send_date",
+    "sent_at",
+    "sendDate",
+  ]);
+  const status = pickString(candidates as any, ["status", "state"]);
+
+  return { openRate, clickRate, placedOrderValue, placedOrderCount, sendDate, status };
+}
+
+async function fetchMessageMetrics(messageId: string) {
+  const paths = [
+    `/api/campaign-messages/${messageId}`,
+    `/api/campaign-messages/${messageId}/reporting`,
+    `/api/campaign-message-analytics/${messageId}`,
+    `/api/campaign-message-reports/${messageId}`,
+  ];
+
+  let lastError: Error | null = null;
+  for (const path of paths) {
+    try {
+      const data = await klaviyoGet(path, {
+        "additional_fields[campaign-message]": "stats,statistics,reporting",
+      });
+      const metrics = extractMetrics(data);
+      if (
+        metrics.openRate !== undefined ||
+        metrics.clickRate !== undefined ||
+        metrics.placedOrderValue !== undefined ||
+        metrics.placedOrderCount !== undefined
+      ) {
+        return metrics;
+      }
+    } catch (error: any) {
+      lastError = error;
+    }
+  }
+
+  if (lastError && isDev()) {
+    console.warn("Klaviyo metrics fetch failed:", lastError.message);
+  }
+
+  return {};
 }
 
 function resolveMessageId(campaign: KlaviyoCampaign) {
@@ -118,35 +229,38 @@ export async function fetchCampaignResults(campaignId: string) {
 
   const message = await fetchCampaignMessage(messageId);
   const messageAttrs = message?.attributes ?? {};
+  const metrics = await fetchMessageMetrics(messageId);
 
   return {
     campaignId: campaign.id,
     name: campaignName,
-    status: pickString(messageAttrs, ["status", "state"]) || status,
+    status: metrics.status || pickString(messageAttrs, ["status", "state"]) || status,
     sendDate:
-      pickString(messageAttrs, ["send_time", "send_date", "sent_at"]) || sendDate,
-    openRate: pickNumber(messageAttrs, [
-      "open_rate",
-      "open_rate_unique",
-      "unique_open_rate",
-    ]),
-    clickRate: pickNumber(messageAttrs, [
-      "click_rate",
-      "click_rate_unique",
-      "unique_click_rate",
-    ]),
-    placedOrderValue: pickNumber(messageAttrs, [
-      "placed_order_value",
-      "placed_order_revenue",
-      "conversion_value",
-      "revenue",
-    ]),
-    placedOrderCount: pickNumber(messageAttrs, [
-      "placed_order_count",
-      "placed_orders",
-      "conversion_count",
-      "orders",
-    ]),
+      metrics.sendDate ||
+      pickString(messageAttrs, ["send_time", "send_date", "sent_at"]) ||
+      sendDate,
+    openRate:
+      metrics.openRate ||
+      pickNumber(messageAttrs, ["open_rate", "open_rate_unique", "unique_open_rate"]),
+    clickRate:
+      metrics.clickRate ||
+      pickNumber(messageAttrs, ["click_rate", "click_rate_unique", "unique_click_rate"]),
+    placedOrderValue:
+      metrics.placedOrderValue ||
+      pickNumber(messageAttrs, [
+        "placed_order_value",
+        "placed_order_revenue",
+        "conversion_value",
+        "revenue",
+      ]),
+    placedOrderCount:
+      metrics.placedOrderCount ||
+      pickNumber(messageAttrs, [
+        "placed_order_count",
+        "placed_orders",
+        "conversion_count",
+        "orders",
+      ]),
     refreshedAt: nowIso(),
   };
 }
