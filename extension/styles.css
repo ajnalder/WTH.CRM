@@ -2,24 +2,35 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  z-index: 9999;
+  background: #111827 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  z-index: 9999 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: auto !important;
+  max-width: 220px !important;
+  line-height: 1.1 !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
 }
 
 .promo-extension-button:hover {
-  background: #1f2937;
+  background: #1f2937 !important;
 }
 
 .promo-extension-button.promo-floating {
-  position: fixed;
-  right: 16px;
-  bottom: 80px;
-  padding: 10px 16px;
-  font-size: 13px;
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 110px !important;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  height: auto !important;
+  width: auto !important;
 }
