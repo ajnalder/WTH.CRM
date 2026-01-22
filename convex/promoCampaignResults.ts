@@ -31,10 +31,61 @@ export const getResultsForPortal = query({
   },
 });
 
+export const upsertCampaignResult = mutation({
+  args: {
+    promotionId: v.string(),
+    campaignId: v.string(),
+    name: v.string(),
+    status: v.optional(v.string()),
+    sendDate: v.optional(v.string()),
+    openRate: v.optional(v.number()),
+    clickRate: v.optional(v.number()),
+    placedOrderValue: v.optional(v.number()),
+    placedOrderCount: v.optional(v.number()),
+    refreshedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx);
+
+    const now = nowIso();
+    const existing = await ctx.db
+      .query("promo_campaign_results")
+      .withIndex("by_promotion", (q) => q.eq("promotion_id", args.promotionId))
+      .first();
+
+    const payload = {
+      campaign_id: args.campaignId,
+      name: args.name,
+      status: args.status,
+      send_date: args.sendDate,
+      open_rate: args.openRate,
+      click_rate: args.clickRate,
+      placed_order_value: args.placedOrderValue,
+      placed_order_count: args.placedOrderCount,
+      refreshed_at: args.refreshedAt,
+      updated_at: now,
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, payload);
+      return { ok: true, id: existing.id };
+    }
+
+    await ctx.db.insert("promo_campaign_results", {
+      id: generateId(),
+      promotion_id: args.promotionId,
+      ...payload,
+      created_at: now,
+    });
+
+    return { ok: true };
+  },
+});
+
 export const refreshResultsForPortal = action({
   args: { clientId: v.string(), token: v.string(), promotionId: v.string() },
   handler: async (ctx, { clientId, token, promotionId }) => {
-    await assertValidPortalToken(ctx, clientId, token);
+    await ctx.runQuery("promoClients:validatePortalToken" as any, { clientId, token });
 
     const promotion = await ctx.runQuery("promoPromotions:getPromotionForPortal" as any, {
       clientId,
@@ -62,50 +113,26 @@ export const refreshResultsForPortal = action({
     }
 
     const fetched = await fetchCampaignResults(campaignId);
-    const now = nowIso();
+    await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
+      promotionId,
+      campaignId: fetched.campaignId,
+      name: fetched.name,
+      status: fetched.status,
+      sendDate: fetched.sendDate,
+      openRate: fetched.openRate,
+      clickRate: fetched.clickRate,
+      placedOrderValue: fetched.placedOrderValue,
+      placedOrderCount: fetched.placedOrderCount,
+      refreshedAt: fetched.refreshedAt,
+    });
 
-    const current = await ctx.db
-      .query("promo_campaign_results")
-      .withIndex("by_promotion", (q) => q.eq("promotion_id", promotionId))
-      .first();
+    const results = await ctx.runQuery("promoCampaignResults:getResultsForPortal" as any, {
+      clientId,
+      token,
+      promotionId,
+    });
 
-    if (current) {
-      await ctx.db.patch(current._id, {
-        campaign_id: fetched.campaignId,
-        name: fetched.name,
-        status: fetched.status,
-        send_date: fetched.sendDate,
-        open_rate: fetched.openRate,
-        click_rate: fetched.clickRate,
-        placed_order_value: fetched.placedOrderValue,
-        placed_order_count: fetched.placedOrderCount,
-        refreshed_at: fetched.refreshedAt,
-        updated_at: now,
-      });
-    } else {
-      await ctx.db.insert("promo_campaign_results", {
-        id: generateId(),
-        promotion_id: promotionId,
-        campaign_id: fetched.campaignId,
-        name: fetched.name,
-        status: fetched.status,
-        send_date: fetched.sendDate,
-        open_rate: fetched.openRate,
-        click_rate: fetched.clickRate,
-        placed_order_value: fetched.placedOrderValue,
-        placed_order_count: fetched.placedOrderCount,
-        refreshed_at: fetched.refreshedAt,
-        created_at: now,
-        updated_at: now,
-      });
-    }
-
-    const results = await ctx.db
-      .query("promo_campaign_results")
-      .withIndex("by_promotion", (q) => q.eq("promotion_id", promotionId))
-      .collect();
-
-    return { ok: true, results, refreshedAt: fetched.refreshedAt };
+    return { ok: true, results: results?.results ?? [], refreshedAt: fetched.refreshedAt };
   },
 });
 
@@ -128,43 +155,18 @@ export const refreshResultsForAdmin = action({
     }
 
     const fetched = await fetchCampaignResults(campaignId);
-    const now = nowIso();
-
-    const current = await ctx.db
-      .query("promo_campaign_results")
-      .withIndex("by_promotion", (q) => q.eq("promotion_id", promotionId))
-      .first();
-
-    if (current) {
-      await ctx.db.patch(current._id, {
-        campaign_id: fetched.campaignId,
-        name: fetched.name,
-        status: fetched.status,
-        send_date: fetched.sendDate,
-        open_rate: fetched.openRate,
-        click_rate: fetched.clickRate,
-        placed_order_value: fetched.placedOrderValue,
-        placed_order_count: fetched.placedOrderCount,
-        refreshed_at: fetched.refreshedAt,
-        updated_at: now,
-      });
-    } else {
-      await ctx.db.insert("promo_campaign_results", {
-        id: generateId(),
-        promotion_id: promotionId,
-        campaign_id: fetched.campaignId,
-        name: fetched.name,
-        status: fetched.status,
-        send_date: fetched.sendDate,
-        open_rate: fetched.openRate,
-        click_rate: fetched.clickRate,
-        placed_order_value: fetched.placedOrderValue,
-        placed_order_count: fetched.placedOrderCount,
-        refreshed_at: fetched.refreshedAt,
-        created_at: now,
-        updated_at: now,
-      });
-    }
+    await ctx.runMutation("promoCampaignResults:upsertCampaignResult" as any, {
+      promotionId,
+      campaignId: fetched.campaignId,
+      name: fetched.name,
+      status: fetched.status,
+      sendDate: fetched.sendDate,
+      openRate: fetched.openRate,
+      clickRate: fetched.clickRate,
+      placedOrderValue: fetched.placedOrderValue,
+      placedOrderCount: fetched.placedOrderCount,
+      refreshedAt: fetched.refreshedAt,
+    });
 
     return { ok: true, refreshedAt: fetched.refreshedAt };
   },
