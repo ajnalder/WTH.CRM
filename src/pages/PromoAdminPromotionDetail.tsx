@@ -16,6 +16,7 @@ export default function PromoAdminPromotionDetail() {
   const [showPack, setShowPack] = useState(false);
   const [loadingPack, setLoadingPack] = useState(false);
   const [packBlocks, setPackBlocks] = useState<any[]>([]);
+  const [packCampaign, setPackCampaign] = useState<any | null>(null);
 
   const promotionData = useQuery(
     promoApi.promoPromotions.getPromotionForAdmin,
@@ -31,7 +32,7 @@ export default function PromoAdminPromotionDetail() {
     () => (packBlocks.length ? packBlocks : packData?.blocks ?? []),
     [packBlocks, packData]
   );
-  const campaignCopy = promotionData?.promotion;
+  const campaignCopy = packCampaign ?? packData?.campaign ?? promotionData?.promotion;
   const hasCampaignCopy =
     !!campaignCopy?.generated_campaign_title ||
     !!campaignCopy?.generated_opening_paragraph ||
@@ -43,7 +44,10 @@ export default function PromoAdminPromotionDetail() {
       setPackBlocks(packData.blocks);
       setShowPack(true);
     }
-  }, [packData?.blocks?.length]);
+    if (packData?.campaign) {
+      setPackCampaign(packData.campaign);
+    }
+  }, [packData?.blocks?.length, packData?.campaign]);
 
   const handleTogglePack = async () => {
     if (!id) return;
@@ -56,6 +60,9 @@ export default function PromoAdminPromotionDetail() {
       const result = await generateCanvaPack({ promotionId: id });
       if (result?.blocks?.length) {
         setPackBlocks(result.blocks);
+      }
+      if (result?.campaign) {
+        setPackCampaign(result.campaign);
       }
       setShowPack(true);
     } catch (error: any) {
@@ -213,6 +220,11 @@ export default function PromoAdminPromotionDetail() {
                 <p>{campaignCopy?.generated_opening_paragraph}</p>
               </div>
             </div>
+          )}
+          {!hasCampaignCopy && (
+            <p className="text-sm text-muted-foreground">
+              Campaign copy not generated yet. Click "Generate" to create it.
+            </p>
           )}
           {blocks.length === 0 && (
             <p className="text-sm text-muted-foreground">No blocks available yet.</p>

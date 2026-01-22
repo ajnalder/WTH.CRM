@@ -421,7 +421,20 @@ export const getCanvaPackForAdmin = query({
 
     if (!pack) return null;
 
-    return { blocks: pack.blocks };
+    const promotion = await getPromotionById(ctx, promotionId);
+
+    return {
+      blocks: pack.blocks,
+      campaign: promotion
+        ? {
+            generated_campaign_title: promotion.generated_campaign_title,
+            generated_subject_lines: promotion.generated_subject_lines,
+            generated_preview_texts: promotion.generated_preview_texts,
+            generated_opening_paragraph: promotion.generated_opening_paragraph,
+            generated_at: promotion.generated_at,
+          }
+        : null,
+    };
   },
 });
 
@@ -516,6 +529,15 @@ export const generateCanvaPackForAdmin = action({
       blocks,
     });
 
-    return { blocks };
+    return {
+      blocks,
+      campaign: {
+        generated_campaign_title: result.promotion.generated_campaign_title,
+        generated_subject_lines: result.promotion.generated_subject_lines,
+        generated_preview_texts: result.promotion.generated_preview_texts,
+        generated_opening_paragraph: result.promotion.generated_opening_paragraph,
+        generated_at: result.promotion.generated_at,
+      },
+    };
   },
 });
