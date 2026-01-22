@@ -139,26 +139,51 @@ function addProductPageButton() {
   const handle = extractHandle(window.location.href);
   if (!handle) return;
   document.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
+  const existingFloating = document.getElementById("promo-picker-floating");
+  if (existingFloating) existingFloating.remove();
 
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = `${buttonClass} promo-floating`;
+  const button = document.createElement("div");
+  button.id = "promo-picker-floating";
   button.textContent = "Add to promo";
+  button.style.all = "initial";
   button.style.position = "fixed";
   button.style.right = "24px";
   button.style.bottom = "110px";
-  button.style.padding = "10px 16px";
-  button.style.borderRadius = "999px";
+  button.style.zIndex = "2147483647";
   button.style.background = "#111827";
   button.style.color = "#fff";
-  button.style.border = "none";
+  button.style.padding = "10px 16px";
+  button.style.borderRadius = "999px";
+  button.style.fontFamily = "system-ui, -apple-system, sans-serif";
   button.style.fontSize = "13px";
+  button.style.lineHeight = "1";
   button.style.cursor = "pointer";
-  button.style.zIndex = "999999";
+  button.style.display = "inline-flex";
+  button.style.alignItems = "center";
+  button.style.justifyContent = "center";
+  button.style.whiteSpace = "nowrap";
+  button.style.height = "32px";
+  button.style.minHeight = "32px";
+  button.style.maxHeight = "32px";
   button.style.width = "auto";
-  button.style.height = "auto";
-  button.style.lineHeight = "1.1";
+  button.style.maxWidth = "220px";
+  button.style.boxShadow = "0 8px 20px rgba(0,0,0,0.2)";
+  button.style.boxSizing = "border-box";
+  button.style.userSelect = "none";
+  button.style.textDecoration = "none";
+  button.style.transform = "none";
+  button.style.writingMode = "horizontal-tb";
+  button.style.textOrientation = "mixed";
+  button.style.pointerEvents = "auto";
+  button.setAttribute("role", "button");
+  button.setAttribute("tabindex", "0");
   button.addEventListener("click", () => handleAdd(window.location.href));
+  button.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleAdd(window.location.href);
+    }
+  });
   document.body.appendChild(button);
 }
 
