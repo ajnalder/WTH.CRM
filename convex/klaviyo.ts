@@ -206,26 +206,33 @@ async function assignTemplateToCampaign(
     throw new Error("Klaviyo campaign message not found.");
   }
 
-  await klaviyoPost(
-    "/api/campaign-message-template-assignments",
-    {
-      data: {
-        type: "campaign-message-template-assignment",
-        relationships: {
-          "campaign-message": {
-            data: { type: "campaign-message", id: messageId },
-          },
-          template: {
-            data: { type: "template", id: templateId },
+  const openingParagraph = context.openingParagraph?.trim();
+  if (!openingParagraph) {
+    await klaviyoPost(
+      `/api/campaign-messages/${messageId}`,
+      {
+        data: {
+          type: "campaign-message",
+          id: messageId,
+          attributes: {
+            definition: {
+              channel: "email",
+              label: "Email",
+              content: {
+                subject: context.subjectLine,
+                preview_text: context.previewText,
+                from_email: context.fromEmail,
+                from_label: context.fromLabel,
+                template_id: templateId,
+              },
+            },
           },
         },
       },
-    },
-    { authScheme: "apiKey" }
-  );
-
-  const openingParagraph = context.openingParagraph?.trim();
-  if (!openingParagraph) return;
+      { authScheme: "apiKey" }
+    );
+    return;
+  }
 
   await klaviyoPost(
     `/api/campaign-messages/${messageId}`,
