@@ -60,6 +60,7 @@ export default defineSchema({
     klaviyo_default_audience_id: v.optional(v.string()),
     klaviyo_audiences: v.optional(v.array(v.object({ id: v.string(), label: v.optional(v.string()) }))),
     klaviyo_placed_order_metric_id: v.optional(v.string()),
+    klaviyo_template_id: v.optional(v.string()),
     shopify_domain: v.optional(v.string()),
     shopify_admin_access_token: v.optional(v.string()),
     shopify_last_synced_at: v.optional(v.string()),

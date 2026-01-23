@@ -531,6 +531,8 @@ export const createKlaviyoCampaignForPromotion = action({
       fromLabel: crmClient?.klaviyo_from_label,
       audienceOptions,
       defaultAudienceId: crmClient?.klaviyo_default_audience_id,
+      templateId: crmClient?.klaviyo_template_id,
+      openingParagraph: promotion.generated_opening_paragraph,
     });
     await ctx.runMutation("promoPromotions:setKlaviyoCampaignId" as any, {
       promotionId,

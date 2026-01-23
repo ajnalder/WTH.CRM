@@ -27,6 +27,7 @@ type ClientKlaviyoTabProps = {
     klaviyo_default_audience_id?: string | null;
     klaviyo_audiences?: { id: string; label?: string }[] | null;
     klaviyo_placed_order_metric_id?: string | null;
+    klaviyo_template_id?: string | null;
     shopify_domain?: string | null;
     shopify_admin_access_token?: string | null;
     shopify_last_synced_at?: string | null;
@@ -51,6 +52,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
     klaviyo_from_label: client.klaviyo_from_label || "",
     klaviyo_default_audience_id: client.klaviyo_default_audience_id || "",
     klaviyo_placed_order_metric_id: client.klaviyo_placed_order_metric_id || "",
+    klaviyo_template_id: client.klaviyo_template_id || "",
   });
   const [audiences, setAudiences] = useState<{ id: string; label: string }[]>(
     client.klaviyo_audiences?.map((audience) => ({
@@ -85,6 +87,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
       klaviyo_from_label: client.klaviyo_from_label || "",
       klaviyo_default_audience_id: client.klaviyo_default_audience_id || "",
       klaviyo_placed_order_metric_id: client.klaviyo_placed_order_metric_id || "",
+      klaviyo_template_id: client.klaviyo_template_id || "",
     });
     setAudiences(
       client.klaviyo_audiences?.map((audience) => ({
@@ -144,6 +147,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
           settingsForm.klaviyo_default_audience_id.trim() || undefined,
         klaviyo_placed_order_metric_id:
           settingsForm.klaviyo_placed_order_metric_id.trim() || undefined,
+        klaviyo_template_id: settingsForm.klaviyo_template_id.trim() || undefined,
         klaviyo_audiences: cleanedAudiences,
       },
     });
@@ -418,6 +422,23 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
               }
               placeholder="RESQ6t"
             />
+          </div>
+          <div>
+            <Label htmlFor="klaviyo_template_id">Email template ID</Label>
+            <Input
+              id="klaviyo_template_id"
+              value={settingsForm.klaviyo_template_id}
+              onChange={(event) =>
+                setSettingsForm((prev) => ({
+                  ...prev,
+                  klaviyo_template_id: event.target.value,
+                }))
+              }
+              placeholder="S8umiC"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Template should include {{ opening_paragraph }} placeholder.
+            </p>
           </div>
         </div>
         <div className="space-y-3">

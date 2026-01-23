@@ -105,6 +105,8 @@ type KlaviyoCampaignDraftOptions = {
   fromLabel?: string;
   audienceOptions?: KlaviyoAudienceOption[];
   defaultAudienceId?: string;
+  templateId?: string;
+  openingParagraph?: string;
 };
 
 export async function createKlaviyoCampaignDraft(
@@ -174,7 +176,92 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Klaviyo campaign creation failed.");
   }
 
+  if (options?.templateId) {
+    await assignTemplateToCampaign(campaignId, options.templateId, {
+      openingParagraph: options.openingParagraph,
+      subjectLine,
+      previewText,
+      fromEmail,
+      fromLabel,
+    });
+  }
+
   return { campaignId };
+}
+
+async function assignTemplateToCampaign(
+  campaignId: string,
+  templateId: string,
+  context: {
+    openingParagraph?: string;
+    subjectLine?: string;
+    previewText?: string;
+    fromEmail?: string;
+    fromLabel?: string;
+  }
+) {
+  const campaign = await fetchCampaign(campaignId);
+  const messageId = pickCampaignMessageId(campaign);
+  if (!messageId) {
+    throw new Error("Klaviyo campaign message not found.");
+  }
+
+  await klaviyoPost(
+    "/api/campaign-message-template-assignments",
+    {
+      data: {
+        type: "campaign-message-template-assignment",
+        relationships: {
+          "campaign-message": {
+            data: { type: "campaign-message", id: messageId },
+          },
+          template: {
+            data: { type: "template", id: templateId },
+          },
+        },
+      },
+    },
+    { authScheme: "apiKey" }
+  );
+
+  const openingParagraph = context.openingParagraph?.trim();
+  if (!openingParagraph) return;
+
+  await klaviyoPost(
+    `/api/campaign-messages/${messageId}`,
+    {
+      data: {
+        type: "campaign-message",
+        id: messageId,
+        attributes: {
+          definition: {
+            channel: "email",
+            label: "Email",
+            content: {
+              subject: context.subjectLine,
+              preview_text: context.previewText,
+              from_email: context.fromEmail,
+              from_label: context.fromLabel,
+              template_id: templateId,
+              template_data: {
+                opening_paragraph: openingParagraph,
+              },
+            },
+          },
+        },
+      },
+    },
+    { authScheme: "apiKey" }
+  );
+}
+
+function pickCampaignMessageId(campaign: KlaviyoCampaign | undefined) {
+  const relationships = campaign?.relationships as any;
+  const messages =
+    relationships?.["campaign-messages"]?.data ??
+    relationships?.campaign_messages?.data ??
+    [];
+  return messages?.[0]?.id as string | undefined;
 }
 
 export function getKlaviyoAudienceOptions(settings?: {

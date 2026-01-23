@@ -18,6 +18,7 @@ export interface Client {
   klaviyo_default_audience_id?: string | null;
   klaviyo_audiences?: { id: string; label?: string }[] | null;
   klaviyo_placed_order_metric_id?: string | null;
+  klaviyo_template_id?: string | null;
   shopify_domain?: string | null;
   shopify_admin_access_token?: string | null;
   shopify_last_synced_at?: string | null;
