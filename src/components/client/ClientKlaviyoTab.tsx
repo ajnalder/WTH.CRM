@@ -437,7 +437,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
               placeholder="S8umiC"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Template should include {{ opening_paragraph }} placeholder.
+              Template should include {"{{ opening_paragraph }}"} placeholder.
             </p>
           </div>
         </div>
