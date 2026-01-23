@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { action, internalAction, internalQuery } from "./_generated/server";
+import { api, internal } from "./_generated/api";
 import { assertAdmin } from "./promoUtils";
 import { nowIso } from "./_utils";
 
@@ -57,6 +57,14 @@ function stripHtml(value: string | null | undefined) {
   return value.replace(/<[^>]*>/g, "").trim();
 }
 
+type ShopifyClientRecord = {
+  id: string;
+  shopify_domain?: string | null;
+  shopify_admin_access_token?: string | null;
+  shopify_last_synced_at?: string | null;
+  shopify_product_count?: number | null;
+};
+
 async function shopifyGraphql(domain: string, token: string, query: string, variables: any) {
   const url = `https://${normalizeDomain(domain)}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
   const response = await fetch(url, {
@@ -92,6 +100,118 @@ async function shopifyGraphql(domain: string, token: string, query: string, vari
   return payload?.data;
 }
 
+async function syncClientProducts(ctx: any, client: ShopifyClientRecord) {
+  const domain = client.shopify_domain;
+  const token = client.shopify_admin_access_token;
+  if (!domain || !token) {
+    throw new Error("Missing Shopify domain or token");
+  }
+
+  const startedAt = nowIso();
+  await ctx.runMutation(api.clients.update, {
+    id: client.id,
+    updates: {
+      shopify_sync_status: "running",
+      shopify_sync_error: "",
+    },
+  });
+
+  const isInitialSync = !client.shopify_last_synced_at;
+  const updatedAfter = client.shopify_last_synced_at;
+  const query =
+    updatedAfter && !isInitialSync ? `updated_at:>=${updatedAfter}` : undefined;
+
+  let hasNextPage = true;
+  let after: string | null = null;
+  let totalProcessed = 0;
+  let createdCount = 0;
+  let updatedCount = 0;
+
+  while (hasNextPage) {
+    const data = await shopifyGraphql(domain, token, PRODUCTS_QUERY, {
+      first: 100,
+      after,
+      query,
+    });
+
+    const edges = data.products.edges ?? [];
+    const products = edges.map((edge: any) => {
+      const node = edge.node;
+      const variant = node.variants?.nodes?.[0];
+      const image = node.images?.nodes?.[0];
+      const collections = node.collections?.nodes?.map((c: any) => c.title) ?? [];
+      const price = variant?.price ? Number(variant.price) : 0;
+      const compareAtPrice = variant?.compareAtPrice
+        ? Number(variant.compareAtPrice)
+        : undefined;
+      const shortTitle =
+        node.title && node.title.length > 60 ? node.title.slice(0, 60) : undefined;
+
+      return {
+        externalId: node.id,
+        title: node.title,
+        shortTitle,
+        handle: node.handle,
+        productUrl:
+          node.onlineStoreUrl ||
+          `https://${normalizeDomain(domain)}/products/${node.handle}`,
+        imageUrl: image?.url,
+        price,
+        compareAtPrice,
+        vendor: node.vendor || undefined,
+        productType: node.productType || undefined,
+        tags: Array.isArray(node.tags) ? node.tags.join(", ") : undefined,
+        description: stripHtml(node.descriptionHtml),
+        collections,
+        status: node.status ? String(node.status).toLowerCase() : undefined,
+      };
+    });
+
+    if (products.length > 0) {
+      const result = await ctx.runMutation(api.promoProducts.upsertShopifyProducts, {
+        clientId: client.id,
+        products,
+      });
+      createdCount += result.createdCount ?? 0;
+      updatedCount += result.updatedCount ?? 0;
+    }
+
+    totalProcessed += products.length;
+    hasNextPage = data.products.pageInfo.hasNextPage;
+    after = data.products.pageInfo.endCursor;
+  }
+
+  await ctx.runMutation(api.clients.update, {
+    id: client.id,
+    updates: {
+      shopify_sync_status: "ok",
+      shopify_sync_error: "",
+      shopify_last_synced_at: startedAt,
+      shopify_product_count: isInitialSync
+        ? totalProcessed
+        : client.shopify_product_count,
+    },
+  });
+
+  return { createdCount, updatedCount, totalProcessed };
+}
+
+export const listShopifyClientsForSync = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const clients = await ctx.db.query("clients").collect();
+    return clients
+      .filter((client) => client.shopify_domain && client.shopify_admin_access_token)
+      .map((client) => ({
+        id: client.id,
+        shopify_domain: client.shopify_domain,
+        shopify_admin_access_token: client.shopify_admin_access_token,
+        shopify_last_synced_at: client.shopify_last_synced_at,
+        shopify_product_count: client.shopify_product_count,
+      }));
+  },
+});
+
 export const syncShopifyProducts = action({
   args: { clientId: v.string() },
   handler: async (ctx, { clientId }) => {
@@ -102,102 +222,8 @@ export const syncShopifyProducts = action({
       throw new Error("Client not found");
     }
 
-    const domain = client.shopify_domain;
-    const token = client.shopify_admin_access_token;
-    if (!domain || !token) {
-      throw new Error("Missing Shopify domain or token");
-    }
-
-    const startedAt = nowIso();
-    await ctx.runMutation(api.clients.update, {
-      id: clientId,
-      updates: {
-        shopify_sync_status: "running",
-        shopify_sync_error: "",
-      },
-    });
-
-    const isInitialSync = !client.shopify_last_synced_at;
-    const updatedAfter = client.shopify_last_synced_at;
-    const query =
-      updatedAfter && !isInitialSync
-        ? `updated_at:>=${updatedAfter}`
-        : undefined;
-
-    let hasNextPage = true;
-    let after: string | null = null;
-    let totalProcessed = 0;
-    let createdCount = 0;
-    let updatedCount = 0;
-
     try {
-      while (hasNextPage) {
-        const data = await shopifyGraphql(domain, token, PRODUCTS_QUERY, {
-          first: 100,
-          after,
-          query,
-        });
-
-        const edges = data.products.edges ?? [];
-        const products = edges.map((edge: any) => {
-          const node = edge.node;
-          const variant = node.variants?.nodes?.[0];
-          const image = node.images?.nodes?.[0];
-          const collections = node.collections?.nodes?.map((c: any) => c.title) ?? [];
-          const price = variant?.price ? Number(variant.price) : 0;
-          const compareAtPrice = variant?.compareAtPrice
-            ? Number(variant.compareAtPrice)
-            : undefined;
-          const shortTitle =
-            node.title && node.title.length > 60 ? node.title.slice(0, 60) : undefined;
-
-          return {
-            externalId: node.id,
-            title: node.title,
-            shortTitle,
-            handle: node.handle,
-            productUrl:
-              node.onlineStoreUrl ||
-              `https://${normalizeDomain(domain)}/products/${node.handle}`,
-            imageUrl: image?.url,
-            price,
-            compareAtPrice,
-            vendor: node.vendor || undefined,
-            productType: node.productType || undefined,
-            tags: Array.isArray(node.tags) ? node.tags.join(", ") : undefined,
-            description: stripHtml(node.descriptionHtml),
-            collections,
-            status: node.status ? String(node.status).toLowerCase() : undefined,
-          };
-        });
-
-        if (products.length > 0) {
-          const result = await ctx.runMutation(api.promoProducts.upsertShopifyProducts, {
-            clientId,
-            products,
-          });
-          createdCount += result.createdCount ?? 0;
-          updatedCount += result.updatedCount ?? 0;
-        }
-
-        totalProcessed += products.length;
-        hasNextPage = data.products.pageInfo.hasNextPage;
-        after = data.products.pageInfo.endCursor;
-      }
-
-      await ctx.runMutation(api.clients.update, {
-        id: clientId,
-        updates: {
-          shopify_sync_status: "ok",
-          shopify_sync_error: "",
-          shopify_last_synced_at: startedAt,
-          shopify_product_count: isInitialSync
-            ? totalProcessed
-            : client.shopify_product_count,
-        },
-      });
-
-      return { createdCount, updatedCount, totalProcessed };
+      return await syncClientProducts(ctx, client);
     } catch (error: any) {
       await ctx.runMutation(api.clients.update, {
         id: clientId,
@@ -208,5 +234,29 @@ export const syncShopifyProducts = action({
       });
       throw error;
     }
+  },
+});
+
+export const syncAllShopifyClients = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const clients = await ctx.runQuery(internal.shopify.listShopifyClientsForSync, {});
+    const results = [];
+    for (const client of clients) {
+      try {
+        const result = await syncClientProducts(ctx, client);
+        results.push({ clientId: client.id, ok: true, ...result });
+      } catch (error: any) {
+        await ctx.runMutation(api.clients.update, {
+          id: client.id,
+          updates: {
+            shopify_sync_status: "error",
+            shopify_sync_error: error?.message || "Shopify sync failed",
+          },
+        });
+        results.push({ clientId: client.id, ok: false, error: error?.message });
+      }
+    }
+    return results;
   },
 });
