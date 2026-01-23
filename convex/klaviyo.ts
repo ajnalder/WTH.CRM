@@ -235,31 +235,23 @@ async function assignTemplateToCampaign(
   }
 
   const openingParagraph = context.openingParagraph?.trim();
-  if (!openingParagraph) {
-    await klaviyoPatch(
-      `/api/campaign-messages/${messageId}`,
-      {
-        data: {
-          type: "campaign-message",
-          id: messageId,
-          attributes: {
-            definition: {
-              channel: "email",
-              label: "Email",
-              content: {
-                subject: context.subjectLine,
-                preview_text: context.previewText,
-                from_email: context.fromEmail,
-                from_label: context.fromLabel,
-                template_id: templateId,
-              },
-            },
-          },
-        },
+  const attributes: Record<string, any> = {
+    definition: {
+      channel: "email",
+      label: "Email",
+      content: {
+        subject: context.subjectLine,
+        preview_text: context.previewText,
+        from_email: context.fromEmail,
+        from_label: context.fromLabel,
       },
-      { authScheme: "apiKey" }
-    );
-    return;
+    },
+  };
+
+  if (openingParagraph) {
+    attributes.template_data = {
+      opening_paragraph: openingParagraph,
+    };
   }
 
   await klaviyoPatch(
@@ -268,20 +260,10 @@ async function assignTemplateToCampaign(
       data: {
         type: "campaign-message",
         id: messageId,
-        attributes: {
-          definition: {
-            channel: "email",
-            label: "Email",
-            content: {
-              subject: context.subjectLine,
-              preview_text: context.previewText,
-              from_email: context.fromEmail,
-              from_label: context.fromLabel,
-              template_id: templateId,
-              template_data: {
-                opening_paragraph: openingParagraph,
-              },
-            },
+        attributes,
+        relationships: {
+          template: {
+            data: { type: "template", id: templateId },
           },
         },
       },
