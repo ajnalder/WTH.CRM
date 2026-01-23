@@ -65,6 +65,12 @@ type ShopifyClientRecord = {
   shopify_product_count?: number | null;
 };
 
+type ShopifySyncResult = {
+  createdCount: number;
+  updatedCount: number;
+  totalProcessed: number;
+};
+
 async function shopifyGraphql(domain: string, token: string, query: string, variables: any) {
   const url = `https://${normalizeDomain(domain)}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
   const response = await fetch(url, {
@@ -100,7 +106,10 @@ async function shopifyGraphql(domain: string, token: string, query: string, vari
   return payload?.data;
 }
 
-async function syncClientProducts(ctx: any, client: ShopifyClientRecord) {
+async function syncClientProducts(
+  ctx: any,
+  client: ShopifyClientRecord
+): Promise<ShopifySyncResult> {
   const domain = client.shopify_domain;
   const token = client.shopify_admin_access_token;
   if (!domain || !token) {
@@ -198,7 +207,7 @@ async function syncClientProducts(ctx: any, client: ShopifyClientRecord) {
 
 export const listShopifyClientsForSync = internalQuery({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<ShopifyClientRecord[]> => {
     const clients = await ctx.db.query("clients").collect();
     return clients
       .filter((client) => client.shopify_domain && client.shopify_admin_access_token)
@@ -214,10 +223,12 @@ export const listShopifyClientsForSync = internalQuery({
 
 export const syncShopifyProducts = action({
   args: { clientId: v.string() },
-  handler: async (ctx, { clientId }) => {
+  handler: async (ctx, { clientId }): Promise<ShopifySyncResult> => {
     await assertAdmin(ctx);
 
-    const client = await ctx.runQuery(api.clients.getById, { id: clientId });
+    const client: ShopifyClientRecord | null = await ctx.runQuery(api.clients.getById, {
+      id: clientId,
+    });
     if (!client) {
       throw new Error("Client not found");
     }
@@ -239,9 +250,16 @@ export const syncShopifyProducts = action({
 
 export const syncAllShopifyClients = internalAction({
   args: {},
-  handler: async (ctx) => {
-    const clients = await ctx.runQuery(internal.shopify.listShopifyClientsForSync, {});
-    const results = [];
+  handler: async (
+    ctx
+  ): Promise<Array<ShopifySyncResult & { clientId: string; ok: boolean; error?: string }>> => {
+    const clients: ShopifyClientRecord[] = await ctx.runQuery(
+      internal.shopify.listShopifyClientsForSync,
+      {}
+    );
+    const results: Array<
+      ShopifySyncResult & { clientId: string; ok: boolean; error?: string }
+    > = [];
     for (const client of clients) {
       try {
         const result = await syncClientProducts(ctx, client);
