@@ -272,7 +272,14 @@ export const syncAllShopifyClients = internalAction({
             shopify_sync_error: error?.message || "Shopify sync failed",
           },
         });
-        results.push({ clientId: client.id, ok: false, error: error?.message });
+        results.push({
+          clientId: client.id,
+          ok: false,
+          error: error?.message,
+          createdCount: 0,
+          updatedCount: 0,
+          totalProcessed: 0,
+        });
       }
     }
     return results;
