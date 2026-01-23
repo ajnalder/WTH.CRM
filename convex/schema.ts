@@ -60,6 +60,12 @@ export default defineSchema({
     klaviyo_default_audience_id: v.optional(v.string()),
     klaviyo_audiences: v.optional(v.array(v.object({ id: v.string(), label: v.optional(v.string()) }))),
     klaviyo_placed_order_metric_id: v.optional(v.string()),
+    shopify_domain: v.optional(v.string()),
+    shopify_admin_access_token: v.optional(v.string()),
+    shopify_last_synced_at: v.optional(v.string()),
+    shopify_sync_status: v.optional(v.string()),
+    shopify_sync_error: v.optional(v.string()),
+    shopify_product_count: v.optional(v.number()),
   })
     .index("by_user", ["user_id"])
     .index("by_public_id", ["id"]),
@@ -549,6 +555,7 @@ export default defineSchema({
     .index("by_client", ["client_id"])
     .index("by_client_title", ["client_id", "title"])
     .index("by_public_id", ["id"])
+    .index("by_client_external_id", ["client_id", "external_id"])
     .index("by_client_handle", ["client_id", "handle"])
     .index("by_client_product_url", ["client_id", "product_url"])
     .index("by_vendor", ["client_id", "vendor"])

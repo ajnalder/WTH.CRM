@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/integrations/convex/api";
@@ -15,18 +15,6 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useClients } from "@/hooks/useClients";
-import {
-  buildCollectionRules,
-  mapCollectionRuleRows,
-  CollectionRule,
-} from "@/utils/promoCollectionRules";
-import {
-  CsvCollectionRow,
-  CsvProductRow,
-  mapCollectionRows,
-  mapCsvRows,
-  parseCsvText,
-} from "@/utils/promoCsv";
 
 const promoApi = api as any;
 
@@ -39,6 +27,12 @@ type ClientKlaviyoTabProps = {
     klaviyo_default_audience_id?: string | null;
     klaviyo_audiences?: { id: string; label?: string }[] | null;
     klaviyo_placed_order_metric_id?: string | null;
+    shopify_domain?: string | null;
+    shopify_admin_access_token?: string | null;
+    shopify_last_synced_at?: string | null;
+    shopify_sync_status?: string | null;
+    shopify_sync_error?: string | null;
+    shopify_product_count?: number | null;
   };
 };
 
@@ -76,23 +70,14 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   const generatePortalToken = useAction(promoApi.promoClients.generatePortalToken);
   const rotatePortalToken = useAction(promoApi.promoClients.rotatePortalToken);
 
-  const importCsvRows = useAction(promoApi.promoProducts.importCsv);
-  const importCollections = useAction(promoApi.promoProducts.importCollections);
-  const applyCollectionRules = useAction(promoApi.promoProducts.applyCollectionRules);
+  const syncShopifyProducts = useAction(promoApi.shopify.syncShopifyProducts);
 
-  const [rows, setRows] = useState<CsvProductRow[]>([]);
-  const [rawCount, setRawCount] = useState(0);
-  const [collectionRows, setCollectionRows] = useState<CsvCollectionRow[]>([]);
-  const [collectionRawCount, setCollectionRawCount] = useState(0);
-  const [ruleRows, setRuleRows] = useState<CollectionRule[]>([]);
-  const [ruleRawCount, setRuleRawCount] = useState(0);
-  const [ruleSkipped, setRuleSkipped] = useState<{ row: number; reason: string }[]>([]);
-  const [result, setResult] = useState<any>(null);
-  const [collectionResult, setCollectionResult] = useState<any>(null);
-  const [rulesResult, setRulesResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [collectionLoading, setCollectionLoading] = useState(false);
-  const [rulesLoading, setRulesLoading] = useState(false);
+  const [shopifyForm, setShopifyForm] = useState({
+    shopify_domain: client.shopify_domain || "",
+    shopify_admin_access_token: client.shopify_admin_access_token || "",
+  });
+  const [showShopifyToken, setShowShopifyToken] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     setSettingsForm({
@@ -107,6 +92,10 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
         label: audience.label || "",
       })) || [emptyAudience]
     );
+    setShopifyForm({
+      shopify_domain: client.shopify_domain || "",
+      shopify_admin_access_token: client.shopify_admin_access_token || "",
+    });
   }, [client]);
 
   const promoEntry = useMemo(() => {
@@ -235,92 +224,41 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
     setMigrateSelection("");
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const parsed = parseCsvText(text);
-    setRawCount(Math.max(0, parsed.length - 1));
-    const mapped = mapCsvRows(parsed);
-    setRows(mapped);
-    setResult(null);
+  const handleUpdateShopify = async () => {
+    await updateClient({
+      id: client.id,
+      updates: {
+        shopify_domain: shopifyForm.shopify_domain.trim(),
+        shopify_admin_access_token: shopifyForm.shopify_admin_access_token.trim(),
+      },
+    });
+    toast({ title: "Shopify settings saved" });
   };
 
-  const handleCollectionFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const parsed = parseCsvText(text);
-    setCollectionRawCount(Math.max(0, parsed.length - 1));
-    const mapped = mapCollectionRows(parsed);
-    setCollectionRows(mapped);
-    setCollectionResult(null);
-  };
-
-  const handleRulesFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const parsed = parseCsvText(text);
-    setRuleRawCount(Math.max(0, parsed.length - 1));
-    const mapped = mapCollectionRuleRows(parsed);
-    const { rules, skipped } = buildCollectionRules(mapped);
-    setRuleRows(rules);
-    setRuleSkipped(skipped);
-    setRulesResult(null);
-  };
-
-  const handleImport = async () => {
-    if (!promoClientId) return;
-    setLoading(true);
-    try {
-      const summary = await importCsvRows({ clientId: promoClientId, rows });
-      setResult(summary);
-      toast({ title: "CSV import complete" });
-    } catch (error: any) {
+  const handleSyncShopify = async () => {
+    if (!shopifyForm.shopify_domain.trim() || !shopifyForm.shopify_admin_access_token.trim()) {
       toast({
-        title: "CSV import failed",
-        description: error.message ?? "Please retry.",
+        title: "Missing Shopify settings",
+        description: "Add the domain and Admin API token first.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
-
-  const handleCollectionImport = async () => {
-    if (!promoClientId) return;
-    setCollectionLoading(true);
+    setSyncing(true);
     try {
-      const summary = await importCollections({ clientId: promoClientId, rows: collectionRows });
-      setCollectionResult(summary);
-      toast({ title: "Collection import complete" });
+      const result = await syncShopifyProducts({ clientId: client.id });
+      toast({
+        title: "Shopify sync complete",
+        description: `Processed ${result?.totalProcessed ?? 0} products.`,
+      });
     } catch (error: any) {
       toast({
-        title: "Collection import failed",
+        title: "Shopify sync failed",
         description: error.message ?? "Please retry.",
         variant: "destructive",
       });
     } finally {
-      setCollectionLoading(false);
-    }
-  };
-
-  const handleApplyRules = async () => {
-    if (!promoClientId) return;
-    setRulesLoading(true);
-    try {
-      const summary = await applyCollectionRules({ clientId: promoClientId, rules: ruleRows });
-      setRulesResult(summary);
-      toast({ title: "Collection rules applied" });
-    } catch (error: any) {
-      toast({
-        title: "Collection rules failed",
-        description: error.message ?? "Please retry.",
-        variant: "destructive",
-      });
-    } finally {
-      setRulesLoading(false);
+      setSyncing(false);
     }
   };
 
@@ -535,84 +473,68 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
       </Card>
 
       <Card className="p-4 space-y-4">
-        <h2 className="text-lg font-medium">Shopify data import</h2>
+        <h2 className="text-lg font-medium">Shopify connection</h2>
         <p className="text-sm text-muted-foreground">
-          Upload product and collection CSV files to enable product selection.
+          Connect Shopify Admin API to sync products directly into the promo picker.
         </p>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">CSV file</label>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleFileChange}
-            className="block w-full text-sm"
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label htmlFor="shopify_domain">Shopify domain</Label>
+            <Input
+              id="shopify_domain"
+              value={shopifyForm.shopify_domain}
+              onChange={(event) =>
+                setShopifyForm((prev) => ({
+                  ...prev,
+                  shopify_domain: event.target.value,
+                }))
+              }
+              placeholder="golf360.co.nz"
+            />
+          </div>
+          <div>
+            <Label htmlFor="shopify_admin_access_token">Admin API access token</Label>
+            <div className="flex gap-2">
+              <Input
+                id="shopify_admin_access_token"
+                type={showShopifyToken ? "text" : "password"}
+                value={shopifyForm.shopify_admin_access_token}
+                onChange={(event) =>
+                  setShopifyForm((prev) => ({
+                    ...prev,
+                    shopify_admin_access_token: event.target.value,
+                  }))
+                }
+                placeholder="shpat_..."
+              />
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setShowShopifyToken((prev) => !prev)}
+              >
+                {showShopifyToken ? "Hide" : "Show"}
+              </Button>
+            </div>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
-          {rows.length > 0
-            ? `Mapped ${rows.length} products from ${rawCount} rows.`
-            : rawCount > 0
-            ? "No mappable rows found. Check headers or required fields."
-            : "No file selected yet."}
+          Status: {client.shopify_sync_status || "not synced"}
+          {client.shopify_last_synced_at ? ` • Last sync ${client.shopify_last_synced_at}` : ""}
+          {typeof client.shopify_product_count === "number"
+            ? ` • ${client.shopify_product_count} products`
+            : ""}
         </div>
-        <Button onClick={handleImport} disabled={!promoClientId || rows.length === 0 || loading}>
-          {loading ? "Importing..." : "Import products"}
-        </Button>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Collections CSV</label>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleCollectionFileChange}
-            className="block w-full text-sm"
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {collectionRows.length > 0
-            ? `Mapped ${collectionRows.length} collection rows from ${collectionRawCount} rows.`
-            : collectionRawCount > 0
-            ? "No mappable rows found. Check headers."
-            : "No file selected yet."}
-        </div>
-        <Button
-          onClick={handleCollectionImport}
-          disabled={!promoClientId || collectionRows.length === 0 || collectionLoading}
-        >
-          {collectionLoading ? "Importing..." : "Import collections"}
-        </Button>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Collection Rules CSV</label>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleRulesFileChange}
-            className="block w-full text-sm"
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {ruleRows.length > 0
-            ? `Mapped ${ruleRows.length} rules from ${ruleRawCount} rows.`
-            : ruleRawCount > 0
-            ? "No mappable rows found. Check headers."
-            : "No file selected yet."}
-        </div>
-        {ruleSkipped.length > 0 && (
-          <div className="rounded-md border bg-muted p-3 text-xs text-muted-foreground">
-            {ruleSkipped.map((skip) => (
-              <div key={`${skip.row}-${skip.reason}`}>
-                Row {skip.row}: {skip.reason}
-              </div>
-            ))}
+        {client.shopify_sync_error && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+            {client.shopify_sync_error}
           </div>
         )}
-        <Button
-          onClick={handleApplyRules}
-          disabled={!promoClientId || ruleRows.length === 0 || rulesLoading}
-        >
-          {rulesLoading ? "Applying..." : "Apply collection rules"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleUpdateShopify}>Save Shopify settings</Button>
+          <Button variant="outline" onClick={handleSyncShopify} disabled={syncing}>
+            {syncing ? "Syncing..." : "Sync products now"}
+          </Button>
+        </div>
       </Card>
 
       <Card className="p-4 space-y-4">

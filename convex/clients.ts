@@ -129,6 +129,12 @@ export const update = mutation({
       klaviyo_default_audience_id: v.optional(v.string()),
       klaviyo_audiences: v.optional(v.array(v.object({ id: v.string(), label: v.optional(v.string()) }))),
       klaviyo_placed_order_metric_id: v.optional(v.string()),
+      shopify_domain: v.optional(v.string()),
+      shopify_admin_access_token: v.optional(v.string()),
+      shopify_last_synced_at: v.optional(v.string()),
+      shopify_sync_status: v.optional(v.string()),
+      shopify_sync_error: v.optional(v.string()),
+      shopify_product_count: v.optional(v.number()),
     }),
   },
   handler: async (ctx, args) => {
