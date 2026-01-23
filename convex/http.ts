@@ -204,4 +204,62 @@ http.route({
   }),
 });
 
+http.route({
+  path: "/promo/extension-status",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/promo/extension-status",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    let payload: any;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400, headers: corsHeaders });
+    }
+
+    const { clientId, token, promotionId } = payload ?? {};
+    if (!clientId || !token || !promotionId) {
+      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+    }
+
+    try {
+      const validation = await ctx.runQuery(api.promoClients.validatePortalToken, {
+        clientId,
+        token,
+      });
+      if (!validation?.valid) {
+        return new Response(
+          `Invalid token (clientId=${clientId})`,
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      const promotion = await ctx.runQuery(api.promoPromotions.getPromotionForPortal, {
+        clientId,
+        token,
+        promotionId,
+      });
+      if (!promotion?.promotion) {
+        return new Response("Promotion not found", { status: 404, headers: corsHeaders });
+      }
+
+      return new Response(JSON.stringify({ status: promotion.promotion.status }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (error: any) {
+      return new Response(error.message ?? "Server error", {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
+  }),
+});
+
 export default http;

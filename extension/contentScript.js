@@ -1,6 +1,7 @@
 const addedFlag = "data-promo-extension-added";
 const buttonClass = "promo-extension-button";
 const config = window.PROMO_PICKER_CONFIG || {};
+const promoState = { active: false };
 const productCardSelectors = [
   "[data-product-id]",
   "[data-product-handle]",
@@ -75,6 +76,38 @@ async function sendToPromo(product, currentConfig) {
   }
 }
 
+async function fetchPromotionStatus(currentConfig) {
+  if (
+    !currentConfig.convexSiteUrl ||
+    !currentConfig.clientId ||
+    !currentConfig.token ||
+    !currentConfig.promotionId
+  ) {
+    return null;
+  }
+  const response = await fetch(
+    `${currentConfig.convexSiteUrl}/promo/extension-status`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientId: currentConfig.clientId,
+        token: currentConfig.token,
+        promotionId: currentConfig.promotionId,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) return "missing";
+    if (response.status === 401) return "invalid";
+    return null;
+  }
+
+  const data = await response.json();
+  return data?.status || null;
+}
+
 function showToast(message, isError = false) {
   const toast = document.createElement("div");
   toast.textContent = message;
@@ -125,6 +158,68 @@ async function getConfig() {
   return { ...config };
 }
 
+function clearAddButtons() {
+  document.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
+  const floating = document.getElementById("promo-picker-floating");
+  if (floating) floating.remove();
+  document.querySelectorAll(`[${addedFlag}]`).forEach((node) => {
+    node.removeAttribute(addedFlag);
+  });
+}
+
+function removeStartButton() {
+  const startButton = document.getElementById("promo-picker-start");
+  if (startButton) startButton.remove();
+}
+
+function addStartButton(currentConfig) {
+  if (!currentConfig.clientId || !currentConfig.token) return;
+  removeStartButton();
+  const button = document.createElement("div");
+  button.id = "promo-picker-start";
+  button.textContent = "Start promo";
+  button.style.all = "initial";
+  button.style.position = "fixed";
+  button.style.right = "24px";
+  button.style.bottom = "140px";
+  button.style.zIndex = "2147483647";
+  button.style.background = "#0f172a";
+  button.style.color = "#fff";
+  button.style.padding = "10px 16px";
+  button.style.borderRadius = "999px";
+  button.style.fontFamily = "system-ui, -apple-system, sans-serif";
+  button.style.fontSize = "13px";
+  button.style.lineHeight = "1";
+  button.style.cursor = "pointer";
+  button.style.display = "inline-flex";
+  button.style.alignItems = "center";
+  button.style.justifyContent = "center";
+  button.style.whiteSpace = "nowrap";
+  button.style.height = "32px";
+  button.style.minHeight = "32px";
+  button.style.maxHeight = "32px";
+  button.style.width = "auto";
+  button.style.maxWidth = "220px";
+  button.style.boxShadow = "0 8px 20px rgba(0,0,0,0.2)";
+  button.style.boxSizing = "border-box";
+  button.style.userSelect = "none";
+  button.style.textDecoration = "none";
+  button.style.transform = "none";
+  button.style.writingMode = "horizontal-tb";
+  button.style.textOrientation = "mixed";
+  button.style.pointerEvents = "auto";
+  button.setAttribute("role", "button");
+  button.setAttribute("tabindex", "0");
+  button.addEventListener("click", () => openPromoPortal(currentConfig));
+  button.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openPromoPortal(currentConfig);
+    }
+  });
+  document.body.appendChild(button);
+}
+
 async function handleAdd(url) {
   const handle = extractHandle(url);
   if (!handle) {
@@ -140,6 +235,11 @@ async function handleAdd(url) {
         openPromoPortal(currentConfig);
       }
       showToast(configHint, true);
+      return;
+    }
+    if (!promoState.active) {
+      openPromoPortal(currentConfig);
+      showToast("Start a promo first", true);
       return;
     }
     const data = await fetchProductJson(handle);
@@ -179,6 +279,7 @@ function addButtonToLink(link) {
 }
 
 function addButtons() {
+  if (!promoState.active) return;
   if (extractHandle(window.location.href)) {
     return;
   }
@@ -187,6 +288,7 @@ function addButtons() {
 }
 
 function addProductPageButton() {
+  if (!promoState.active) return;
   const handle = extractHandle(window.location.href);
   if (!handle) return;
   document.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
@@ -238,11 +340,40 @@ function addProductPageButton() {
   document.body.appendChild(button);
 }
 
-addButtons();
-addProductPageButton();
+async function refreshPromotionState() {
+  const currentConfig = await getConfig();
+  if (!currentConfig.promotionId) {
+    promoState.active = false;
+    clearAddButtons();
+    addStartButton(currentConfig);
+    return;
+  }
+  const status = await fetchPromotionStatus(currentConfig);
+  if (status && status !== "draft") {
+    promoState.active = false;
+    if (chrome?.storage?.sync) {
+      await chrome.storage.sync.set({ promotionId: "" });
+    }
+    clearAddButtons();
+    addStartButton(currentConfig);
+    return;
+  }
+
+  promoState.active = true;
+  removeStartButton();
+  addButtons();
+  addProductPageButton();
+}
+
+refreshPromotionState();
 
 const observer = new MutationObserver(() => {
   addButtons();
+  addProductPageButton();
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
+
+setInterval(() => {
+  refreshPromotionState();
+}, 30000);
