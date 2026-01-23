@@ -95,6 +95,34 @@ async function klaviyoPost(
   return JSON.parse(text);
 }
 
+async function klaviyoPatch(
+  path: string,
+  body: unknown,
+  options?: { authScheme?: "apiKey" | "bearer" },
+) {
+  const { apiKey, baseUrl, revision } = getKlaviyoConfig();
+  const url = `${baseUrl}${path}`;
+  const authScheme = options?.authScheme ?? "apiKey";
+
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: authScheme === "bearer" ? `Bearer ${apiKey}` : `Klaviyo-API-Key ${apiKey}`,
+      Accept: "application/json",
+      revision,
+      "Content-Type": "application/vnd.api+json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`Klaviyo error ${response.status}: ${text}`);
+  }
+
+  return JSON.parse(text);
+}
+
 export type KlaviyoAudienceOption = { id: string; label?: string };
 
 type KlaviyoCampaignDraftOptions = {
@@ -208,7 +236,7 @@ async function assignTemplateToCampaign(
 
   const openingParagraph = context.openingParagraph?.trim();
   if (!openingParagraph) {
-    await klaviyoPost(
+    await klaviyoPatch(
       `/api/campaign-messages/${messageId}`,
       {
         data: {
@@ -234,7 +262,7 @@ async function assignTemplateToCampaign(
     return;
   }
 
-  await klaviyoPost(
+  await klaviyoPatch(
     `/api/campaign-messages/${messageId}`,
     {
       data: {
