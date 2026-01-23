@@ -68,14 +68,28 @@ async function shopifyGraphql(domain: string, token: string, query: string, vari
     body: JSON.stringify({ query, variables }),
   });
 
-  const payload = await response.json();
-  if (!response.ok || payload.errors) {
-    const message =
-      payload?.errors?.[0]?.message || payload?.errors?.[0]?.extensions?.code;
-    throw new Error(message || "Shopify API error");
+  const raw = await response.text();
+  let payload: any = null;
+  try {
+    payload = raw ? JSON.parse(raw) : null;
+  } catch {
+    payload = null;
   }
 
-  return payload.data;
+  if (!response.ok) {
+    const message =
+      payload?.errors?.[0]?.message ||
+      payload?.errors?.[0]?.extensions?.code ||
+      raw;
+    throw new Error(`Shopify API ${response.status}: ${message || "Request failed"}`);
+  }
+
+  if (payload?.errors?.length) {
+    const message = payload.errors.map((err: any) => err.message).join("; ");
+    throw new Error(`Shopify API error: ${message || "Unknown error"}`);
+  }
+
+  return payload?.data;
 }
 
 export const syncShopifyProducts = action({

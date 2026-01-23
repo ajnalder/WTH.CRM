@@ -489,8 +489,11 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
                   shopify_domain: event.target.value,
                 }))
               }
-              placeholder="golf360.co.nz"
+              placeholder="golf360nz.myshopify.com"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Use the myshopify.com domain from your store admin.
+            </p>
           </div>
           <div>
             <Label htmlFor="shopify_admin_access_token">Admin API access token</Label>
