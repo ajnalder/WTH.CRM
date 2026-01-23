@@ -27,6 +27,17 @@ export default function PromoPortalPromotionDetail() {
       : "skip"
   );
 
+  const promotion = promotionData?.promotion;
+  const canReturnToPicker = Boolean(returnUrl) && promotion?.status === "draft";
+
+  useEffect(() => {
+    if (!canReturnToPicker || !autoReturn) return;
+    const timer = window.setTimeout(() => {
+      window.location.assign(returnUrl);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [autoReturn, canReturnToPicker, returnUrl]);
+
   if (!clientId || !token) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
@@ -68,16 +79,7 @@ export default function PromoPortalPromotionDetail() {
     );
   }
 
-  const { promotion, items } = promotionData;
-  const canReturnToPicker = Boolean(returnUrl) && promotion.status === "draft";
-
-  useEffect(() => {
-    if (!canReturnToPicker || !autoReturn) return;
-    const timer = window.setTimeout(() => {
-      window.location.assign(returnUrl);
-    }, 800);
-    return () => window.clearTimeout(timer);
-  }, [autoReturn, canReturnToPicker, returnUrl]);
+  const { items } = promotionData;
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
