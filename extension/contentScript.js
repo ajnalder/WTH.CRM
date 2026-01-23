@@ -134,9 +134,13 @@ function formatConfigHint(current) {
   return missing.length ? `Missing: ${missing.join(", ")}` : null;
 }
 
-function openPromoPortal(currentConfig) {
+function openPromoPortal(currentConfig, returnUrl) {
   if (!currentConfig.clientId || !currentConfig.token) return;
-  const url = `https://wth-crm.vercel.app/p/${currentConfig.clientId}/new?token=${currentConfig.token}`;
+  const params = new URLSearchParams({ token: currentConfig.token });
+  if (returnUrl) {
+    params.set("returnUrl", returnUrl);
+  }
+  const url = `https://wth-crm.vercel.app/p/${currentConfig.clientId}/new?${params.toString()}`;
   chrome.runtime?.sendMessage({ type: "promo-picker:open-portal", url });
 }
 
@@ -210,11 +214,13 @@ function addStartButton(currentConfig) {
   button.style.pointerEvents = "auto";
   button.setAttribute("role", "button");
   button.setAttribute("tabindex", "0");
-  button.addEventListener("click", () => openPromoPortal(currentConfig));
+  button.addEventListener("click", () =>
+    openPromoPortal(currentConfig, window.location.href)
+  );
   button.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      openPromoPortal(currentConfig);
+      openPromoPortal(currentConfig, window.location.href);
     }
   });
   document.body.appendChild(button);
@@ -232,13 +238,13 @@ async function handleAdd(url) {
     const configHint = formatConfigHint(currentConfig);
     if (configHint) {
       if (!currentConfig.promotionId) {
-        openPromoPortal(currentConfig);
+        openPromoPortal(currentConfig, window.location.href);
       }
       showToast(configHint, true);
       return;
     }
     if (!promoState.active) {
-      openPromoPortal(currentConfig);
+      openPromoPortal(currentConfig, window.location.href);
       showToast("Start a promo first", true);
       return;
     }

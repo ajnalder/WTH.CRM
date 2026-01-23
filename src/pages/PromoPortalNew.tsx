@@ -24,6 +24,7 @@ export default function PromoPortalNew() {
   const navigate = useNavigate();
   const token = searchParams.get("token") ?? "";
   const existingPromotionId = searchParams.get("promotionId");
+  const returnUrl = searchParams.get("returnUrl") ?? "";
 
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
@@ -167,7 +168,12 @@ export default function PromoPortalNew() {
       name: name.trim(),
       noteToAndrew: note.trim() || undefined,
     });
-    setPromotionId(id);
+    const nextParams = new URLSearchParams({ token });
+    if (returnUrl) {
+      nextParams.set("returnUrl", returnUrl);
+      nextParams.set("autoReturn", "1");
+    }
+    navigate(`/p/${clientId}/promotions/${id}?${nextParams.toString()}`);
   };
 
   const handleUpdateDetails = async () => {

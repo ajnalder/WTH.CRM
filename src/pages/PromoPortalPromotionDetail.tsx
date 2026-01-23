@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/integrations/convex/api";
@@ -11,6 +12,8 @@ export default function PromoPortalPromotionDetail() {
   const { clientId, id } = useParams();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const returnUrl = searchParams.get("returnUrl") ?? "";
+  const autoReturn = searchParams.get("autoReturn") === "1";
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -66,6 +69,15 @@ export default function PromoPortalPromotionDetail() {
   }
 
   const { promotion, items } = promotionData;
+  const canReturnToPicker = Boolean(returnUrl) && promotion.status === "draft";
+
+  useEffect(() => {
+    if (!canReturnToPicker || !autoReturn) return;
+    const timer = window.setTimeout(() => {
+      window.location.assign(returnUrl);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [autoReturn, canReturnToPicker, returnUrl]);
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
@@ -76,6 +88,11 @@ export default function PromoPortalPromotionDetail() {
             <p className="text-sm text-muted-foreground">Status: {promotion.status}</p>
           </div>
           <div className="flex items-center gap-2">
+            {canReturnToPicker && (
+              <Button onClick={() => window.location.assign(returnUrl)}>
+                Continue to product picker
+              </Button>
+            )}
             {promotion.status !== "draft" && (
               <Button asChild variant="default">
                 <Link to={`/p/${clientId}/promotions/${id}/results?token=${token}`}>
