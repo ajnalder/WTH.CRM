@@ -134,7 +134,6 @@ type KlaviyoCampaignDraftOptions = {
   audienceOptions?: KlaviyoAudienceOption[];
   defaultAudienceId?: string;
   templateId?: string;
-  openingParagraph?: string;
 };
 
 export async function createKlaviyoCampaignDraft(
@@ -204,9 +203,8 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Klaviyo campaign creation failed.");
   }
 
-  // If a template ID is provided, fetch it, modify content, create a clone, and assign it
+  // If a template ID is provided, assign it to the campaign message
   const templateId = options?.templateId?.trim();
-  const openingParagraph = options?.openingParagraph?.trim();
 
   if (templateId) {
     // Get the campaign message ID from the response
@@ -214,59 +212,27 @@ export async function createKlaviyoCampaignDraft(
     const messageId = Array.isArray(messageData) ? messageData[0]?.id : messageData?.id;
 
     if (messageId) {
-      // Fetch the template to get its HTML
-      const templateData = await klaviyoGet(`/api/templates/${templateId}/`);
-      const originalHtml = templateData?.data?.attributes?.html || "";
-      const templateName = templateData?.data?.attributes?.name || "Promo Template";
-
-      if (originalHtml) {
-        // Replace the {{ opening_paragraph }} placeholder with actual content
-        let modifiedHtml = originalHtml;
-        if (openingParagraph) {
-          modifiedHtml = modifiedHtml
-            .replace(/\{\{\s*opening_paragraph\s*\}\}/gi, openingParagraph)
-            .replace(/\{\%\s*opening_paragraph\s*\%\}/gi, openingParagraph);
-        }
-
-        // Create a new template with the modified HTML
-        const clonePayload = {
-          data: {
-            type: "template",
-            attributes: {
-              name: `${name} - ${new Date().toISOString().slice(0, 10)}`,
-              editor_type: "CODE",
-              html: modifiedHtml,
-            },
-          },
-        };
-
-        const cloneResult = await klaviyoPost("/api/templates/", clonePayload);
-        const clonedTemplateId = cloneResult?.data?.id;
-
-        if (clonedTemplateId) {
-          // Assign the cloned template to the campaign message
-          const assignPayload = {
-            data: {
-              type: "campaign-message",
-              id: messageId,
-              relationships: {
-                template: {
-                  data: {
-                    type: "template",
-                    id: clonedTemplateId,
-                  },
-                },
+      // Assign the template directly to the campaign message (keeps WYSIWYG editing)
+      const assignPayload = {
+        data: {
+          type: "campaign-message",
+          id: messageId,
+          relationships: {
+            template: {
+              data: {
+                type: "template",
+                id: templateId,
               },
             },
-          };
+          },
+        },
+      };
 
-          await klaviyoPost("/api/campaign-message-assign-template/", assignPayload);
-        }
-      }
+      await klaviyoPost("/api/campaign-message-assign-template/", assignPayload);
     }
   }
 
-  return { campaignId, openingParagraph };
+  return { campaignId };
 }
 
 function pickCampaignMessageId(campaign: KlaviyoCampaign | undefined) {
