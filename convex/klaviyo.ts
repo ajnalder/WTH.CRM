@@ -226,23 +226,46 @@ export async function createKlaviyoCampaignDraft(
           .replace(/\{\%\s*opening_paragraph\s*\%\}/gi, openingParagraph);
       }
 
-      // Update the campaign message with the template HTML
+      // Assign template and set HTML content
       if (templateHtml) {
+        // First, assign the template to the campaign message
+        const assignPayload = {
+          data: {
+            type: "campaign-message-assign-template-action",
+            id: messageId,
+            relationships: {
+              template: {
+                data: {
+                  type: "template",
+                  id: templateId,
+                },
+              },
+            },
+          },
+        };
+
+        try {
+          await klaviyoPost("/api/campaign-message-assign-template/", assignPayload);
+        } catch (err) {
+          // Template assignment might fail, continue anyway
+          console.warn("Template assignment failed:", err);
+        }
+
+        // Then update the message content with our modified HTML
         const updatePayload = {
           data: {
             type: "campaign-message",
             id: messageId,
             attributes: {
-              definition: {
-                channel: "email",
-                label: "Email",
-                content: {
-                  subject: subjectLine,
-                  preview_text: previewText,
-                  from_email: fromEmail,
-                  from_label: fromLabel,
-                  body: templateHtml,
-                },
+              label: "Promo Email",
+              content: {
+                subject: subjectLine,
+                preview_text: previewText,
+                from_email: fromEmail,
+                from_label: fromLabel,
+              },
+              body: {
+                html: templateHtml,
               },
             },
           },
