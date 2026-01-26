@@ -204,7 +204,7 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Klaviyo campaign creation failed.");
   }
 
-  // If a template ID is provided, fetch it and apply to the campaign message
+  // If a template ID is provided, fetch it, modify content, create a clone, and assign it
   const templateId = options?.templateId?.trim();
   const openingParagraph = options?.openingParagraph?.trim();
 
@@ -216,62 +216,51 @@ export async function createKlaviyoCampaignDraft(
     if (messageId) {
       // Fetch the template to get its HTML
       const templateData = await klaviyoGet(`/api/templates/${templateId}/`);
-      let templateHtml = templateData?.data?.attributes?.html || "";
+      const originalHtml = templateData?.data?.attributes?.html || "";
+      const templateName = templateData?.data?.attributes?.name || "Promo Template";
 
-      // Replace the {{ opening_paragraph }} placeholder with actual content
-      if (openingParagraph && templateHtml) {
-        // Handle various placeholder formats
-        templateHtml = templateHtml
-          .replace(/\{\{\s*opening_paragraph\s*\}\}/gi, openingParagraph)
-          .replace(/\{\%\s*opening_paragraph\s*\%\}/gi, openingParagraph);
-      }
+      if (originalHtml) {
+        // Replace the {{ opening_paragraph }} placeholder with actual content
+        let modifiedHtml = originalHtml;
+        if (openingParagraph) {
+          modifiedHtml = modifiedHtml
+            .replace(/\{\{\s*opening_paragraph\s*\}\}/gi, openingParagraph)
+            .replace(/\{\%\s*opening_paragraph\s*\%\}/gi, openingParagraph);
+        }
 
-      // Assign template and set HTML content
-      if (templateHtml) {
-        // First, assign the template to the campaign message
-        const assignPayload = {
+        // Create a new template with the modified HTML
+        const clonePayload = {
           data: {
-            type: "campaign-message-assign-template-action",
-            id: messageId,
-            relationships: {
-              template: {
-                data: {
-                  type: "template",
-                  id: templateId,
+            type: "template",
+            attributes: {
+              name: `${name} - ${new Date().toISOString().slice(0, 10)}`,
+              html: modifiedHtml,
+            },
+          },
+        };
+
+        const cloneResult = await klaviyoPost("/api/templates/", clonePayload);
+        const clonedTemplateId = cloneResult?.data?.id;
+
+        if (clonedTemplateId) {
+          // Assign the cloned template to the campaign message
+          const assignPayload = {
+            data: {
+              type: "campaign-message",
+              id: messageId,
+              relationships: {
+                template: {
+                  data: {
+                    type: "template",
+                    id: clonedTemplateId,
+                  },
                 },
               },
             },
-          },
-        };
+          };
 
-        try {
           await klaviyoPost("/api/campaign-message-assign-template/", assignPayload);
-        } catch (err) {
-          // Template assignment might fail, continue anyway
-          console.warn("Template assignment failed:", err);
         }
-
-        // Then update the message content with our modified HTML
-        const updatePayload = {
-          data: {
-            type: "campaign-message",
-            id: messageId,
-            attributes: {
-              label: "Promo Email",
-              content: {
-                subject: subjectLine,
-                preview_text: previewText,
-                from_email: fromEmail,
-                from_label: fromLabel,
-              },
-              body: {
-                html: templateHtml,
-              },
-            },
-          },
-        };
-
-        await klaviyoPatch(`/api/campaign-messages/${messageId}/`, updatePayload);
       }
     }
   }
