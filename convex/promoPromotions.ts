@@ -497,10 +497,6 @@ export const createKlaviyoCampaignForPromotion = action({
       throw new Error("Promotion not found.");
     }
 
-    if (promotion.klaviyo_campaign_id) {
-      throw new Error("Klaviyo campaign ID already linked.");
-    }
-
     const name =
       promotion.generated_campaign_title?.trim() || promotion.name || "Promotion Campaign";
     const subjectLine =
