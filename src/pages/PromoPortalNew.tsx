@@ -31,6 +31,12 @@ export default function PromoPortalNew() {
   const [promotionId, setPromotionId] = useState<string | null>(
     existingPromotionId ?? null
   );
+
+  // Sync promotionId state with URL param when it changes
+  useEffect(() => {
+    setPromotionId(existingPromotionId ?? null);
+  }, [existingPromotionId]);
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [vendor, setVendor] = useState<string | undefined>(undefined);
