@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { action, internalAction, internalQuery } from "./_generated/server";
 import { api, internal } from "./_generated/api";
-import { assertAdmin } from "./promoUtils";
+import { assertAdmin, assertValidPortalToken } from "./promoUtils";
 import { nowIso } from "./_utils";
 
 const SHOPIFY_API_VERSION = "2024-10";
@@ -275,5 +275,25 @@ export const syncAllShopifyClients = internalAction({
       }
     }
     return results;
+  },
+});
+
+export const syncShopifyProductsForPortal = action({
+  args: { clientId: v.string(), token: v.string() },
+  handler: async (ctx, { clientId, token }): Promise<ShopifySyncResult> => {
+    await assertValidPortalToken(ctx, clientId, token);
+
+    const client = await ctx.runQuery(api.clients.getByIdForPromo, { id: clientId });
+    if (!client) {
+      throw new Error("Client not found");
+    }
+
+    return syncClientProducts(ctx, {
+      id: client.id,
+      shopify_domain: client.shopify_domain,
+      shopify_admin_access_token: client.shopify_admin_access_token,
+      shopify_last_synced_at: client.shopify_last_synced_at,
+      shopify_product_count: client.shopify_product_count,
+    });
   },
 });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -79,7 +79,10 @@ export default function PromoPortalNew() {
   );
 
   const [cachedProducts, setCachedProducts] = useState<any[]>([]);
+  const [syncing, setSyncing] = useState(false);
   const productsPage = products?.page ?? cachedProducts;
+
+  const syncShopify = useAction(promoApi.shopify.syncShopifyProductsForPortal);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -185,6 +188,16 @@ export default function PromoPortalNew() {
       name: name.trim(),
       noteToAndrew: note.trim() || undefined,
     });
+  };
+
+  const handleRefreshProducts = async () => {
+    if (!clientId || !token) return;
+    setSyncing(true);
+    try {
+      await syncShopify({ clientId, token });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleAdd = async (productId: string) => {
@@ -454,9 +467,14 @@ export default function PromoPortalNew() {
             <h1 className="text-2xl font-semibold">Create a Promotion</h1>
             <p className="text-sm text-muted-foreground">Step {promotionId ? 2 : 1} of 2</p>
           </div>
-          <Button asChild variant="outline">
-            <Link to={`/p/${clientId}?token=${token}`}>Back</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleRefreshProducts} disabled={syncing}>
+              {syncing ? "Refreshing..." : "Refresh products"}
+            </Button>
+            <Button asChild variant="outline">
+              <Link to={`/p/${clientId}?token=${token}`}>Back</Link>
+            </Button>
+          </div>
         </div>
 
         {!promotionId ? (
