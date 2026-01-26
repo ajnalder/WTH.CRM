@@ -234,6 +234,7 @@ export async function createKlaviyoCampaignDraft(
             type: "template",
             attributes: {
               name: `${name} - ${new Date().toISOString().slice(0, 10)}`,
+              editor_type: "CODE",
               html: modifiedHtml,
             },
           },
