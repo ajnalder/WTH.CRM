@@ -204,7 +204,52 @@ export async function createKlaviyoCampaignDraft(
     throw new Error("Klaviyo campaign creation failed.");
   }
 
-  return { campaignId };
+  // If a template ID is provided, fetch it and apply to the campaign message
+  const templateId = options?.templateId?.trim();
+  const openingParagraph = options?.openingParagraph?.trim();
+
+  if (templateId) {
+    // Get the campaign message ID from the response
+    const messageData = data?.data?.relationships?.["campaign-messages"]?.data;
+    const messageId = Array.isArray(messageData) ? messageData[0]?.id : messageData?.id;
+
+    if (messageId) {
+      // Fetch the template to get its HTML
+      const templateData = await klaviyoGet(`/api/templates/${templateId}/`);
+      let templateHtml = templateData?.data?.attributes?.html || "";
+
+      // Replace the {{ opening_paragraph }} placeholder with actual content
+      if (openingParagraph && templateHtml) {
+        // Handle various placeholder formats
+        templateHtml = templateHtml
+          .replace(/\{\{\s*opening_paragraph\s*\}\}/gi, openingParagraph)
+          .replace(/\{\%\s*opening_paragraph\s*\%\}/gi, openingParagraph);
+      }
+
+      // Update the campaign message with the template HTML
+      if (templateHtml) {
+        const updatePayload = {
+          data: {
+            type: "campaign-message",
+            id: messageId,
+            attributes: {
+              content: {
+                subject: subjectLine,
+                preview_text: previewText,
+                from_email: fromEmail,
+                from_label: fromLabel,
+                body: templateHtml,
+              },
+            },
+          },
+        };
+
+        await klaviyoPatch(`/api/campaign-messages/${messageId}/`, updatePayload);
+      }
+    }
+  }
+
+  return { campaignId, openingParagraph };
 }
 
 function pickCampaignMessageId(campaign: KlaviyoCampaign | undefined) {
