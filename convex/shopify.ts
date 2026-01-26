@@ -281,14 +281,15 @@ export const syncAllShopifyClients = internalAction({
 export const syncShopifyProductsForPortal = action({
   args: { clientId: v.string(), token: v.string() },
   handler: async (ctx, { clientId, token }): Promise<ShopifySyncResult> => {
-    await assertValidPortalToken(ctx, clientId, token);
+    const mutationCtx = (ctx as any).mutationCtx ?? ctx;
+    await assertValidPortalToken(mutationCtx, clientId, token);
 
-    const client = await ctx.runQuery(api.clients.getByIdForPromo, { id: clientId });
+    const client = await mutationCtx.runQuery(api.clients.getByIdForPromo, { id: clientId });
     if (!client) {
       throw new Error("Client not found");
     }
 
-    return syncClientProducts(ctx, {
+    return syncClientProducts(mutationCtx, {
       id: client.id,
       shopify_domain: client.shopify_domain,
       shopify_admin_access_token: client.shopify_admin_access_token,
