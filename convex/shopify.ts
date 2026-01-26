@@ -59,7 +59,7 @@ function stripHtml(value: string | null | undefined) {
 
 type ShopifyClientRecord = {
   crmClientId: string;
-  promoClientId: string;
+  promoClientId?: string | null;
   shopify_domain?: string | null;
   shopify_admin_access_token?: string | null;
   shopify_last_synced_at?: string | null;
@@ -113,6 +113,7 @@ async function syncClientProducts(
 ): Promise<ShopifySyncResult> {
   const domain = client.shopify_domain;
   const token = client.shopify_admin_access_token;
+  const promoClientId = client.promoClientId ?? client.crmClientId;
   if (!domain || !token) {
     throw new Error("Missing Shopify domain or token");
   }
@@ -125,9 +126,18 @@ async function syncClientProducts(
   });
 
   const isInitialSync = !client.shopify_last_synced_at;
-  const updatedAfter = client.shopify_last_synced_at;
-  const query =
-    updatedAfter && !isInitialSync ? `updated_at:>=${updatedAfter}` : undefined;
+
+  // Format the timestamp for Shopify's query syntax
+  // Remove milliseconds and add a 2-minute buffer to catch edge cases
+  let query: string | undefined;
+  if (!isInitialSync && client.shopify_last_synced_at) {
+    const lastSyncDate = new Date(client.shopify_last_synced_at);
+    // Subtract 2 minutes to ensure we don't miss products due to clock skew
+    lastSyncDate.setMinutes(lastSyncDate.getMinutes() - 2);
+    // Format as ISO without milliseconds (Shopify doesn't handle them well)
+    const cleanTimestamp = lastSyncDate.toISOString().replace(/\.\d{3}Z$/, "Z");
+    query = `updated_at:>=${cleanTimestamp}`;
+  }
 
   let hasNextPage = true;
   let after: string | null = null;
@@ -177,7 +187,7 @@ async function syncClientProducts(
 
     if (products.length > 0) {
       const result = await ctx.runMutation(api.promoProducts.upsertShopifyProducts, {
-        clientId: client.promoClientId,
+        clientId: promoClientId,
         products,
       });
       createdCount += result.createdCount ?? 0;
@@ -231,12 +241,26 @@ export const syncShopifyProducts = action({
   handler: async (ctx, { clientId }): Promise<ShopifySyncResult> => {
     await assertAdmin(ctx);
 
-    const client: ShopifyClientRecord | null = await ctx.runQuery(api.clients.getById, {
+    const crmClient = await ctx.runQuery(api.clients.getByIdForPromo, {
       id: clientId,
     });
-    if (!client) {
+    if (!crmClient) {
       throw new Error("Client not found");
     }
+
+    const promoClientId =
+      (await ctx.runQuery(internal.shopify.findPromoClientIdForCrm, {
+        crmClientId: clientId,
+      })) ?? clientId;
+
+    const client: ShopifyClientRecord = {
+      crmClientId: crmClient.id,
+      promoClientId,
+      shopify_domain: crmClient.shopify_domain,
+      shopify_admin_access_token: crmClient.shopify_admin_access_token,
+      shopify_last_synced_at: crmClient.shopify_last_synced_at,
+      shopify_product_count: crmClient.shopify_product_count,
+    };
 
     try {
       return await syncClientProducts(ctx, client);
@@ -270,7 +294,7 @@ export const syncAllShopifyClients = internalAction({
     for (const client of clients) {
       try {
         const result = await syncClientProducts(ctx, client);
-        results.push({ clientId: client.id, ok: true, ...result });
+        results.push({ clientId: client.crmClientId, ok: true, ...result });
       } catch (error: any) {
         await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
           id: client.crmClientId,
@@ -279,7 +303,6 @@ export const syncAllShopifyClients = internalAction({
         });
         results.push({
           clientId: client.crmClientId,
-          promoClientId: client.promoClientId,
           ok: false,
           error: error?.message,
           createdCount: 0,
@@ -323,5 +346,16 @@ export const syncShopifyProductsForPortal = action({
       shopify_last_synced_at: crmClient.shopify_last_synced_at,
       shopify_product_count: crmClient.shopify_product_count,
     });
+  },
+});
+
+export const findPromoClientIdForCrm = internalQuery({
+  args: { crmClientId: v.string() },
+  handler: async (ctx, { crmClientId }) => {
+    const promo = await ctx.db
+      .query("promo_clients")
+      .withIndex("by_crm_client", (q) => q.eq("crm_client_id", crmClientId))
+      .first();
+    return promo?.id ?? null;
   },
 });
