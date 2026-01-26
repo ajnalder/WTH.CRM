@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { nowIso, getUserId } from "./_utils";
 
@@ -163,6 +163,35 @@ export const update = mutation({
       updated_at: nowIso(),
     };
 
+    await ctx.db.replace(_id, updated);
+    return updated;
+  },
+});
+
+export const updateShopifySyncMeta = internalMutation({
+  args: {
+    id: v.string(),
+    shopify_sync_status: v.optional(v.string()),
+    shopify_sync_error: v.optional(v.string()),
+    shopify_last_synced_at: v.optional(v.string()),
+    shopify_product_count: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const client = await ctx.db
+      .query("clients")
+      .withIndex("by_public_id", (q) => q.eq("id", args.id))
+      .unique();
+
+    if (!client) {
+      throw new Error("Client not found");
+    }
+
+    const { _id, _creationTime, ...clientData } = client;
+    const updated = {
+      ...clientData,
+      ...args,
+      updated_at: nowIso(),
+    };
     await ctx.db.replace(_id, updated);
     return updated;
   },

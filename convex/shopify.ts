@@ -117,12 +117,10 @@ async function syncClientProducts(
   }
 
   const startedAt = nowIso();
-  await ctx.runMutation(api.clients.update, {
+  await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
     id: client.id,
-    updates: {
-      shopify_sync_status: "running",
-      shopify_sync_error: "",
-    },
+    shopify_sync_status: "running",
+    shopify_sync_error: "",
   });
 
   const isInitialSync = !client.shopify_last_synced_at;
@@ -190,17 +188,15 @@ async function syncClientProducts(
     after = data.products.pageInfo.endCursor;
   }
 
-  await ctx.runMutation(api.clients.update, {
-    id: client.id,
-    updates: {
-      shopify_sync_status: "ok",
-      shopify_sync_error: "",
-      shopify_last_synced_at: startedAt,
-      shopify_product_count: isInitialSync
-        ? totalProcessed
-        : client.shopify_product_count,
-    },
-  });
+      await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
+        id: client.id,
+        shopify_sync_status: "ok",
+        shopify_sync_error: "",
+        shopify_last_synced_at: startedAt,
+        shopify_product_count: isInitialSync
+          ? totalProcessed
+          : client.shopify_product_count,
+      });
 
   return { createdCount, updatedCount, totalProcessed };
 }
@@ -236,12 +232,10 @@ export const syncShopifyProducts = action({
     try {
       return await syncClientProducts(ctx, client);
     } catch (error: any) {
-      await ctx.runMutation(api.clients.update, {
+      await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
         id: clientId,
-        updates: {
-          shopify_sync_status: "error",
-          shopify_sync_error: error?.message || "Shopify sync failed",
-        },
+        shopify_sync_status: "error",
+        shopify_sync_error: error?.message || "Shopify sync failed",
       });
       throw error;
     }
@@ -265,12 +259,10 @@ export const syncAllShopifyClients = internalAction({
         const result = await syncClientProducts(ctx, client);
         results.push({ clientId: client.id, ok: true, ...result });
       } catch (error: any) {
-        await ctx.runMutation(api.clients.update, {
+        await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
           id: client.id,
-          updates: {
-            shopify_sync_status: "error",
-            shopify_sync_error: error?.message || "Shopify sync failed",
-          },
+          shopify_sync_status: "error",
+          shopify_sync_error: error?.message || "Shopify sync failed",
         });
         results.push({
           clientId: client.id,
