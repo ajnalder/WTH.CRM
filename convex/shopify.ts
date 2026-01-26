@@ -289,17 +289,24 @@ export const syncShopifyProductsForPortal = action({
       throw new Error("Invalid portal token");
     }
 
-    const client = await ctx.runQuery(api.clients.getByIdForPromo, { id: clientId });
-    if (!client) {
+    const promoClient = await ctx.runQuery(api.promoClients.getClientById, { clientId });
+    if (!promoClient?.crm_client_id) {
+      throw new Error("Client not linked to CRM client");
+    }
+
+    const crmClient = await ctx.runQuery(api.clients.getByIdForPromo, {
+      id: promoClient.crm_client_id,
+    });
+    if (!crmClient) {
       throw new Error("Client not found");
     }
 
     return syncClientProducts(ctx, {
-      id: client.id,
-      shopify_domain: client.shopify_domain,
-      shopify_admin_access_token: client.shopify_admin_access_token,
-      shopify_last_synced_at: client.shopify_last_synced_at,
-      shopify_product_count: client.shopify_product_count,
+      id: crmClient.id,
+      shopify_domain: crmClient.shopify_domain,
+      shopify_admin_access_token: crmClient.shopify_admin_access_token,
+      shopify_last_synced_at: crmClient.shopify_last_synced_at,
+      shopify_product_count: crmClient.shopify_product_count,
     });
   },
 });
