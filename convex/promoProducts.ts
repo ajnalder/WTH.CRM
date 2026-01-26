@@ -365,6 +365,13 @@ export const searchProducts = query({
       filtered = filtered.filter((item) => item.collections?.includes(collection));
     }
 
+    // Sort by most recent first (created_at descending)
+    filtered.sort((a, b) => {
+      const dateA = a.created_at ?? "";
+      const dateB = b.created_at ?? "";
+      return dateB.localeCompare(dateA);
+    });
+
     return {
       page: filtered.slice(0, numItems),
       isDone: true,
