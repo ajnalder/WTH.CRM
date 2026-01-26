@@ -281,7 +281,7 @@ export const syncAllShopifyClients = internalAction({
 export const syncShopifyProductsForPortal = action({
   args: { clientId: v.string(), token: v.string() },
   handler: async (ctx, { clientId, token }): Promise<ShopifySyncResult> => {
-    const mutationCtx = (ctx as any).mutationCtx ?? ctx;
+    const mutationCtx: any = (ctx as any).db ? ctx : (ctx as any).mutationCtx ?? ctx;
     await assertValidPortalToken(mutationCtx, clientId, token);
 
     const client = await mutationCtx.runQuery(api.clients.getByIdForPromo, { id: clientId });
