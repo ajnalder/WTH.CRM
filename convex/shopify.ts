@@ -186,7 +186,7 @@ async function syncClientProducts(
     });
 
     if (products.length > 0) {
-      const result = await ctx.runMutation(api.promoProducts.upsertShopifyProducts, {
+      const result = await ctx.runMutation(internal.promoProducts.upsertShopifyProductsInternal, {
         clientId: promoClientId,
         products,
       });

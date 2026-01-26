@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { action, mutation, query } from "./_generated/server";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { assertAdmin, assertValidPortalToken, generateId, updateTimestamp } from "./promoUtils";
 import { nowIso } from "./_utils";
 
@@ -190,6 +190,64 @@ export const upsertShopifyProducts = mutation({
   },
   handler: async (ctx, { clientId, products }) => {
     await assertAdmin(ctx);
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const product of products) {
+      const existing = await ctx.db
+        .query("promo_products")
+        .withIndex("by_client_external_id", (q) =>
+          q.eq("client_id", clientId).eq("external_id", product.externalId)
+        )
+        .first();
+
+      const payload = {
+        client_id: clientId,
+        external_source: "shopify_admin",
+        external_id: product.externalId,
+        title: product.title,
+        short_title: product.shortTitle,
+        handle: product.handle,
+        product_url: product.productUrl,
+        image_url: product.imageUrl ?? "",
+        price: product.price,
+        compare_at_price: product.compareAtPrice,
+        vendor: product.vendor,
+        product_type: product.productType,
+        tags: product.tags,
+        description: product.description,
+        collections: product.collections,
+        status: product.status ?? "active",
+      };
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          ...payload,
+          ...updateTimestamp(),
+        });
+        updatedCount += 1;
+      } else {
+        await ctx.db.insert("promo_products", {
+          id: generateId(),
+          ...payload,
+          created_at: nowIso(),
+          updated_at: nowIso(),
+        });
+        createdCount += 1;
+      }
+    }
+
+    return { createdCount, updatedCount };
+  },
+});
+
+// Internal version for use from actions (portal sync) - no auth check
+export const upsertShopifyProductsInternal = internalMutation({
+  args: {
+    clientId: v.string(),
+    products: v.array(shopifyProductRow),
+  },
+  handler: async (ctx, { clientId, products }) => {
     let createdCount = 0;
     let updatedCount = 0;
 
