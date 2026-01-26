@@ -324,11 +324,9 @@ export default function PromoAdminPromotionDetail() {
             >
               Save ID
             </Button>
-            {!klaviyoCampaignId.trim() && (
-              <Button onClick={handleCreateKlaviyoCampaign} disabled={isCreatingCampaign}>
-                {isCreatingCampaign ? "Creating..." : "Create in Klaviyo"}
-              </Button>
-            )}
+            <Button onClick={handleCreateKlaviyoCampaign} disabled={isCreatingCampaign}>
+              {isCreatingCampaign ? "Creating..." : "Create in Klaviyo"}
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground">
             Results are read-only and synced from Klaviyo without modifying campaigns.
