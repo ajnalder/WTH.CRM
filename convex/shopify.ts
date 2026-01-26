@@ -58,7 +58,8 @@ function stripHtml(value: string | null | undefined) {
 }
 
 type ShopifyClientRecord = {
-  id: string;
+  crmClientId: string;
+  promoClientId: string;
   shopify_domain?: string | null;
   shopify_admin_access_token?: string | null;
   shopify_last_synced_at?: string | null;
@@ -118,7 +119,7 @@ async function syncClientProducts(
 
   const startedAt = nowIso();
   await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
-    id: client.id,
+    id: client.crmClientId,
     shopify_sync_status: "running",
     shopify_sync_error: "",
   });
@@ -176,7 +177,7 @@ async function syncClientProducts(
 
     if (products.length > 0) {
       const result = await ctx.runMutation(api.promoProducts.upsertShopifyProducts, {
-        clientId: client.id,
+        clientId: client.promoClientId,
         products,
       });
       createdCount += result.createdCount ?? 0;
@@ -189,7 +190,7 @@ async function syncClientProducts(
   }
 
       await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
-        id: client.id,
+        id: client.crmClientId,
         shopify_sync_status: "ok",
         shopify_sync_error: "",
         shopify_last_synced_at: startedAt,
@@ -204,16 +205,24 @@ async function syncClientProducts(
 export const listShopifyClientsForSync = internalQuery({
   args: {},
   handler: async (ctx): Promise<ShopifyClientRecord[]> => {
+    const promoClients = await ctx.db.query("promo_clients").collect();
     const clients = await ctx.db.query("clients").collect();
-    return clients
-      .filter((client) => client.shopify_domain && client.shopify_admin_access_token)
-      .map((client) => ({
-        id: client.id,
-        shopify_domain: client.shopify_domain,
-        shopify_admin_access_token: client.shopify_admin_access_token,
-        shopify_last_synced_at: client.shopify_last_synced_at,
-        shopify_product_count: client.shopify_product_count,
-      }));
+    const crmById = new Map(clients.map((c) => [c.id, c]));
+
+    return promoClients
+      .map((promo) => {
+        const crm = promo.crm_client_id ? crmById.get(promo.crm_client_id) : null;
+        if (!crm || !crm.shopify_domain || !crm.shopify_admin_access_token) return null;
+        return {
+          crmClientId: crm.id,
+          promoClientId: promo.id,
+          shopify_domain: crm.shopify_domain,
+          shopify_admin_access_token: crm.shopify_admin_access_token,
+          shopify_last_synced_at: crm.shopify_last_synced_at,
+          shopify_product_count: crm.shopify_product_count,
+        } as ShopifyClientRecord;
+      })
+      .filter(Boolean) as ShopifyClientRecord[];
   },
 });
 
@@ -246,7 +255,11 @@ export const syncAllShopifyClients = internalAction({
   args: {},
   handler: async (
     ctx
-  ): Promise<Array<ShopifySyncResult & { clientId: string; ok: boolean; error?: string }>> => {
+  ): Promise<
+    Array<
+      ShopifySyncResult & { clientId: string; promoClientId?: string; ok: boolean; error?: string }
+    >
+  > => {
     const clients: ShopifyClientRecord[] = await ctx.runQuery(
       internal.shopify.listShopifyClientsForSync,
       {}
@@ -260,12 +273,13 @@ export const syncAllShopifyClients = internalAction({
         results.push({ clientId: client.id, ok: true, ...result });
       } catch (error: any) {
         await ctx.runMutation(internal.clients.updateShopifySyncMeta, {
-          id: client.id,
+          id: client.crmClientId,
           shopify_sync_status: "error",
           shopify_sync_error: error?.message || "Shopify sync failed",
         });
         results.push({
-          clientId: client.id,
+          clientId: client.crmClientId,
+          promoClientId: client.promoClientId,
           ok: false,
           error: error?.message,
           createdCount: 0,
@@ -302,7 +316,8 @@ export const syncShopifyProductsForPortal = action({
     }
 
     return syncClientProducts(ctx, {
-      id: crmClient.id,
+      crmClientId: crmClient.id,
+      promoClientId: promoClient.id,
       shopify_domain: crmClient.shopify_domain,
       shopify_admin_access_token: crmClient.shopify_admin_access_token,
       shopify_last_synced_at: crmClient.shopify_last_synced_at,
