@@ -233,12 +233,16 @@ export async function createKlaviyoCampaignDraft(
             type: "campaign-message",
             id: messageId,
             attributes: {
-              content: {
-                subject: subjectLine,
-                preview_text: previewText,
-                from_email: fromEmail,
-                from_label: fromLabel,
-                body: templateHtml,
+              definition: {
+                channel: "email",
+                label: "Email",
+                content: {
+                  subject: subjectLine,
+                  preview_text: previewText,
+                  from_email: fromEmail,
+                  from_label: fromLabel,
+                  body: templateHtml,
+                },
               },
             },
           },
