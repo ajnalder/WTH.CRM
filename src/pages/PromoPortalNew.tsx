@@ -171,12 +171,8 @@ export default function PromoPortalNew() {
       name: name.trim(),
       noteToAndrew: note.trim() || undefined,
     });
-    const nextParams = new URLSearchParams({ token });
-    if (returnUrl) {
-      nextParams.set("returnUrl", returnUrl);
-      nextParams.set("autoReturn", "1");
-    }
-    navigate(`/p/${clientId}/promotions/${id}?${nextParams.toString()}`);
+    // Navigate directly to the product picker (same page with promotionId)
+    navigate(`/p/${clientId}/new?token=${token}&promotionId=${id}`);
   };
 
   const handleUpdateDetails = async () => {
