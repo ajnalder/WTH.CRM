@@ -5,6 +5,8 @@ Last updated: 2026-01-21
 Overview
 - Web app running on Vercel, currently pointed at Convex dev deployment.
 - Convex prod has little data; most active data is in dev.
+- This is a comprehensive CRM web app for What the Heck, a NZ based web design business based in Tauranga. Andrew is the owner and is building this app. 
+- This app was orginally built on Loveable and was downloaded loacally to rebuild it as a stand alone app hosted on Vercel and the database was changed from Supabase to Convex. 
 
 Deployments
 - Convex dev: https://frugal-lyrebird-181.convex.cloud
