@@ -59,6 +59,7 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   const [linkSelection, setLinkSelection] = useState("");
   const [migrateSelection, setMigrateSelection] = useState("");
   const [isBackfilling, setIsBackfilling] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
   const [settingsForm, setSettingsForm] = useState({
     klaviyo_from_email: client.klaviyo_from_email || "",
@@ -120,6 +121,8 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
 
   const promoClient = promoEntry?.promoClient ?? null;
   const promoClientId = promoClient?.id ?? "";
+  const resolvedPortalToken =
+    (promoClientId && portalTokens[promoClientId]) || promoClient?.portal_token || "";
 
   const promotions = useQuery(
     promoApi.promoPromotions.listPromotionsForAdmin,
@@ -137,11 +140,9 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   }, [promoClients, promoClient?.id]);
 
   const portalLink = useMemo(() => {
-    if (!promoClientId) return "";
-    const token = portalTokens[promoClientId];
-    if (!token) return "";
-    return `${window.location.origin}/p/${promoClientId}?token=${token}`;
-  }, [promoClientId, portalTokens]);
+    if (!promoClientId || !resolvedPortalToken) return "";
+    return `${window.location.origin}/p/${promoClientId}?token=${resolvedPortalToken}`;
+  }, [promoClientId, resolvedPortalToken]);
 
   const handleUpdateSettings = async () => {
     const cleanedAudiences = audiences
@@ -212,6 +213,27 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
     if (!promoClientId) return;
     const result = await rotatePortalToken({ clientId: promoClientId });
     setPortalTokens((prev) => ({ ...prev, [promoClientId]: result.token }));
+  };
+
+  const ensurePortalToken = async () => {
+    if (resolvedPortalToken || !promoClientId) return resolvedPortalToken;
+    const result = promoClient?.portal_token_hash
+      ? await rotatePortalToken({ clientId: promoClientId })
+      : await generatePortalToken({ clientId: promoClientId });
+    setPortalTokens((prev) => ({ ...prev, [promoClientId]: result.token }));
+    return result.token;
+  };
+
+  const handleOpenPortal = async () => {
+    if (!promoClientId) return;
+    setIsOpeningPortal(true);
+    try {
+      const token = await ensurePortalToken();
+      if (!token) return;
+      window.open(`/p/${promoClientId}?token=${token}`, "_blank", "noopener,noreferrer");
+    } finally {
+      setIsOpeningPortal(false);
+    }
   };
 
   const handleCopyPortalLink = async () => {
@@ -297,10 +319,12 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
               <Button variant="outline" onClick={handleCopyPortalLink} disabled={!portalLink}>
                 Copy portal link
               </Button>
-              <Button asChild variant="outline" disabled={!portalTokens[promoClientId]}>
-                <Link to={`/p/${promoClientId}?token=${portalTokens[promoClientId] ?? ""}`}>
-                  Open portal
-                </Link>
+              <Button
+                variant="outline"
+                onClick={handleOpenPortal}
+                disabled={isOpeningPortal}
+              >
+                {isOpeningPortal ? "Opening..." : "Open portal"}
               </Button>
             </div>
             <div className="rounded-md border bg-muted p-3 text-sm break-all">

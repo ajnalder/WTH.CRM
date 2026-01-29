@@ -522,6 +522,7 @@ export default defineSchema({
     crm_client_id: v.optional(v.string()),
     name: v.string(),
     portal_token_hash: v.optional(v.string()),
+    portal_token: v.optional(v.string()),
     portal_token_created_at: v.optional(v.string()),
     portal_token_rotated_at: v.optional(v.string()),
     created_at: v.string(),

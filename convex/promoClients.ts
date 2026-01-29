@@ -130,6 +130,7 @@ export const listCrmClientsForPromo = query({
               id: promoClient.id,
               name: promoClient.name,
               portal_token_hash: promoClient.portal_token_hash ?? undefined,
+              portal_token: promoClient.portal_token ?? undefined,
               product_count: productCount,
             }
           : null,
@@ -156,6 +157,7 @@ export const listPromoClientsForAdmin = query({
         name: client.name,
         crm_client_id: client.crm_client_id ?? null,
         portal_token_hash: client.portal_token_hash ?? null,
+        portal_token: client.portal_token ?? null,
         product_count: products.length,
       });
     }
@@ -345,10 +347,11 @@ export const setPortalTokenHash = mutation({
   args: {
     clientId: v.string(),
     tokenHash: v.string(),
+    portalToken: v.string(),
     createdAt: v.string(),
     rotatedAt: v.string(),
   },
-  handler: async (ctx, { clientId, tokenHash, createdAt, rotatedAt }) => {
+  handler: async (ctx, { clientId, tokenHash, portalToken, createdAt, rotatedAt }) => {
     await assertAdmin(ctx);
 
     const record = await ctx.db
@@ -362,6 +365,7 @@ export const setPortalTokenHash = mutation({
 
     await ctx.db.patch(record._id, {
       portal_token_hash: tokenHash,
+      portal_token: portalToken,
       portal_token_created_at: record.portal_token_created_at ?? createdAt,
       portal_token_rotated_at: rotatedAt,
       updated_at: nowIso(),
@@ -383,6 +387,7 @@ export const generatePortalToken = action({
     await ctx.runMutation("promoClients:setPortalTokenHash" as any, {
       clientId,
       tokenHash,
+      portalToken: rawToken,
       createdAt: timestamp,
       rotatedAt: timestamp,
     });
@@ -403,6 +408,7 @@ export const rotatePortalToken = action({
     await ctx.runMutation("promoClients:setPortalTokenHash" as any, {
       clientId,
       tokenHash,
+      portalToken: rawToken,
       createdAt: timestamp,
       rotatedAt: timestamp,
     });
