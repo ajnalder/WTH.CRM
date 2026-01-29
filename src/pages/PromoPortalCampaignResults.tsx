@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useAction, useQuery } from "convex/react";
 import { Mail } from "lucide-react";
@@ -49,6 +49,7 @@ export default function PromoPortalCampaignResults() {
   const token = searchParams.get("token") ?? "";
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const hasAutoRefreshed = useRef(false);
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -133,6 +134,13 @@ export default function PromoPortalCampaignResults() {
     }
   };
 
+  useEffect(() => {
+    if (!clientId || !token || !id || !validation?.valid) return;
+    if (hasAutoRefreshed.current) return;
+    hasAutoRefreshed.current = true;
+    handleRefresh(false);
+  }, [clientId, token, id, validation?.valid]);
+
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
@@ -158,14 +166,9 @@ export default function PromoPortalCampaignResults() {
                   Last updated: {formatDate(refreshedAt)}
                 </p>
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => handleRefresh(false)} disabled={isRefreshing}>
-                {isRefreshing ? "Refreshing..." : "Refresh results"}
-              </Button>
-              <Button variant="default" onClick={() => handleRefresh(true)} disabled={isRefreshing}>
-                Force refresh
-              </Button>
+              {isRefreshing && (
+                <p className="text-xs text-muted-foreground">Refreshing results…</p>
+              )}
             </div>
           </div>
           {refreshError && (
