@@ -49,9 +49,6 @@ export default function PromoPortalCampaignResults() {
   const token = searchParams.get("token") ?? "";
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<
-    { path: string; status: number | null; ok: boolean; keys: string[] }[] | null
-  >(null);
 
   const validation = useQuery(
     promoApi.promoClients.validatePortalToken,
@@ -122,17 +119,13 @@ export default function PromoPortalCampaignResults() {
     if (!clientId || !token || !id) return;
     setIsRefreshing(true);
     setRefreshError(null);
-    setDebugInfo(null);
     try {
-      const response = await refreshResults({
+      await refreshResults({
         clientId,
         token,
         promotionId: id,
         force,
       });
-      if (Array.isArray(response?.debug)) {
-        setDebugInfo(response.debug);
-      }
     } catch (error: any) {
       setRefreshError(error.message ?? "Failed to refresh results.");
     } finally {
@@ -177,23 +170,6 @@ export default function PromoPortalCampaignResults() {
           </div>
           {refreshError && (
             <p className="text-sm text-red-600">{refreshError}</p>
-          )}
-          {debugInfo && (
-            <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-              <p className="font-semibold">Debug (Klaviyo keys)</p>
-              {debugInfo.length === 0 && <p>No debug data returned.</p>}
-              {debugInfo.map((entry) => (
-                <div key={entry.path} className="mt-2">
-                  <p>
-                    Path: {entry.path} ({entry.ok ? "ok" : "error"}
-                    {entry.status ? ` ${entry.status}` : ""})
-                  </p>
-                  <p className="mt-1 break-words">
-                    Keys: {entry.keys.length ? entry.keys.join(", ") : "—"}
-                  </p>
-                </div>
-              ))}
-            </div>
           )}
           {!hasLinkedCampaign && (
             <p className="text-sm text-muted-foreground">
