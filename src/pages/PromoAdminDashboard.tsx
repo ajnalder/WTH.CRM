@@ -8,6 +8,19 @@ import { useToast } from "@/components/ui/use-toast";
 
 const promoApi = api as any;
 
+function formatPlannedDateTime(date?: string, time?: string) {
+  if (!date) return "";
+  const base = new Date(`${date}T${time || "00:00"}:00`);
+  const dateLabel = new Intl.DateTimeFormat("en-NZ", {
+    dateStyle: "medium",
+  }).format(base);
+  if (!time) return dateLabel;
+  const timeLabel = new Intl.DateTimeFormat("en-NZ", {
+    timeStyle: "short",
+  }).format(base);
+  return `${dateLabel} · ${timeLabel}`;
+}
+
 export default function PromoAdminDashboard() {
   const { toast } = useToast();
   const promotions = useQuery(promoApi.promoPromotions.listIncomingPromotionsForAdmin, {});
@@ -47,6 +60,11 @@ export default function PromoAdminDashboard() {
                   <p className="text-xs text-muted-foreground">
                     {promo.client_name} · Status: {promo.status}
                   </p>
+                  {promo.planned_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Tentative: {formatPlannedDateTime(promo.planned_date, promo.planned_time)}
+                    </p>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {promo.submitted_at ? "Submitted" : "Draft"}

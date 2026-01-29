@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAction, useMutation, useQuery } from "convex/react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { api } from "@/integrations/convex/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -15,8 +19,17 @@ import {
 } from "@/components/ui/select";
 import { formatPrice, computePromoPrice, formatSavings } from "@/utils/promoPricing";
 import { PromoImage } from "@/components/promo/PromoImage";
+import { cn } from "@/lib/utils";
 
 const promoApi = api as any;
+
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const hours = Math.floor(index / 2);
+  const minutes = index % 2 === 0 ? "00" : "30";
+  const value = `${String(hours).padStart(2, "0")}:${minutes}`;
+  const label = format(new Date(2024, 0, 1, hours, Number(minutes)), "h:mm a");
+  return { value, label };
+});
 
 export default function PromoPortalNew() {
   const { clientId } = useParams();
@@ -28,6 +41,8 @@ export default function PromoPortalNew() {
 
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
+  const [plannedDate, setPlannedDate] = useState("");
+  const [plannedTime, setPlannedTime] = useState("");
   const [promotionId, setPromotionId] = useState<string | null>(
     existingPromotionId ?? null
   );
@@ -167,7 +182,25 @@ export default function PromoPortalNew() {
     if (!promotionData?.promotion) return;
     setName(promotionData.promotion.name ?? "");
     setNote(promotionData.promotion.note_to_andrew ?? "");
+    setPlannedDate(promotionData.promotion.planned_date ?? "");
+    setPlannedTime(promotionData.promotion.planned_time ?? "");
   }, [promotionData?.promotion]);
+
+  const plannedDateValue = plannedDate
+    ? new Date(`${plannedDate}T00:00:00`)
+    : undefined;
+
+  const handlePlannedDateSelect = (date: Date | undefined) => {
+    if (!date) {
+      setPlannedDate("");
+      setPlannedTime("");
+      return;
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    setPlannedDate(`${year}-${month}-${day}`);
+  };
 
   const handleStart = async () => {
     if (!clientId || !token || !name.trim()) return;
@@ -176,6 +209,8 @@ export default function PromoPortalNew() {
       token,
       name: name.trim(),
       noteToAndrew: note.trim() || undefined,
+      plannedDate: plannedDate || undefined,
+      plannedTime: plannedTime || undefined,
     });
     // Navigate directly to the product picker (same page with promotionId)
     navigate(`/p/${clientId}/new?token=${token}&promotionId=${id}`);
@@ -189,6 +224,8 @@ export default function PromoPortalNew() {
       promotionId,
       name: name.trim(),
       noteToAndrew: note.trim() || undefined,
+      plannedDate: plannedDate || undefined,
+      plannedTime: plannedTime || undefined,
     });
   };
 
@@ -254,6 +291,53 @@ export default function PromoPortalNew() {
       <div className="space-y-2">
         <label className="text-sm font-medium">Note to Andrew (optional)</label>
         <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Planned send date</label>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-between text-left font-normal",
+                  !plannedDate && "text-muted-foreground"
+                )}
+              >
+                {plannedDateValue ? format(plannedDateValue, "PPP") : "Pick a date"}
+                <CalendarIcon className="ml-2 h-4 w-4 opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={plannedDateValue}
+                onSelect={handlePlannedDateSelect}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Select
+            value={plannedTime || "unset"}
+            onValueChange={(value) => setPlannedTime(value === "unset" ? "" : value)}
+            disabled={!plannedDate}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unset">No time</SelectItem>
+              {TIME_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Optional — add a tentative send date for planning.
+        </p>
       </div>
       <Button variant="outline" onClick={handleUpdateDetails} disabled={!name.trim()}>
         Save details
@@ -488,6 +572,55 @@ export default function PromoPortalNew() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Note to Andrew (optional)</label>
               <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Planned send date</label>
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-between text-left font-normal",
+                        !plannedDate && "text-muted-foreground"
+                      )}
+                    >
+                      {plannedDateValue ? format(plannedDateValue, "PPP") : "Pick a date"}
+                      <CalendarIcon className="ml-2 h-4 w-4 opacity-60" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={plannedDateValue}
+                      onSelect={handlePlannedDateSelect}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Select
+                  value={plannedTime || "unset"}
+                  onValueChange={(value) =>
+                    setPlannedTime(value === "unset" ? "" : value)
+                  }
+                  disabled={!plannedDate}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unset">No time</SelectItem>
+                    {TIME_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Optional — add a tentative send date for planning.
+              </p>
             </div>
             <Button onClick={handleStart} disabled={!name.trim()}>
               Continue to product picker

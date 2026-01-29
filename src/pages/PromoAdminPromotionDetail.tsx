@@ -18,6 +18,19 @@ import { PromoImage } from "@/components/promo/PromoImage";
 
 const promoApi = api as any;
 
+function formatPlannedDateTime(date?: string, time?: string) {
+  if (!date) return "";
+  const base = new Date(`${date}T${time || "00:00"}:00`);
+  const dateLabel = new Intl.DateTimeFormat("en-NZ", {
+    dateStyle: "medium",
+  }).format(base);
+  if (!time) return dateLabel;
+  const timeLabel = new Intl.DateTimeFormat("en-NZ", {
+    timeStyle: "short",
+  }).format(base);
+  return `${dateLabel} · ${timeLabel}`;
+}
+
 export default function PromoAdminPromotionDetail() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -211,6 +224,12 @@ export default function PromoAdminPromotionDetail() {
         <div>
           <h1 className="text-2xl font-semibold">{promotion.name}</h1>
           <p className="text-sm text-muted-foreground">Status: {promotion.status}</p>
+          {promotion.planned_date && (
+            <p className="text-sm text-muted-foreground">
+              Tentative send:{" "}
+              {formatPlannedDateTime(promotion.planned_date, promotion.planned_time)}
+            </p>
+          )}
         </div>
         <Button asChild variant="outline">
           <Link to="/admin">Back</Link>

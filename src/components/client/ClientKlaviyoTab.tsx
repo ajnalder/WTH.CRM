@@ -39,6 +39,19 @@ type ClientKlaviyoTabProps = {
 
 const emptyAudience = { id: "", label: "" };
 
+function formatPlannedDateTime(date?: string, time?: string) {
+  if (!date) return "";
+  const base = new Date(`${date}T${time || "00:00"}:00`);
+  const dateLabel = new Intl.DateTimeFormat("en-NZ", {
+    dateStyle: "medium",
+  }).format(base);
+  if (!time) return dateLabel;
+  const timeLabel = new Intl.DateTimeFormat("en-NZ", {
+    timeStyle: "short",
+  }).format(base);
+  return `${dateLabel} · ${timeLabel}`;
+}
+
 export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
   const { toast } = useToast();
   const { updateClient } = useClients();
@@ -578,6 +591,11 @@ export default function ClientKlaviyoTab({ client }: ClientKlaviyoTabProps) {
                   <div>
                     <p className="font-medium">{promo.name}</p>
                     <p className="text-xs text-muted-foreground">Status: {promo.status}</p>
+                    {promo.planned_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Tentative: {formatPlannedDateTime(promo.planned_date, promo.planned_time)}
+                      </p>
+                    )}
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {promo.submitted_at ? "Submitted" : "Draft"}

@@ -572,6 +572,8 @@ export default defineSchema({
     client_id: v.string(),
     name: v.string(),
     note_to_andrew: v.optional(v.string()),
+    planned_date: v.optional(v.string()),
+    planned_time: v.optional(v.string()),
     generated_campaign_title: v.optional(v.string()),
     generated_subject_lines: v.optional(v.array(v.string())),
     generated_preview_texts: v.optional(v.array(v.string())),

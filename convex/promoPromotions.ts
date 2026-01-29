@@ -104,6 +104,12 @@ async function hydratePromotion(ctx: any, promotionId: string) {
   return { promotion, items: hydratedItems };
 }
 
+function buildPlannedSortKey(promotion: any) {
+  if (!promotion?.planned_date) return null;
+  const time = promotion.planned_time || "00:00";
+  return `${promotion.planned_date}T${time}`;
+}
+
 export const listPromotionsForPortal = query({
   args: { clientId: v.string(), token: v.string() },
   handler: async (ctx, { clientId, token }) => {
@@ -131,10 +137,18 @@ export const listPromotionsForAdmin = query({
     return promotions.sort((a, b) => {
       const statusA = PROMO_STATUSES.indexOf(a.status);
       const statusB = PROMO_STATUSES.indexOf(b.status);
-      if (statusA === statusB) {
-        return a.created_at < b.created_at ? 1 : -1;
+      if (statusA !== statusB) {
+        return statusA - statusB;
       }
-      return statusA - statusB;
+
+      const plannedA = buildPlannedSortKey(a);
+      const plannedB = buildPlannedSortKey(b);
+      if (plannedA && plannedB) {
+        return plannedA.localeCompare(plannedB);
+      }
+      if (plannedA) return -1;
+      if (plannedB) return 1;
+      return a.created_at < b.created_at ? 1 : -1;
     });
   },
 });
@@ -156,7 +170,16 @@ export const listIncomingPromotionsForAdmin = query({
         ...promotion,
         client_name: clientNameById.get(promotion.client_id) || "Unknown client",
       }))
-      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      .sort((a, b) => {
+        const plannedA = buildPlannedSortKey(a);
+        const plannedB = buildPlannedSortKey(b);
+        if (plannedA && plannedB) {
+          return plannedA.localeCompare(plannedB);
+        }
+        if (plannedA) return -1;
+        if (plannedB) return 1;
+        return a.created_at < b.created_at ? 1 : -1;
+      });
   },
 });
 
@@ -166,8 +189,10 @@ export const createPromotion = mutation({
     token: v.string(),
     name: v.string(),
     noteToAndrew: v.optional(v.string()),
+    plannedDate: v.optional(v.string()),
+    plannedTime: v.optional(v.string()),
   },
-  handler: async (ctx, { clientId, token, name, noteToAndrew }) => {
+  handler: async (ctx, { clientId, token, name, noteToAndrew, plannedDate, plannedTime }) => {
     await assertValidPortalToken(ctx, clientId, token);
 
     const now = nowIso();
@@ -178,6 +203,8 @@ export const createPromotion = mutation({
       client_id: clientId,
       name,
       note_to_andrew: noteToAndrew,
+      planned_date: plannedDate,
+      planned_time: plannedTime,
       status: "draft",
       created_by: "client",
       created_at: now,
@@ -362,8 +389,13 @@ export const updatePromotionDetails = mutation({
     promotionId: v.string(),
     name: v.string(),
     noteToAndrew: v.optional(v.string()),
+    plannedDate: v.optional(v.string()),
+    plannedTime: v.optional(v.string()),
   },
-  handler: async (ctx, { clientId, token, promotionId, name, noteToAndrew }) => {
+  handler: async (
+    ctx,
+    { clientId, token, promotionId, name, noteToAndrew, plannedDate, plannedTime }
+  ) => {
     await assertValidPortalToken(ctx, clientId, token);
 
     const promotion = await getPromotionById(ctx, promotionId);
@@ -378,6 +410,8 @@ export const updatePromotionDetails = mutation({
     await ctx.db.patch(promotion._id, {
       name,
       note_to_andrew: noteToAndrew,
+      planned_date: plannedDate,
+      planned_time: plannedTime,
       updated_at: nowIso(),
     });
 
