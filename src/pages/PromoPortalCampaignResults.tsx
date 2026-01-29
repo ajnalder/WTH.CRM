@@ -70,6 +70,31 @@ export default function PromoPortalCampaignResults() {
   );
   const refreshResults = useAction(promoApi.promoCampaignResults.refreshResultsForPortal);
 
+  const handleRefresh = async (force = false) => {
+    if (!clientId || !token || !id) return;
+    setIsRefreshing(true);
+    setRefreshError(null);
+    try {
+      await refreshResults({
+        clientId,
+        token,
+        promotionId: id,
+        force,
+      });
+    } catch (error: any) {
+      setRefreshError(error.message ?? "Failed to refresh results.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!clientId || !token || !id || !validation?.valid) return;
+    if (hasAutoRefreshed.current) return;
+    hasAutoRefreshed.current = true;
+    handleRefresh(false);
+  }, [clientId, token, id, validation?.valid]);
+
   if (!clientId || !token) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
@@ -116,31 +141,6 @@ export default function PromoPortalCampaignResults() {
   const refreshedAt = resultsData?.refreshedAt as string | null;
   const hasLinkedCampaign = !!promotionData.promotion.klaviyo_campaign_id;
 
-  const handleRefresh = async (force = false) => {
-    if (!clientId || !token || !id) return;
-    setIsRefreshing(true);
-    setRefreshError(null);
-    try {
-      await refreshResults({
-        clientId,
-        token,
-        promotionId: id,
-        force,
-      });
-    } catch (error: any) {
-      setRefreshError(error.message ?? "Failed to refresh results.");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!clientId || !token || !id || !validation?.valid) return;
-    if (hasAutoRefreshed.current) return;
-    hasAutoRefreshed.current = true;
-    handleRefresh(false);
-  }, [clientId, token, id, validation?.valid]);
-
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
@@ -182,7 +182,7 @@ export default function PromoPortalCampaignResults() {
           )}
           {hasLinkedCampaign && campaigns.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No results synced yet. Click “Refresh results” to fetch from Klaviyo.
+              No results synced yet. We’ll update automatically when data is available.
             </p>
           )}
 
